@@ -1,14 +1,96 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import CustomToggle from "../SendNewMessage/CustomToggle";
 import { useNavigate, useNavigation } from 'react-router-dom';
+import Cookies from 'js-cookie';
 
 const AccountSetting = () => {
 
     const user = useSelector((state) => state?.loginUser?.userLogin);
+    const authInformation = useSelector((state) => state?.auth?.authInformation.at(0));
+    const [isLoading, setIsLoading] = useState(false);
+    const [passwordValues, setPasswordValues] = useState({
+        currentPwd: "",
+        newPwd: "",
+        confirmPwd: "",
+    })
+
+    const [userDetail, setUserDetail] = useState([]);
+    const [authDetail, setAuthDetail] = useState({
+        first_name: user?.first_name,
+        last_name: user?.last_name,
+        email: user?.email,
+        phone: user?.phone
+    })
+    const getUserDetail = async () => {
+        try {
+            const apiResponse = await fetch(`${authInformation?.baseURL}/users/${user?.id}`, {
+                method: "GET",
+                headers: {
+                    "Authorization": authInformation?.token
+                }
+            });
+            const result = await apiResponse.json();
+            setUserDetail(result);
+            if (apiResponse.ok) {
+                console.log(result);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
     const [checked, setChecked] = useState([]);
     const navigate = useNavigate();
     console.log(user);
+
+    useEffect(() => {
+        getUserDetail();
+        console.log(userDetail)
+    }, [user?.id])
+
+    const changePassword = async () => {
+        try {
+            const apiResponse = await fetch(`${authInformation?.baseURL}/users/${user?.id}/change-password`, {
+                method: "POST",
+                headers: {
+                    "Authorization": Cookies.get("jwtToken"),
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ current_password: passwordValues.currentPwd, new_password: passwordValues.newPwd })
+            });
+            const result = await apiResponse.json();
+            console.log(result);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const updateDynamicUser = async () => {
+        setIsLoading(true);
+        try {
+            const apiResponse = await fetch(`${authInformation?.baseURL}/users/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": authInformation?.token,
+                    "Content-Type": "application/json",
+                },
+
+                body: JSON.stringify({ first_name: authDetail?.first_name, last_name: authDetail?.last_name, phone: authDetail?.phone, emai: authDetail.email })
+            });
+
+            const result = await apiResponse.json();
+            if (apiResponse.status === 200 && apiResponse.ok) {
+                setSuccessMessage("User Updated Successfully");
+                console.log(result);
+            } else {
+                console.log("Something is missing");
+            }
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
     return (
         <div className=' w-full overflow-y-auto h-[100%] px-10'>
@@ -27,25 +109,25 @@ const AccountSetting = () => {
                 <div className='p-6 flex flex-row gap-x-5'>
                     <div className='flex flex-row items-center justify-center w-[20%] h-[100%]'>
                         <h2 className='w-[100px] h-[100px] items-center justify-center flex text-xl font-medium rounded-full bg-gray-300'>
-                            {user?.first_name.charAt(0).toUpperCase() + " " + user?.last_name?.charAt(0).toUpperCase()}
+                            {user?.first_name?.charAt(0)?.toUpperCase() + " " + user?.last_name?.charAt(0).toUpperCase() || ""}
                         </h2>
                     </div>
                     <div className='w-full grid xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-1 gap-x-5 space-y-4'>
                         <div className='space-y-1'>
                             <label htmlFor="first_name" className='block text-gray-700 font-medium text-sm'>First Name</label>
-                            <input type="text" id='first_name' value={user?.first_name} placeholder="First Name" className='w-full rounded-lg outline-green-500 border border-gray-200 px-3 py-2' />
+                            <input type="text" id='first_name' value={authDetail?.first_name} onChange={(e) => setAuthDetail({ ...authDetail, first_name: e.target.value })} placeholder="First Name" className='w-full rounded-lg outline-green-500 border border-gray-200 px-3 py-2' />
                         </div>
                         <div className='space-y-1'>
                             <label htmlFor="last_name" className='block text-gray-700 font-medium text-sm'>Last Name</label>
-                            <input type="text" id='last_name' value={user?.last_name} placeholder='Last Name' className='w-full rounded-lg outline-green-500 border border-gray-200 px-3 py-2' />
+                            <input type="text" id='last_name' value={authDetail?.last_name} onChange={(e) => setAuthDetail({ ...authDetail, last_name: e.target.value })} placeholder='Last Name' className='w-full rounded-lg outline-green-500 border border-gray-200 px-3 py-2' />
                         </div>
                         <div className='space-y-1'>
                             <label htmlFor="phone" className='block text-gray-700 font-medium text-sm'>Phone Number</label>
-                            <input type="text" id='phone' value={user?.phone} placeholder='Phone Number' className='w-full rounded-lg outline-green-500 border border-gray-200 px-3 py-2' />
+                            <input type="text" id='phone' value={authDetail?.phone} onChange={(e) => setAuthDetail({ ...authDetail, phone: e.target.value })} placeholder='Phone Number' className='w-full rounded-lg outline-green-500 border border-gray-200 px-3 py-2' />
                         </div>
                         <div className='space-y-1'>
                             <label htmlFor="email" className='block text-gray-700 font-medium text-sm'>Email Address</label>
-                            <input type="text" id='email' value={user?.email} placeholder='Last Name' className='w-full rounded-lg outline-green-500 border border-gray-200 px-3 py-2' />
+                            <input type="text" id='email' value={authDetail?.email} onChange={(e) => setAuthDetail({ ...authDetail, email: e.target.value })} placeholder='Last Name' className='w-full rounded-lg outline-green-500 border border-gray-200 px-3 py-2' />
                         </div>
                     </div>
                 </div>
@@ -59,16 +141,16 @@ const AccountSetting = () => {
 
                         <div className='space-y-2'>
                             <label htmlFor="currentPassword" className='text-gray-700 block font-medium text-sm'>Current Password</label>
-                            <input type="text" id='currentPassword' placeholder='Current Password' className='border border-gray-200 rounded-lg outline-green-500 px-3 py-2 w-1/2' />
+                            <input type="text" id='currentPassword' placeholder='Current Password' value={passwordValues.currentPwd} onChange={(e) => setPasswordValues({ ...passwordValues, currentPwd: e.target.value })} className='border border-gray-200 rounded-lg outline-green-500 px-3 py-2 w-1/2' />
                         </div>
 
                         <div className='flex flex-row w-full gap-x-5'>
                             <div className='w-full'>
-                                <label htmlFor="newPassword" className='text-gray-700 block font-medium text-sm'>New Password</label>
+                                <label htmlFor="newPassword" value={passwordValues.newPwd} onChange={(e) => setPasswordValues({ ...passwordValues, newPwd: e.target.value })} className='text-gray-700 block font-medium text-sm'>New Password</label>
                                 <input type="text" id='newPassword' placeholder='New Password' className='border border-gray-200 rounded-lg outline-green-500 px-3 py-2 w-full' />
                             </div>
                             <div className='w-full'>
-                                <label htmlFor="confirmPassword" className='text-gray-700 block font-medium text-sm'>New Password</label>
+                                <label htmlFor="confirmPassword" value={passwordValues.confirmPwd} onChange={(e) => setPasswordValues({ ...passwordValues, confirmPwd: e.target.value })} className='text-gray-700 block font-medium text-sm'>Confirm New Password</label>
                                 <input type="text" id='confirmPassword' placeholder='Confirm Password' className='border border-gray-200 rounded-lg outline-green-500 px-3 py-2 w-full' />
                             </div>
                         </div>
@@ -122,9 +204,16 @@ const AccountSetting = () => {
                             Cancel
                         </button>
                         <button
-                            className="flex flex-row items-center  cursor-pointer justify-center rounded-lg font-medium text-sm bg-green-500 text-white px-4 py-2 border border-gray-200 shadow-sm">
+                            disabled={passwordValues.newPwd !== passwordValues.confirmPwd
+                            }
+                            onClick={() => {
+                                changePassword()
+                                updateDynamicUser();
+                            }}
+                            className="flex flex-row items-center disabled:cursor-not-allowed disabled:opacity-90  cursor-pointer justify-center rounded-lg font-medium text-sm bg-green-500 text-white px-4 py-2 border border-gray-200 shadow-sm">
                             Save Changes
                         </button>
+
                     </div>
                 </div>
             </div>

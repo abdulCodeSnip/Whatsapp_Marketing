@@ -37,6 +37,10 @@ const ScheduleMessage = () => {
         setDate(`${year}-${month}-${day}`);
     }, []);
 
+    const scheduledData = `${date.slice(0, 10)}T${time.slice(10)}`
+    console.log(scheduledData);
+
+
     // send a scheduled message from frontend to backend
     const sendScheduleMessage = async () => {
 
@@ -51,7 +55,35 @@ const ScheduleMessage = () => {
                     body: JSON.stringify({
                         receiver_id: selected?.id,
                         content: messageContent,
-                        scheduled_at: date + time,
+                        scheduled_at: "2025-07-23T", // to UTF
+                    })
+                });
+                if (!apiResponse.ok) {
+                    throw new Error(`Failed for user ${selected?.id}`);
+                }
+                const result = await apiResponse.json();
+                console.log(result);
+            } catch (error) {
+                console.log(error);
+            }
+        });
+        await Promise.all(promises);
+    }
+
+
+    // Send message to users directly from the frontend to backend
+    const sendMessageDirectly = async () => {
+        const promises = selectedContacts?.map(async (selected) => {
+            try {
+                const apiResponse = await fetch(`${authInformation?.baseURL}/messages/send`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": authInformation?.token
+                    },
+                    body: JSON.stringify({
+                        receiver_id: selected?.id,
+                        content: messageContent,
                     })
                 });
 
@@ -60,32 +92,15 @@ const ScheduleMessage = () => {
                 }
 
                 const result = await apiResponse.json();
-                console.log(`Scheduled for ${selected?.id}`);
+                console.log(result);
             } catch (error) {
                 console.log(error);
             }
         });
         await Promise.all(promises);
-        // try {
-        //     const apiResponse = await fetch(`${authInformation?.baseURL}/messages/schedule`, {
-        //         method: "POST",
-        //         headers: {
-        //             "Authorization": authInformation?.token,
-        //             "Content-Type": "application/json",
-        //         },
-        //         body: JSON.stringify({
-        //             receiver_id: 16,
-        //             content: "This is a scheduled message",
-        //             scheduled_at: `${date + time}`
-        //         })
-        //     });
-        //     const result = await apiResponse.json();
-        //     console.log("Result is ", result);
-        // } catch (error) {
-        //     console.log(error);
-        // }
     }
 
+    // fucntion to send all the message to users
 
     return (
         <div className=' p-5 space-y-3'>
@@ -151,7 +166,7 @@ const ScheduleMessage = () => {
             }
             <div className='flex flex-row items-center justify-end gap-5'>
                 <button onClick={() => navigate("/")} className='flex flex-row items-center justify-center px-4 py-2 rounded-lg cursor-pointer border border-gray-200 outline-green-500 bg-gray-50 text-gray-700 hover:opacity-95 shadow-sm'>Cancel</button>
-                <button onClick={() => sendScheduleMessage()} className='flex flex-row items-center justify-center px-4 py-2 rounded-lg cursor-pointer border border-gray-200 outline-green-500 bg-green-500 text-white hover:opacity-95 shadow-sm'>Send Message</button>
+                <button onClick={() => scheduled ? sendScheduleMessage() : sendMessageDirectly()} className='flex flex-row items-center justify-center px-4 py-2 rounded-lg cursor-pointer border border-gray-200 outline-green-500 bg-green-500 text-white hover:opacity-95 shadow-sm'>Send Message</button>
             </div>
         </div>
     )

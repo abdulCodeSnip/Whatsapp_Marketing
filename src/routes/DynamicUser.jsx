@@ -90,7 +90,7 @@ const DynamicUser = () => {
                 <Header />
 
                 {/* Main Content */}
-                <main className="flex-1 p-6 bg-gray-50 overflow-y-auto">
+                <main className="flex-1 p-6 bg-gray-50 overflow-y-auto space-y-5">
                     <div>
                         {
                             (errorMessage !== null && userDetail === null) && (
@@ -153,20 +153,6 @@ const DynamicUser = () => {
                                             className='w-full border border-gray-300 rounded-lg p-2 outline-green-500'
                                         />
                                     </div>
-
-                                    <div>
-                                        <label htmlFor="role" className='text-gray-600 font-medium text-sm block'>
-                                            Role
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="role"
-                                            value={userDetail.role || ''}
-                                            onChange={handleChange}
-                                            className='w-full border border-gray-300 rounded-lg p-2 outline-green-500'
-                                        />
-                                    </div>
-
                                 </div>
                             )
                         }
@@ -187,7 +173,7 @@ const DynamicUser = () => {
                                 {isLoading && (
                                     <AiOutlineLoading3Quarters className="animate-spin" />)}
                                 <span>
-                                    Update User
+                                    Update Contact
                                 </span>
                             </button>
                         </div>

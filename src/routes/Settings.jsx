@@ -9,6 +9,9 @@ import WhatsappConnectionSetting from '../Components/SettingsPage/WhatsappConnec
 
 const Settings = () => {
 
+     const user = useSelector((state) => state?.loginUser?.userLogin);
+     console.log(user);
+
      const selectedButton = useSelector((state) => state?.selectedButton?.activeButton);
      console.log(selectedButton);
 
@@ -27,7 +30,7 @@ const Settings = () => {
                          <div className='p-6 w-full h-[100%]'>
                               {
                                    selectedButton === "Option-1" ?
-                                        <AccountSetting /> : selectedButton === "Option-2" ? <WhatsappConnectionSetting /> : null
+                                        <AccountSetting /> : selectedButton === "Option-2" && user?.role?.toLowerCase() === "admin" ? <WhatsappConnectionSetting /> : null
                               }
                          </div>
                     </main>

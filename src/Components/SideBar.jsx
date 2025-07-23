@@ -5,7 +5,8 @@ import { MdOutlineDashboard } from 'react-icons/md'
 import { RiContactsBookLine, RiMessage2Line } from 'react-icons/ri'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link, useLocation } from 'react-router-dom'
-import { authenticatingUser } from '../redux/authentication/loginUser'
+import { authenticatingUser } from '../redux/authentication/loginUser';
+import Cookies from 'js-cookie'
 
 const SideBar = () => {
 
@@ -21,8 +22,8 @@ const SideBar = () => {
                          "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                         email: "hamza@gmail.com",
-                         password: "619f28b8"
+                         email: Cookies.get("email"),
+                         password: Cookies.get("password")
                     })
                });
 
@@ -36,6 +37,7 @@ const SideBar = () => {
           authenticateUser();
      }, [])
 
+     console.log(Cookies.get("email"));
      const { pathname } = useLocation();
      return (
           <div className="w-64 bg-gray-900 text-white flex flex-col">

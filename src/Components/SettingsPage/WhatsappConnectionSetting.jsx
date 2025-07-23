@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { BiCheckCircle } from 'react-icons/bi'
 import { FaCheckCircle } from 'react-icons/fa'
 import { MdArrowRightAlt } from 'react-icons/md'
@@ -6,11 +6,35 @@ import { RiWhatsappFill } from 'react-icons/ri'
 import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 
+
 const WhatsappConnectionSetting = () => {
 
     const currentUser = useSelector((state) => state?.loginUser?.userLogin);
     const allTemplates = useSelector((state) => state?.allTemplates?.allTemplates);
-    console.log(allTemplates);
+    const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
+
+    const [apiConfiguration, setApiConfiguration] = useState([]);
+    const [showAPIKey, setShowAPIKey] = useState(false);
+
+    const getWhatsappAPIConfiguration = async () => {
+        try {
+            const apiResponse = await fetch(`${authInformation?.baseURL}/whatsapp/config?userId=13`, {
+                method: "GET",
+                headers: {
+                    "Authorization": authInformation?.token
+                }
+            });
+            const result = await apiResponse.json();
+            setApiConfiguration(result);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    useEffect(() => {
+        getWhatsappAPIConfiguration();
+        console.log(apiConfiguration);
+    }, [])
     return (
         <div className='w-full h-[100%] overflow-y-auto rounded-xl divide-y divide-gray-200 bg-white shadow-sm'>
             <div className='p-6'>
@@ -61,8 +85,8 @@ const WhatsappConnectionSetting = () => {
                     <div className='space-y-2 '>
                         <label htmlFor="apiKey" className='text-gray-600 font-medium text-sm block'>API Key</label>
                         <div className='flex flex-row gap-x-2'>
-                            <input type="password" name="apiKey" id="apiKey" contentEditable={false} readOnly value={"this is a strong password"} className='border border-gray-200 rounded-xl outline-green-500 w-full px-3 py-2' />
-                            <button className='bg-gray-200 rounded-lg border-2 border-gray-200 w-[100px] cursor-pointer text-gray-800 font-medium text-xs'>Show</button>
+                            <input type={showAPIKey ? "text" : "password"} name="apiKey" id="apiKey" contentEditable={false} readOnly value={apiConfiguration?.whatsapp_api_token} className='border border-gray-200 rounded-xl outline-green-500 w-full px-3 py-2' />
+                            <button onClick={() => setShowAPIKey(!showAPIKey)} className='bg-gray-200 rounded-lg border-2 border-gray-200 w-[100px] cursor-pointer text-gray-800 font-medium text-xs'>Show</button>
                         </div>
                     </div>
                 </div>

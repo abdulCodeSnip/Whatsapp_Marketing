@@ -9,14 +9,16 @@ import { useSelector } from 'react-redux';
 const ContactGroupCard = () => {
      const [isButtonActive, setIsButtonActive] = useState(true);
 
-     const allContacts = useSelector((state) => state?.allContacts?.allContacts[0]);
+     const allContacts = useSelector((state) => state?.allContacts.allContacts);
+     console.log(allContacts);
 
-     console.log(allContacts?.filter(contact => contact?.is_favourite === true));
      const favouriteContacts = allContacts?.filter(contact => contact?.is_favourite === true)?.length || 0;
      const customerContacts = allContacts?.filter((contact) => contact?.type?.toLowerCase() === "customer")?.length || 0;
      const prospectContacts = allContacts?.filter((contact) => contact?.type?.toLowerCase() === "prospects")?.length || 0;
      const teamSupport = allContacts?.filter((contact) => contact?.type?.toLowerCase() === ("team support" || "team_support" || "teamSupport" || "team" || "support"))?.length;
      const marketingList = allContacts?.filter((contact) => contact?.type?.toLowerCase() === ("marketing" || "marketing lists" || "lists" || "marketing_list"))?.length || 0;
+
+     // React TOASTIFY
 
      let shortcutContactButtons = [
           {

@@ -12,6 +12,7 @@ const SelectRecipientsDialog = ({ closeDialog }) => {
     // Getting Contacts from Redux Store
     const addingContactsToStore = useSelector((state) => state.allContacts?.selectedContacts);
     const contacts = useSelector((state) => state?.allContacts?.allContacts[0]?.users);
+    console.log(contacts);
     const dispatch = useDispatch();
 
     // Handling buttons using Event Deligation

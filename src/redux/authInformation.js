@@ -1,10 +1,13 @@
 import { createSlice } from "@reduxjs/toolkit";
+import Cookies from "js-cookie";
 
+const token = Cookies.get("jwtToken")
 const initialState = {
+
     authInformation: [
         {
             baseURL: "http://localhost:3000",
-            token: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTMsImVtYWlsIjoiaGFtemFAZ21haWwuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzUzMjA3MjMzLCJleHAiOjE3NTMyOTM2MzN9.Nu7nuNRFo_gqZ-hvKjGtoXwRw0vZFByhU446RuHkBeU"
+            token: "Bearer " + token
         }
     ]
 }

@@ -13,6 +13,7 @@
     "@reduxjs/toolkit": "^2.8.2",
     "@tailwindcss/vite": "^4.1.11",
     "emoji-picker-react": "^4.13.2",
+    "js-cookie": "^3.0.5",
     "lodash": "^4.17.21",
     "papaparse": "^5.5.3",
     "react": "^19.1.0",

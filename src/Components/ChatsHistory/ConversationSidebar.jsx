@@ -6,10 +6,12 @@ import { dynamicChats } from '../../redux/chatHistoryPage/chats';
 
 const ConversationSidebar = () => {
     const [conversation, setConversation] = useState([]);
+    const [errorMessage, setErrorMessage] = useState("");
 
     //values from Redux
     const authInformation = useSelector((state) => state?.auth?.authInformation.at(0));
-    const conversationFromStore = useSelector((state) => state?.selectedContact?.selectedContact);
+    const conversationFromStore = useSelector((state) => state);
+    console.log(conversationFromStore);
 
     const dispatch = useDispatch();
 
@@ -23,7 +25,11 @@ const ConversationSidebar = () => {
             });
 
             const result = await apiResponse.json();
-            if (apiResponse.ok && apiResponse.status === 200) {
+            if (result?.message?.includes("No chat")) {
+                setErrorMessage("No History Found");
+            }
+            console.log(result);
+            if (apiResponse.ok) {
                 setConversation(result);
                 console.log(result);
             } else {
@@ -55,41 +61,46 @@ const ConversationSidebar = () => {
             </div>
 
             <h2 className='text-gray-900 font-medium text-sm my-2'>Recent Conversations</h2>
-            <div className='divide-y divide-gray-200 flex flex-col'>
-                <div onClick={() => {
-                    dispatch(changeSelectedContact(conversation?.receiver));
-                    dispatch(dynamicChats(conversation?.chat));
-                }} className={`flex flex-row items-center cursor-pointer p-2 ${conversationFromStore?.id === conversation?.receiver?.id ? "bg-green-50 border-l-3 gap-x-2 border-green-600" : "bg-gray-50"}`}>
+            {
+                errorMessage ? (
+                    <h2>{errorMessage}</h2>
+                ) :
+                    <div className='divide-y divide-gray-200 flex flex-col'>
+                        <div onClick={() => {
+                            dispatch(changeSelectedContact(conversation?.receiver));
+                            dispatch(dynamicChats(conversation?.chat));
+                        }} className={`flex flex-row items-center cursor-pointer p-2 ${conversationFromStore?.id === conversation?.receiver?.id ? "bg-green-50 border-l-3 gap-x-2 border-green-600" : "bg-gray-50"}`}>
 
-                    {/* Logo of the user */}
-                    <div>
-                        <h2 className='text-purple-700 bg-purple-100 rounded-full w-[40px] h-[40px] flex items-center justify-center font-medium'>
-                            {
-                                conversation?.receiver?.name.charAt(0).toUpperCase() + " " + conversation?.receiver?.name?.charAt(conversation?.receiver?.name?.length - 1).toUpperCase()
-                            }
-                        </h2>
+                            {/* Logo of the user */}
+                            <div>
+                                <h2 className='text-purple-700 bg-purple-100 rounded-full w-[40px] h-[40px] flex items-center justify-center font-medium'>
+                                    {
+                                        conversation?.receiver?.name.charAt(0).toUpperCase() + " " + conversation?.receiver?.name?.charAt(conversation?.receiver?.name?.length - 1).toUpperCase()
+                                    }
+                                </h2>
 
 
-                    </div>
+                            </div>
 
-                    <div className='flex flex-col'>
-                        <div className='flex flex-row items-center justify-between w-full'>
-                            {/* Contact Name */}
-                            <h2 className='text-gray-900 font-medium '>
-                                {conversation?.receiver?.name}
-                            </h2>
-                            {/* Extracting Timestamp of the message that was just updated */}
-                            <span className='text-gray-500 text-xs'>{(conversation?.chat?.at(conversation?.chat?.length - 1).updated_at)?.split("T")?.at(1)?.split(".")?.at(0)?.slice(0, 5)}</span>
+                            <div className='flex flex-col'>
+                                <div className='flex flex-row items-center justify-between w-full'>
+                                    {/* Contact Name */}
+                                    <h2 className='text-gray-900 font-medium '>
+                                        {conversation?.receiver?.name}
+                                    </h2>
+                                    {/* Extracting Timestamp of the message that was just updated */}
+                                    <span className='text-gray-500 text-xs'>{(conversation?.chat?.at(conversation?.chat?.length - 1).updated_at)?.split("T")?.at(1)?.split(".")?.at(0)?.slice(0, 5)}</span>
+                                </div>
+                                {/* Recent Message Overview */}
+                                <span className='text-gray-500 text-xs'>
+                                    {
+                                        conversation?.chat?.at(conversation?.chat?.length - 1)?.content?.slice(0, 50) + "...."
+                                    }
+                                </span>
+                            </div>
                         </div>
-                        {/* Recent Message Overview */}
-                        <span className='text-gray-500 text-xs'>
-                            {
-                                conversation?.chat?.at(conversation?.chat?.length - 1)?.content?.slice(0, 50) + "...."
-                            }
-                        </span>
                     </div>
-                </div>
-            </div>
+            }
         </div>
     )
 }

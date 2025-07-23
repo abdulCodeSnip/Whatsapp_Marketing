@@ -1,5 +1,5 @@
 
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, useNavigate } from 'react-router-dom'
 import './App.css'
 import Dashboard from "./routes/Dashboard";
 import Messages from './routes/Messages';
@@ -12,7 +12,21 @@ import DynamicTemplate from './Components/TemplatesPage/DynamicTemplate';
 import ImportContacts from './routes/ImportContacts';
 import SendNewMessage from './routes/SendNewMessage';
 import DynamicUser from './routes/DynamicUser';
+import AuthForm from './Components/Authentication/Login';
+import Cookies from 'js-cookie';
+import { useEffect } from 'react';
+
+
 function App() {
+
+  const navigate = useNavigate();
+  const tokenFromCookies = Cookies.get("jwtToken");
+  useEffect(() => {
+    if (!tokenFromCookies) {
+      navigate("/login");
+    }
+  }, [tokenFromCookies]);
+
   return (
     <>
       <Routes>
@@ -97,6 +111,11 @@ function App() {
           element={
             <DynamicUser />
           }
+        />
+
+        <Route
+          path='/login'
+          element={<AuthForm />}
         />
       </Routes>
     </>
