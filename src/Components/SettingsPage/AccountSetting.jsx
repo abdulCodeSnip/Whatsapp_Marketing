@@ -207,7 +207,7 @@ const AccountSetting = () => {
                             disabled={passwordValues.newPwd !== passwordValues.confirmPwd
                             }
                             onClick={() => {
-                                changePassword()
+                                // changePassword()
                                 updateDynamicUser();
                             }}
                             className="flex flex-row items-center disabled:cursor-not-allowed disabled:opacity-90  cursor-pointer justify-center rounded-lg font-medium text-sm bg-green-500 text-white px-4 py-2 border border-gray-200 shadow-sm">

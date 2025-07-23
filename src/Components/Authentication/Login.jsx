@@ -195,7 +195,7 @@ const AuthForm = () => {
                     </div>
 
                     <button
-                        type="button"
+                        type="submit"
                         onClick={() => {
                             isLogin ? loginUser() : registerNewUser();
                         }}
