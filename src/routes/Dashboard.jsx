@@ -31,6 +31,7 @@ const Dashboard = () => {
      const [showNotifications, setShowNotifications] = useState(false);
      const [changeFAQsSearchInput, setChangeFAQsSearchInput] = useState("");
      const allUsers = useSelector((state) => state.allContacts?.allContacts?.at(0));
+     console.log(allUsers);
 
      // Values from Redux
      const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));

@@ -37,7 +37,6 @@ const SideBar = () => {
           authenticateUser();
      }, [])
 
-     console.log(Cookies.get("email"));
      const { pathname } = useLocation();
      return (
           <div className="w-64 bg-gray-900 text-white flex flex-col">

@@ -76,6 +76,7 @@ const AuthForm = () => {
             });
 
             const result = await apiResponse.json();
+            console.log(result);
             if (apiResponse.status === 401) {
                 setSuccessOrErr("Please Enter right credintials");
             }
@@ -189,13 +190,13 @@ const AuthForm = () => {
                         </button>
                         {
                             successOrErr && isLogin && (
-                                <span className={`text-xs text-red-600 ${successOrErr.includes("Login") ? "text-green-600" : "text-red-600"}`}>{successOrErr}</span>
+                                <span className={`text-xs ${successOrErr.includes("Login Successfully") ? "text-green-600" : "text-red-600"}`}>{successOrErr}</span>
                             )
                         }
                     </div>
 
                     <button
-                        type="submit"
+                        type="button"
                         onClick={() => {
                             isLogin ? loginUser() : registerNewUser();
                         }}

@@ -11,14 +11,37 @@ const SelectRecipientsDialog = ({ closeDialog }) => {
 
     // Getting Contacts from Redux Store
     const addingContactsToStore = useSelector((state) => state.allContacts?.selectedContacts);
-    const contacts = useSelector((state) => state?.allContacts?.allContacts[0]?.users);
-    console.log(contacts);
+    const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
+    const [contacts, setContacts] = useState([]);
+
     const dispatch = useDispatch();
 
+    useEffect(() => {
+        const allContactsFromAPI = async () => {
+
+            try {
+                const apiResponse = await fetch(`${authInformation?.baseURL}/users`, {
+                    method: "GET",
+                    headers: {
+                        "Authorization": authInformation?.token
+                    }
+                });
+
+                const result = await apiResponse.json();
+                setContacts(result?.users);
+            } catch (error) {
+                console.log(error);
+            }
+        };
+        allContactsFromAPI();
+    }, []);
     // Handling buttons using Event Deligation
     const handlingMultipleButtons = (e) => {
         setActiveButton(e?.target?.textContent);
     }
+
+    console.log(addingContactsToStore);
+
 
     const handleSelectedContacts = (contact) => {
         const existingContact = contacts?.find((existing) => existing?.id === contact?.id);
@@ -63,7 +86,7 @@ const SelectRecipientsDialog = ({ closeDialog }) => {
 
             <div className='flex flex-col items-center w-full divide-y divide-gray-200 h-[200px] overflow-y-auto'>
                 {
-                    contacts?.filter((filteredContacts) => (filteredContacts?.first_name + filteredContacts?.last_name)?.trim()?.
+                    contacts.filter((filteredContacts) => (filteredContacts?.first_name + filteredContacts?.last_name)?.trim()?.
                         toLowerCase()?.includes(searchContacts?.trim()?.toLowerCase()))?.map((contact, index) => {
                             const contactName = contact?.first_name + " " + contact?.last_name;
                             const contactEmail = contact?.email;

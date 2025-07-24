@@ -48,7 +48,6 @@ const ChatHistory = () => {
                                    (<div className='w-full flex flex-col overflow-y-auto space-y-3'>
                                         <ReceiverHeader />
                                         <Chats />
-                                        <ChatFooter />
                                    </div>)
                               }
                          </div>

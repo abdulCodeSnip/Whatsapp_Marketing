@@ -3,12 +3,12 @@ import CustomToggle from './CustomToggle'
 import { CgStopwatch } from 'react-icons/cg';
 import { AiOutlineSave } from 'react-icons/ai';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { errorOrSuccessMessage } from '../../redux/sendNewMessage/errorMessage';
 
 const ScheduleMessage = () => {
     const [scheduled, setScheduled] = useState(false);
     const [saveAsTemplate, setSaveAsTemplate] = useState(false);
-    const selectedContacts = useSelector((state) => state?.allContacts?.selectedContacts);
 
     const [time, setTime] = useState("");
     const [date, setDate] = useState("");
@@ -16,11 +16,12 @@ const ScheduleMessage = () => {
 
     // Values from redux
     const authInformation = useSelector((state) => state?.auth?.authInformation[0]);
+    const selectedContacts = useSelector((state) => state?.allContacts?.selectedContacts);
     const messageContent = useSelector((state) => state?.messageContent?.content);
-    console.log(messageContent);
+    const errorOrSuccessMsg = useSelector((state) => state?.errorOrSuccessMessage?.errorMessage);
+    const dispatch = useDispatch();
+
     const navigate = useNavigate();
-
-
 
     useEffect(() => {
         const now = new Date();
@@ -37,10 +38,23 @@ const ScheduleMessage = () => {
         setDate(`${year}-${month}-${day}`);
     }, []);
 
-    const scheduledData = `${date.slice(0, 10)}T${time.slice(10)}`
-    console.log(scheduledData);
+    const fetchAllContacts = async () => {
+        try {
+            const apiResponse = await fetch(`${authInformation?.baseURL}/users`, {
+                method: "GET",
+                headers: {
+                    "Authorization": authInformation?.token
+                }
+            });
+            const result = await apiResponse.json();
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
-
+    useEffect(() => {
+        fetchAllContacts();
+    }, [])
     // send a scheduled message from frontend to backend
     const sendScheduleMessage = async () => {
 
@@ -55,7 +69,7 @@ const ScheduleMessage = () => {
                     body: JSON.stringify({
                         receiver_id: selected?.id,
                         content: messageContent,
-                        scheduled_at: "2025-07-23T", // to UTF
+                        scheduled_at: `${date + "T" + time + ":00Z"}`,
                     })
                 });
                 if (!apiResponse.ok) {
@@ -73,31 +87,42 @@ const ScheduleMessage = () => {
 
     // Send message to users directly from the frontend to backend
     const sendMessageDirectly = async () => {
-        const promises = selectedContacts?.map(async (selected) => {
-            try {
-                const apiResponse = await fetch(`${authInformation?.baseURL}/messages/send`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": authInformation?.token
-                    },
-                    body: JSON.stringify({
-                        receiver_id: selected?.id,
-                        content: messageContent,
-                    })
-                });
 
-                if (!apiResponse.ok) {
-                    throw new Error(`Failed for user ${selected?.id}`);
-                }
+        const formattedData = selectedContacts?.map((contact) => ({
+            phone: contact?.phone,
+            customer_name: contact?.first_name + " " + contact?.last_name
+        }))
+        try {
+            const apiResponse = await fetch(`${authInformation?.baseURL}/messages/send-bulk`, {
+                method: "POST",
+                headers: {
+                    "Authorization": authInformation?.token,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    csv_data: formattedData,
+                    content: messageContent
+                })
+            });
 
-                const result = await apiResponse.json();
-                console.log(result);
-            } catch (error) {
-                console.log(error);
-            }
-        });
-        await Promise.all(promises);
+            const result = await apiResponse.json();
+            console.log(result);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const handleSendOrScheduleMessage = () => {
+        if (messageContent?.length < 10) {
+            dispatch(errorOrSuccessMessage({ message: "Please Enter at least 10 characters", type: "Error" }));
+        } else if (selectedContacts?.length <= 0) {
+            dispatch(errorOrSuccessMessage({ message: "Please select at least one contact", type: "Error" }));
+        } else {
+            dispatch(errorOrSuccessMessage({ message: `Message ${scheduled ? "Scheduled" : "Sent"} Successfully`, type: "Success" }));
+        }
+        if (errorOrSuccessMsg?.type === "Success") {
+            scheduled ? sendScheduleMessage() : sendMessageDirectly();
+        }
     }
 
     // fucntion to send all the message to users
@@ -166,10 +191,17 @@ const ScheduleMessage = () => {
             }
             <div className='flex flex-row items-center justify-end gap-5'>
                 <button onClick={() => navigate("/")} className='flex flex-row items-center justify-center px-4 py-2 rounded-lg cursor-pointer border border-gray-200 outline-green-500 bg-gray-50 text-gray-700 hover:opacity-95 shadow-sm'>Cancel</button>
-                <button onClick={() => scheduled ? sendScheduleMessage() : sendMessageDirectly()} className='flex flex-row items-center justify-center px-4 py-2 rounded-lg cursor-pointer border border-gray-200 outline-green-500 bg-green-500 text-white hover:opacity-95 shadow-sm'>Send Message</button>
+                <button
+                    onClick={() => {
+                        handleSendOrScheduleMessage();
+                        setTimeout(() => {
+                            dispatch(errorOrSuccessMessage({ message: "", type: "" }))
+                        }, 4000);
+                    }} className='flex flex-row items-center justify-center px-4 py-2 rounded-lg cursor-pointer border border-gray-200 outline-green-500 bg-green-500 text-white hover:opacity-95 shadow-sm'>{scheduled ? "Schedule Message" : "Send Message"}</button>
             </div>
         </div>
     )
-}
+};
+
 
 export default ScheduleMessage

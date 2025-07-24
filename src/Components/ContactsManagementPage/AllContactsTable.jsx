@@ -6,16 +6,19 @@ import { FaSearch } from 'react-icons/fa';
 import { LuMessageSquareMore } from 'react-icons/lu';
 import { RiSortAsc } from 'react-icons/ri';
 import FooterPagination from '../footerPagination';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { changeSelectedContact } from '../../redux/chatHistoryPage/selectedContactConversation';
 
 const AllContactsTable = ({ replyToMessage, editContact, actions }) => {
 
      const [searchContacts, setSearchContacts] = useState("");
      const navigate = useNavigate()
 
-     const allContacts = useSelector((state) => state?.allContacts.allContacts?.at(0));
-     console.log(allContacts);
+     const [allContacts, setAllContacts] = useState([]);
+     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
+     const [selectContactForReply, setSelectContactForReply] = useState([]);
+
      const tableHead = [
           {
                id: "1",
@@ -47,6 +50,30 @@ const AllContactsTable = ({ replyToMessage, editContact, actions }) => {
      const dateObject = new Date();
      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
      let currentDate = dateObject.getDate().toString() + " / " + months[(dateObject.getUTCMonth())] + " / " + dateObject.getFullYear().toString();
+
+     const getAllContacts = async () => {
+          try {
+               const apiResponse = await fetch(`${authInformation?.baseURL}/users`, {
+                    method: "GET",
+                    headers: {
+                         "Authorization": authInformation?.token
+                    },
+               });
+               const result = await apiResponse.json();
+               setAllContacts(result);
+               console.log(result);
+          } catch (error) {
+               console.log(error);
+          }
+     }
+
+     const dispatch = useDispatch();
+
+     useEffect(() => {
+          getAllContacts();
+     }, []);
+
+     const selectedContact = useSelector((state) => state?.selectedContact);
 
      return (
           <div className='flex w-full flex-col space-y-5'>
@@ -111,7 +138,7 @@ const AllContactsTable = ({ replyToMessage, editContact, actions }) => {
 
                               <tbody>
                                    {
-                                        allContacts?.map((contact) => (
+                                        allContacts?.users?.map((contact) => (
                                              <tr key={contact?.id}>
 
                                                   {/* First Checkbox */}
@@ -187,7 +214,11 @@ const AllContactsTable = ({ replyToMessage, editContact, actions }) => {
                                                        <div className="flex flex-row items-center justify-between gap-x-2">
 
                                                             {/* Pressed on this icons and a dialog for replay would open */}
-                                                            <button onClick={replyToMessage} className='cursor-pointer p-2 rounded-full hover:text-green-400 text-gray-500 hover:bg-gray-100 transition-all'>
+                                                            <button onClick={() => {
+                                                                 replyToMessage;
+                                                                 dispatch(changeSelectedContact(contact))
+                                                                 navigate(`/chat-history`);
+                                                            }} className='cursor-pointer p-2 rounded-full hover:text-green-400 text-gray-500 hover:bg-gray-100 transition-all'>
                                                                  <LuMessageSquareMore size={18} />
                                                             </button>
                                                             {/* Pressed on this Icon and a dialog for editing a contact would open */}

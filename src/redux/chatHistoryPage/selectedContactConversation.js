@@ -9,7 +9,7 @@ const selectedContactConversation = createSlice({
     initialState: initialState,
     reducers: {
         changeSelectedContact: (state, action) => {
-            state.selectedContact = action?.payload;
+            state.selectedContact = action.payload;
         }
     }
 });

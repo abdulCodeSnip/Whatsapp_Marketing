@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
-import { BiUserPlus } from 'react-icons/bi';
-import { BsExclamationCircle } from 'react-icons/bs';
+import React, { useEffect, useState } from 'react'
+import { BiCheck, BiUserPlus } from 'react-icons/bi';
+import { BsExclamationCircle, BsExclamationCircleFill } from 'react-icons/bs';
 import { CgClose, CgUserAdd } from 'react-icons/cg';
 import { FaRegNewspaper } from 'react-icons/fa';
 import { IoNewspaperOutline } from 'react-icons/io5';
@@ -11,6 +11,7 @@ import { addingSelectedContacts, allContacts, removeSelectedContacts } from '../
 import CustomToggle from './CustomToggle';
 import ScheduleMessage from './ScheduleMessage';
 import { scheduleMessage } from '../../redux/sendNewMessage/sendMessage';
+import { errorOrSuccessMessage } from '../../redux/sendNewMessage/errorMessage';
 
 const AddRecipentsToMessage = () => {
 
@@ -19,9 +20,8 @@ const AddRecipentsToMessage = () => {
 
     // Values from Redux to manange everything globally
     const auth = useSelector((state) => state?.auth?.authInformation);
-    const contactsFromAPI = useSelector((state) => state?.allContacts?.allContacts);
     const addedAndSelectedContacts = useSelector((state) => state.allContacts?.selectedContacts);
-    const scheduledMessage = useSelector((state) => state?.messageContent?.message);
+    const errorOrSuccessMsg = useSelector((state) => state?.errorOrSuccessMessage?.errorMessage);
 
 
     const dispatch = useDispatch();
@@ -43,7 +43,9 @@ const AddRecipentsToMessage = () => {
             console.log("Something went wrong at the backend " + error.message);
         }
     }
-    fetchUsersFromAPI();
+    useEffect(() => {
+        fetchUsersFromAPI();
+    }, [])
 
     const removeSelectedContactFromList = (contact) => {
         dispatch(removeSelectedContacts(contact));
@@ -59,6 +61,26 @@ const AddRecipentsToMessage = () => {
                     </h2>
                 </div>
 
+                {
+                    errorOrSuccessMsg?.message && (
+                        <div className={`${errorOrSuccessMsg?.type === "Success" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"} px-5 flex flex-row items-center gap-3 py-3 font-medium rounded-2xl text-xs shadow-xl z-40 fixed top-12 right-12 `}>
+                            {
+                                errorOrSuccessMsg?.type === "Error" ?
+                                    <div className='p-[2px] rounded-full border border-red-600'>
+                                        <BsExclamationCircleFill size={18} />
+                                    </div> :
+                                    <div className='p-[2px] rounded-full border border-green-600'>
+                                        <BiCheck size={18} />
+                                    </div>
+                            }
+                            {
+                                errorOrSuccessMsg?.message
+                            }
+                            <div>
+                            </div>
+                        </div>
+                    )
+                }
                 {
                     addedAndSelectedContacts && (
                         <div className='flex flex-row items-center gap-x-3'>

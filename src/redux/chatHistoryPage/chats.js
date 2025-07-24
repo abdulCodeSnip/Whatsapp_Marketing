@@ -4,6 +4,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
     chats: [],
     messageText: "",
+    allChats: [],
 };
 
 
@@ -12,15 +13,18 @@ const chatHistory = createSlice({
     initialState: initialState,
     reducers: {
         dynamicChats: (state, action) => {
-            state.chats = action.payload;
+            state.chats.push(action.payload);
         },
         inputChangesForSendingMessage: (state, action) => {
             state.messageText = action.payload;
+        },
+        fetchAllChats: (state, action) => {
+            state.allChats = action.payload;
         }
     },
 
 });
 
-export const { dynamicChats, inputChangesForSendingMessage } = chatHistory.actions;
+export const { dynamicChats, inputChangesForSendingMessage, fetchAllChats } = chatHistory.actions;
 
 export default chatHistory.reducer;

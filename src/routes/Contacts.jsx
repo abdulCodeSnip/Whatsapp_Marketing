@@ -7,7 +7,7 @@ import { FiUpload } from "react-icons/fi";
 import { RiGroupLine } from "react-icons/ri";
 import ContactGroupCard from "../Components/ContactsManagementPage/ContactGroupCard";
 import AllContactsTable from "../Components/ContactsManagementPage/AllContactsTable";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AddContactsDialog from "../Components/ContactsManagementPage/AddContactsDialog";
 import { CgClose } from "react-icons/cg";
 import ImportContactsDialog from "../Components/ContactsManagementPage/ImportContactsDialog";
@@ -26,7 +26,8 @@ const Contacts = () => {
      const [isGroupCreated, setIsGroupCreated] = useState(false);
      const [editContact, setEditContact] = useState(false);
      const [replyToMessage, setReplyToMessage] = useState(false);
-     const users = useSelector((state) => state?.allContacts?.allContacts);
+     const [allContacts, setAllContacts] = useState([]);
+     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
 
 
      const addNewContact = async () => {
@@ -44,6 +45,26 @@ const Contacts = () => {
                console.log(error.message);
           }
      }
+
+
+     const getAllContacts = async () => {
+          try {
+               const apiResponse = await fetch(`${authInformation?.baseURL}/users`, {
+                    method: "GET",
+                    headers: {
+                         "Authorization": authInformation?.token
+                    },
+               });
+               const result = await apiResponse.json();
+               setAllContacts(result);
+          } catch (error) {
+               console.log(error);
+          }
+     }
+
+     useEffect(() => {
+          getAllContacts();
+     }, [])
 
 
      return (
@@ -115,10 +136,9 @@ const Contacts = () => {
                               </div>
 
                               <div className="flex flex-row gap-x-4 justify-between mt-5">
-                                   <div className="flex flex-col flex-1/3">
-                                        <ContactGroupCard />
+                                   <div>
+                                        <h2>Contacts {allContacts?.users?.length}</h2>
                                    </div>
-
                                    {/* All contacts would be fetched through this div */}
                                    <div className="w-full flex-col">
                                         <AllContactsTable editContact={() => setEditContact(true)} replyToMessage={() => setReplyToMessage(true)} />

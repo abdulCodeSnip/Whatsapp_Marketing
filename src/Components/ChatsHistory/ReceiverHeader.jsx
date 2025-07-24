@@ -21,7 +21,6 @@ const ReceiverHeader = () => {
             const result = await apiResponse.json();
             if (apiResponse?.ok && apiResponse?.status === 200) {
                 setUserDetail(result);
-                console.log(result);
             }
         } catch (error) {
             console.log("Something is wrong with your request", error);

@@ -34,6 +34,7 @@ import selectedFile from "./importContactsCSV/importCSV";
 // chat history
 import selectedContact from "./chatHistoryPage/selectedContactConversation";
 import dynamicChats from "./chatHistoryPage/chats";
+import errorOrSuccessMessage from "./sendNewMessage/errorMessage";
 
 export const store = configureStore({
      reducer: {
@@ -79,6 +80,9 @@ export const store = configureStore({
           allMedia: attachments,
           // message to preview data for sending new message
           messageContent: messageContent,
+          // error message for fields
+          errorOrSuccessMessage: errorOrSuccessMessage,
+
 
           // login user, so, user can move to every page with a profile and integrity
           loginUser: loginUser,
@@ -95,5 +99,6 @@ export const store = configureStore({
 
           // dynamic user chats based on the conversation
           dynamicChats: dynamicChats,
+          // selected user to repla
      }
 })

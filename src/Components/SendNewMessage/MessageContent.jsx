@@ -1,5 +1,5 @@
 import { template } from 'lodash';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { FaListUl } from 'react-icons/fa';
 import { GoBold } from 'react-icons/go';
 import { IoNewspaperOutline } from 'react-icons/io5'
@@ -15,6 +15,7 @@ const MessageContent = () => {
     const [templates, setTemplates] = useState([]);
     const authInformation = useSelector((state) => state?.auth?.authInformation);
     const messageContent = useSelector((state) => state?.messageContent?.content);
+
     const dispatch = useDispatch();
 
     const [textareaLength, setTextAreaLength] = useState("");
@@ -34,7 +35,9 @@ const MessageContent = () => {
         }
     }
 
-    getAllTemplates();
+    useEffect(() => {
+        getAllTemplates();
+    }, [])
 
 
     return (

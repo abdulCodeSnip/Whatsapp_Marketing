@@ -5,15 +5,14 @@ import { IoIosLink } from 'react-icons/io'
 import { LuSend } from 'react-icons/lu'
 import { MdEmojiEmotions, MdOutlineEmojiEmotions } from 'react-icons/md'
 import { useDispatch, useSelector } from 'react-redux'
-import { inputChangesForSendingMessage } from '../../redux/chatHistoryPage/chats'
+import { dynamicChats, inputChangesForSendingMessage } from '../../redux/chatHistoryPage/chats'
 
 const ChatFooter = () => {
 
     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
-    const selectedUser = useSelector((state) => state?.selectedContact);
+    const currentUserToConversate = useSelector((state) => state?.selectedContact?.selectedContact);
     const messageFromStore = useSelector((state) => state?.dynamicChats?.messageText);
     const dispatch = useDispatch();
-    console.log(selectedUser);
 
     const [message, setMessage] = useState("");
 
@@ -30,18 +29,8 @@ const ChatFooter = () => {
 
             const result = await apiResponse.json();
             if (apiResponse.ok) {
-                console.log("Sent!", result);
-
-                // ✅ Only now update chat in Redux
-                dispatch(dynamicChats({
-                    content: message,
-                    from: "me",
-                    updated_at: new Date().toISOString(),
-                    scheduled_at: null,
-                    status: "sent"
-                }));
-
-                setMessage(""); // clear input after sending
+                dispatch(dynamicChats(result?.data))
+                setMessage("");
             } else {
                 console.log("Bad request.");
             }
@@ -49,6 +38,8 @@ const ChatFooter = () => {
             console.log("Error:", error);
         }
     };
+
+
 
 
     return (
@@ -63,11 +54,10 @@ const ChatFooter = () => {
                 <div className='w-full'>
                     <input type="text" value={message} onChange={(e) => {
                         setMessage(e.target.value);
-
                     }} placeholder='Type a message....' className='px-3 py-2 rounded-xl border border-gray-200 outline-green-500 w-full' />
                 </div>
                 <button disabled={message.trim() === ""} onClick={() => {
-                    sendMessageToCurrentUser(selectedUser?.id);
+                    sendMessageToCurrentUser(currentUserToConversate?.id);
                     setMessage("");
                     dispatch(inputChangesForSendingMessage(message))
                 }
