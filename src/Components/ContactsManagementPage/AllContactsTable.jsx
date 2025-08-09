@@ -53,7 +53,7 @@ const AllContactsTable = ({ replyToMessage, editContact, actions }) => {
 
      const getAllContacts = async () => {
           try {
-               const apiResponse = await fetch(`${authInformation?.baseURL}/users`, {
+               const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/users`, {
                     method: "GET",
                     headers: {
                          "Authorization": authInformation?.token
@@ -61,7 +61,6 @@ const AllContactsTable = ({ replyToMessage, editContact, actions }) => {
                });
                const result = await apiResponse.json();
                setAllContacts(result);
-               console.log(result);
           } catch (error) {
                console.log(error);
           }
@@ -72,9 +71,6 @@ const AllContactsTable = ({ replyToMessage, editContact, actions }) => {
      useEffect(() => {
           getAllContacts();
      }, []);
-
-     const selectedContact = useSelector((state) => state?.selectedContact);
-
      return (
           <div className='flex w-full flex-col space-y-5'>
                {/* Bulk Buttons for sorting and searching through contacts */}

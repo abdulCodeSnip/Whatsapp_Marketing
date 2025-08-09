@@ -18,7 +18,7 @@ const WhatsappConnectionSetting = () => {
 
     const getWhatsappAPIConfiguration = async () => {
         try {
-            const apiResponse = await fetch(`${authInformation?.baseURL}/whatsapp/config?userId=13`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/whatsapp/config?userId=13`, {
                 method: "GET",
                 headers: {
                     "Authorization": authInformation?.token

@@ -40,7 +40,7 @@ const ScheduleMessage = () => {
 
     const fetchAllContacts = async () => {
         try {
-            const apiResponse = await fetch(`${authInformation?.baseURL}/users`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/users`, {
                 method: "GET",
                 headers: {
                     "Authorization": authInformation?.token
@@ -60,7 +60,7 @@ const ScheduleMessage = () => {
 
         const promises = selectedContacts?.map(async (selected) => {
             try {
-                const apiResponse = await fetch(`${authInformation?.baseURL}/messages/schedule`, {
+                const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/schedule`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -93,7 +93,7 @@ const ScheduleMessage = () => {
             customer_name: contact?.first_name + " " + contact?.last_name
         }))
         try {
-            const apiResponse = await fetch(`${authInformation?.baseURL}/messages/send-bulk`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/send-bulk`, {
                 method: "POST",
                 headers: {
                     "Authorization": authInformation?.token,

@@ -5,8 +5,6 @@ import AddRecipentsToMessage from '../Components/SendNewMessage/AddRecipentsToMe
 
 const SendNewMessage = () => {
 
-    const [users, setUsers] = useState([]);
-
     // fetch users from API
 
 

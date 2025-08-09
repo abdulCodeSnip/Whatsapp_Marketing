@@ -20,7 +20,7 @@ const SelectRecipientsDialog = ({ closeDialog }) => {
         const allContactsFromAPI = async () => {
 
             try {
-                const apiResponse = await fetch(`${authInformation?.baseURL}/users`, {
+                const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/users`, {
                     method: "GET",
                     headers: {
                         "Authorization": authInformation?.token
@@ -39,8 +39,6 @@ const SelectRecipientsDialog = ({ closeDialog }) => {
     const handlingMultipleButtons = (e) => {
         setActiveButton(e?.target?.textContent);
     }
-
-    console.log(addingContactsToStore);
 
 
     const handleSelectedContacts = (contact) => {

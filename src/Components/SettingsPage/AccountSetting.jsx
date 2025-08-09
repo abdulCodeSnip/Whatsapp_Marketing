@@ -24,7 +24,7 @@ const AccountSetting = () => {
     })
     const getUserDetail = async () => {
         try {
-            const apiResponse = await fetch(`${authInformation?.baseURL}/users/${user?.id}`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/${user?.id}`, {
                 method: "GET",
                 headers: {
                     "Authorization": authInformation?.token
@@ -50,7 +50,7 @@ const AccountSetting = () => {
 
     const changePassword = async () => {
         try {
-            const apiResponse = await fetch(`${authInformation?.baseURL}/users/${user?.id}/change-password`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/${user?.id}/change-password`, {
                 method: "POST",
                 headers: {
                     "Authorization": Cookies.get("jwtToken"),
@@ -68,7 +68,7 @@ const AccountSetting = () => {
     const updateDynamicUser = async () => {
         setIsLoading(true);
         try {
-            const apiResponse = await fetch(`${authInformation?.baseURL}/users/${id}`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/${id}`, {
                 method: "PUT",
                 headers: {
                     "Authorization": authInformation?.token,

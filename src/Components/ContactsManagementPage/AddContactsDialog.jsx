@@ -1,24 +1,53 @@
-import React, { useState } from 'react'
+import React, { use, useState } from 'react'
 import { CgClose } from 'react-icons/cg'
 import { useDispatch, useSelector } from 'react-redux';
-import { addContact } from '../../redux/contactsPage/addContacts';
+import { addNewContactToDB } from '../../redux/contactsPage/addContacts';
+import { changingErrorMessageOnSuccess } from '../../redux/contactsPage/errorMessage';
 
 const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
 
-     const [apiResult, setApiResult] = useState(null);
      const dispatch = useDispatch();
 
      const [userContactData, setUserContactData] = useState({
-          contactName: "",
-          contactPhone: "",
+          first_name: "",
+          last_name: "",
           countryCode: "",
-          contactEmail: "",
-          contactTag: "",
-          contactAdditionalNotes: "",
-          contactGroup: "",
+          phone: "",
+          email: "",
+          role: "user",
      });
+     const registerNewUser = async () => {
+          try {
+               const apiResponse = await fetch(`http://whatsapp-app-api.servicsters.com/auth/register`, {
+                    method: "POST",
+                    headers: {
+                         "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                         first_name: userContactData.first_name,
+                         last_name: userContactData?.last_name,
+                         email: userContactData?.email,
+                         phone: userContactData.phone,
+                         password: userContactData?.password || "passowrd",
+                         role: userContactData?.role || "user",
+                    })
+               });
 
-     const contacts = useSelector((state) => state?.contacts);
+               const result = await apiResponse.json();
+               console.log(result?.message);
+               if (apiResponse.ok) {
+                    const message = { content: "Contact added successfully!", type: "Success" }
+                    dispatch(changingErrorMessageOnSuccess(message))
+               } else if (apiResponse.status === 400) {
+                    const message = { content: "Contact already exists", type: "Error" };
+                    dispatch(changingErrorMessageOnSuccess(message));
+               }
+
+          } catch (error) {
+               console.log("Error: ", error.message);
+          }
+     }
+
 
      return (
           <div className='space-y-2 divide-y divide-gray-300'>
@@ -32,15 +61,26 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
                </div>
 
                <div className='px-5 py-2 space-y-2'>
+                    {/* First Name of Contact */}
                     <div>
                          {/* Input for Contact Name */}
-                         <label htmlFor="contactName" className='block tracking-wide font-medium text-sm text-gray-800'>
-                              Full Name
+                         <label htmlFor="first_name" className='block tracking-wide font-medium text-sm text-gray-800'>
+                              First Name
                               <span className='text-red-600 font-medium ml-1 text-base'>*</span>
                          </label>
-                         <input type="text" value={userContactData.contactName} onChange={(e) => setUserContactData({ ...userContactData, contactName: e.target.value })} id="contactName" placeholder='Enter contact name' className='border border-gray-300 rounded-xl w-full px-3 py-2 outline-green-500 mb-2 mt-1' />
+                         <input type="text" name="first_name" value={userContactData.first_name} onChange={(e) => setUserContactData({ ...userContactData, first_name: e.target.value })} id="first_name" placeholder='Enter contact name' className='border border-gray-300 rounded-xl w-full px-3 py-2 outline-green-500 mb-2 mt-1' />
                     </div>
 
+                    {/* Last Name of contactt  */}
+                    <div>
+                         <label htmlFor="last_name" className='block tracking-wide font-medium text-sm text-gray-800'>
+                              Last Name
+                              <span className='text-red-600 font-medium ml-1 text-base'>*</span>
+                         </label>
+                         <input type="text" value={userContactData.last_name} onChange={(e) => setUserContactData({ ...userContactData, last_name: e.target.value })} id="last_name" name='last_name' placeholder='Enter contact name' className='border border-gray-300 rounded-xl w-full px-3 py-2 outline-green-500 mb-2 mt-1' />
+                    </div>
+
+                    {/* Phone Number with Country Code */}
                     <div className='mt-2'>
                          {/* Input for contact Phone Number */}
                          <label
@@ -53,6 +93,7 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
                               <select id="countryCode"
                                    name="countryCode"
                                    value={userContactData.countryCode}
+                                   required
                                    onChange={(e) => setUserContactData({ ...userContactData, countryCode: e.target.value })}
                                    className='border border-gray-300 rounded-l-xl px-3 py-2 cursor-pointer text-sm font-medium text-gray-800 outline-green-500'>
                                    <option value="">Code</option>
@@ -66,9 +107,9 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
                               <input
                                    type="tel"
                                    id="contactPhone"
-                                   value={userContactData.contactPhone}
+                                   value={userContactData.phone}
                                    onChange={(e) =>
-                                        setUserContactData({ ...userContactData, contactPhone: e.target.value })}
+                                        setUserContactData({ ...userContactData, phone: e.target.value })}
                                    placeholder='Phone number'
                                    className='border border-gray-300 outline-green-500 rounded-r-xl w-full px-3 py-2' />
                          </div>
@@ -77,6 +118,7 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
                          </div>
                     </div>
 
+                    {/* User Email */}
                     <div className='my-3'>
                          <label htmlFor='contactEmail' className='text-gray-800 text-sm font-medium block tracking-wide'>
                               Email (Optional)
@@ -84,13 +126,14 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
                          <input
                               type="email"
                               id='contactEmail'
-                              value={userContactData.contactEmail}
-                              onChange={(e) => setUserContactData({ ...userContactData, contactEmail: e.target.value })}
+                              value={userContactData.email}
+                              onChange={(e) => setUserContactData({ ...userContactData, email: e.target.value })}
                               name='contactEmail'
                               placeholder='Enter email address'
                               className='border border-gray-300 outline-green-500 rounded-xl w-full px-3 py-2 my-1' />
                     </div>
 
+                    {/* User Tags such as Customer, marketing and anything else */}
                     <div>
                          <h2 className='text-sm font-medium text-gray-600 block'>Tags</h2>
                          <div className='flex flex-row items-center gap-x-2'>
@@ -98,50 +141,25 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
                                    <h2>Customer</h2>
                                    <button className='cursor-pointer'><CgClose size={13} /></button>
                               </div>
-                              <div>
-                                   <button className='bg-gray-50 p-1 rounded-full border-[0.5px] border-gray-400 text-gray-600 font-medium text-[10px] cursor-pointer'>+Add Tag</button>
-                              </div>
                          </div>
                     </div>
 
-                    <div>
-                         <label htmlFor="addToGroup" className='text-sm font-medium text-gray-600 block'>Add to Group (Optional)</label>
-                         <select name="addToGroup" id="addToGroup" value={userContactData.contactGroup} onChange={(e) => setUserContactData({ ...userContactData, contactGroup: e.target.value })} className='text-sm cursor-pointer text-gray-700 font-medium rounded-xl border my-1 border-gray-200 p-2'>
-                              <option className='p-2 text-sm font-medium text-gray-600 cursor-pointer' value="">Select a Group (optional)</option>
-                              <option className='p-2 text-sm font-medium text-gray-600 cursor-pointer' value="customers">Customers</option>
-                              <option className='p-2 text-sm font-medium text-gray-600 cursor-pointer' value="prospect">Prospect</option>
-                              <option className='p-2 text-sm font-medium text-gray-600 cursor-pointer' value="supporTeam">Support Team</option>
-                              <option className='p-2 text-sm font-medium text-gray-600 cursor-pointer' value="markingList">Marketing List</option>
-                         </select>
-                    </div>
-
-                    <div>
-                         <label htmlFor="additionalNotes" className='text-sm font-medium text-gray-800 block tracking-wide'>Notes (Optional)</label>
-                         <textarea name="additionalNotes" value={userContactData.contactAdditionalNotes} onChange={(e) => setUserContactData({ ...userContactData, contactAdditionalNotes: e.target.value })} id="additionalNotes" placeholder='Add any notes about this contact' className='border-1 border-dashed border-gray-300 w-full rounded-xl px-3 py-2 text-sm mt-2' />
-                    </div>
-
+                    {/* Button to submit Contact */}
                     <div className='flex flex-row items-end justify-end'>
                          <button
-                              disabled={userContactData.contactName === "" || userContactData.contactPhone === ""}
+                              disabled={userContactData.name === "" || userContactData.phone === ""}
                               onClick={() => {
                                    saveContact();
-                                   dispatch(addContact({
-                                        firstname: userContactData.contactName?.split(" ").at(0),
-                                        lastname: userContactData.contactName.split(" ").at(1),
-                                        email: userContactData.contactEmail,
-                                        phone: userContactData.countryCode + userContactData.contactPhone,
-                                        group: userContactData.contactGroup,
-                                        role: "user",
-                                        notes: userContactData.contactAdditionalNotes
-                                   }));
-                                   console.log(contacts?.contacts);
+                                   dispatch(addNewContactToDB(userContactData));
+                                   closeDialog();
+                                   registerNewUser();
                               }}
                               className='bg-green-500 text-white cursor-pointer disabled:cursor-auto font-medium text-sm tracking-wide px-3 py-2 rounded-lg shadow-md disabled:opacity-85'>
                               <span>Save Contact</span>
                          </button>
                     </div>
                </div>
-          </div>
+          </div >
      )
 }
 

@@ -1,7 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-    contacts: []
+    contacts: [],
+    newContactData: [],
 };
 
 const addContactSlice = createSlice({
@@ -29,6 +30,9 @@ const addContactSlice = createSlice({
         // Clear all contacts
         clearAllContacts: (state) => {
             state.contacts = [];
+        },
+        addNewContactToDB: (state, action) => {
+            state.newContactData = action.payload;
         }
     }
 });
@@ -37,7 +41,8 @@ export const {
     addContact,
     addMultipleContacts,
     removeContact,
-    clearAllContacts
+    clearAllContacts,
+    addNewContactToDB,
 } = addContactSlice.actions;
 
 export default addContactSlice.reducer;

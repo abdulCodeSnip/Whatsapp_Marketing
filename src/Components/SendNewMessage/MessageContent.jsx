@@ -1,8 +1,6 @@
-import { template } from 'lodash';
 import React, { useEffect, useState } from 'react'
 import { FaListUl } from 'react-icons/fa';
 import { GoBold } from 'react-icons/go';
-import { IoNewspaperOutline } from 'react-icons/io5'
 import { MdOutlineEmojiEmotions, MdOutlineFormatListNumbered, MdOutlineFormatUnderlined } from 'react-icons/md';
 import { RiItalic, RiLink } from 'react-icons/ri';
 import { useDispatch, useSelector } from 'react-redux';
@@ -20,9 +18,10 @@ const MessageContent = () => {
 
     const [textareaLength, setTextAreaLength] = useState("");
 
+    // Fetch all templates existing in database
     const getAllTemplates = async () => {
         try {
-            const apiResponse = await fetch(`${authInformation[0].baseURL}/templates`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/templates`, {
                 method: "GET",
                 headers: {
                     "Authorization": authInformation[0].token

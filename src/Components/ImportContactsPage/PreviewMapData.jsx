@@ -22,7 +22,7 @@ const PreviewMapData = ({ moveBackward, moveForward }) => {
         try {
             const formData = new FormData();
             formData.append("file", selectedFile[0]);
-            const apiResponse = await fetch(`${authInformation?.baseURL}/contacts/import-csv`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/contacts/import-csv`, {
                 method: "POST",
                 headers: {
                     "Authorization": authInformation?.token,

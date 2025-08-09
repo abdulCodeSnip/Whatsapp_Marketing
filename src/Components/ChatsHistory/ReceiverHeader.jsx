@@ -12,7 +12,7 @@ const ReceiverHeader = () => {
 
     const getUserDetail = async () => {
         try {
-            const apiResponse = await fetch(`${authInformation?.baseURL}/users/${selectedContact?.id}`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/${selectedContact?.id}`, {
                 method: "GET",
                 headers: {
                     "Authorization": authInformation?.token,

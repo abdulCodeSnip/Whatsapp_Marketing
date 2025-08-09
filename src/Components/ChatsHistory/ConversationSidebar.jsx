@@ -32,7 +32,7 @@ const ConversationSidebar = () => {
 
     const getChatHistoryOfCurrenUser = async () => {
         try {
-            const apiResponse = await fetch(`${authInformation?.baseURL}/messages/history/${currentUserToConversate?.id}`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/history/${currentUserToConversate?.id}`, {
                 method: "GET",
                 headers: {
                     "Authorization": authInformation?.token,

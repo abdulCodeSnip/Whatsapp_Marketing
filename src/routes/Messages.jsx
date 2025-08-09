@@ -46,13 +46,8 @@ const Messages = () => {
      const [showForwardMessageDialog, setShowForwardMessageDialog] = useState(false);
      const [showFAQs, setShowFAQs] = useState(false);
      const [showNotifications, setShowNotifications] = useState(false);
-     const [changeFAQsSearchInput, setChangeFAQsSearchInput] = useState("");
 
      const [checkAllCheckBoxes, setCheckAllCheckBoxes] = useState(false);
-
-
-
-
      const authInformation = useSelector((state) => state?.auth?.authInformation.at(0));
      const [currenUserDetail, setCurrentUserDetail] = useState([]);
      const [recentMessages, setRecentMessages] = useState([]);
@@ -60,7 +55,7 @@ const Messages = () => {
 
      const fetchAllMessages = async () => {
           try {
-               const apiResponse = await fetch(`${authInformation?.baseURL}/messages/history/12`, {
+               const apiResponse = await fetch(`${import.meta?.env?.VITE_API_URL}/messages/`, {
                     method: "GET",
                     headers: {
                          "Authorization": authInformation?.token
@@ -71,18 +66,16 @@ const Messages = () => {
                if (apiResponse.ok) {
                     setRecentMessages(result);
                     console.log(result);
-               } else {
-                    console.log("You're missing something");
                }
           } catch (error) {
                console.log("Something is wrong !", error);
           }
      }
 
-     const id = recentMessages?.receiver?.id || 12;
+     const id = recentMessages?.receiver?.id;
      const getUserDetail = async () => {
           try {
-               const apiResponse = await fetch(`${authInformation?.baseURL}/users/${id}`, {
+               const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/${id}`, {
                     method: "GET",
                     headers: {
                          "Authorization": authInformation?.token,
@@ -192,62 +185,6 @@ const Messages = () => {
 
      return (
           <>
-
-               {/* Custom Notification Bar if notification icons is pressed */}
-               {
-                    showNotifications && (
-                         <div className="fixed top-15 right-10 w-[350px] divide-y space-y-2 divide-gray-200 bg-white border border-gray-300 rounded-2xl shadow-lg z-50">
-                              <div className="flex flex-row items-center justify-between p-4">
-                                   <div>
-                                        <h2 className="font-medium">Notifications</h2>
-                                   </div>
-                                   <div>
-                                        <button
-                                             className="text-green-500 text-xs">
-                                             Mark all as read
-                                        </button>
-                                   </div>
-                              </div>
-                              <NotificationCustomCard
-                                   title={"Your Appointment"}
-                                   time={"2min ago"}
-                                   footer={"Your Appointment has been confirmed with our HR"} />
-
-                              <NotificationCustomCard
-                                   title={"Your Appointment"}
-                                   time={"2min ago"}
-                                   footer={"Your Appointment has been confirmed with our HR"} />
-
-                              <NotificationCustomCard
-                                   title={"Your Appointment"}
-                                   time={"2min ago"}
-                                   footer={"Your Appointment has been confirmed with our HR"} />
-
-                              {/* Link to show All notifications */}
-                              <Link to={"#"}
-                                   className="flex flex-row gap-x-2 p-3 text-green-500 items-center justify-center">
-                                   <div>
-                                        <h2 className="text-sm font-medium">View all notifications</h2>
-                                   </div>
-                                   <div>
-                                        <FaArrowRight size={13} />
-                                   </div>
-                              </Link>
-                         </div>
-                    )}
-
-               {/* Custom FAQs bar if the FAQs Icons is pressed */}
-
-               {
-                    showFAQs && (
-                         <FAQsCard
-                              setChangeFAQsSearchInput={setChangeFAQsSearchInput}
-                              closeFAQs={() => setShowFAQs(false)}
-                              changeFAQsSearchInput={changeFAQsSearchInput}
-                         />
-                    )
-               }
-
                <div className="flex overflow-hidden h-screen relative">
                     {/* Sidebar at left side, having navigation to different routes*/}
                     <SideBar />

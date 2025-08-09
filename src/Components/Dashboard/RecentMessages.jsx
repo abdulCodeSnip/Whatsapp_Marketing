@@ -13,7 +13,7 @@ const RecentMessages = () => {
 
     const fetchAllMessages = async () => {
         try {
-            const apiResponse = await fetch(`${authInformation?.baseURL}/messages/history/12`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/history`, {
                 method: "GET",
                 headers: {
                     "Authorization": authInformation?.token
@@ -24,11 +24,9 @@ const RecentMessages = () => {
             if (apiResponse.ok) {
                 setRecentMessages(result);
                 console.log(result);
-            } else {
-                console.log("You're missing something");
             }
         } catch (error) {
-            console.log("Something is wrong !", error);
+
         }
     }
 

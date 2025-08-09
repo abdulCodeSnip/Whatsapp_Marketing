@@ -6,7 +6,7 @@ const initialState = {
 
     authInformation: [
         {
-            baseURL: "http://localhost:3000",
+            baseURL: "http://whatsapp-app-api.servicsters.com/",
             token: "Bearer " + token
         }
     ]

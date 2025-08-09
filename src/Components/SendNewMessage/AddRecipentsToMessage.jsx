@@ -28,7 +28,7 @@ const AddRecipentsToMessage = () => {
 
     const fetchUsersFromAPI = async () => {
         try {
-            const apiResponse = await fetch(`${auth?.at(0)?.baseURL}/contacts`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/contacts`, {
                 method: "GET",
                 headers: {
                     "Authorization": auth?.at(0)?.token

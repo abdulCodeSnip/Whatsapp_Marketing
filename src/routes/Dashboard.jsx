@@ -1,19 +1,16 @@
 import React, { useEffect, useState } from 'react'
-import { MdOutlineDashboard, MdArticle } from "react-icons/md";
-import { RiMessage2Line, RiContactsBookLine, RiCheckDoubleLine, RiSendPlaneLine } from "react-icons/ri";
-import { IoNewspaperOutline, IoSettingsOutline, IoClose } from "react-icons/io5";
-import { FaHistory, FaSearch, FaUserFriends } from "react-icons/fa";
-import { CiSearch } from "react-icons/ci";
-import { BsQuestionCircle, BsFileEarmarkPlus } from "react-icons/bs";
-import { LuBellRing, LuNewspaper } from "react-icons/lu";
-import { FiUser } from "react-icons/fi";
+import dotenv from "dotenv";
+import { RiMessage2Line, RiCheckDoubleLine, RiSendPlaneLine } from "react-icons/ri";
+import { IoClose } from "react-icons/io5";
+import { FaUserFriends } from "react-icons/fa";
+import { BsFileEarmarkPlus } from "react-icons/bs";
+import { LuNewspaper } from "react-icons/lu";
 import { TbUserPlus } from "react-icons/tb";
 import { FaArrowRight } from "react-icons/fa6";
-import { Link, useLocation } from 'react-router-dom';
+import { Link, } from 'react-router-dom';
 import CustomInput from '../Components/customInput';
 import DashboardCard from '../Components/dashboardCard';
 import CustomLinkButton from '../Components/customLinkButton';
-import MessageCard from '../Components/messageCard';
 import CampaignCard from '../Components/campaignCard';
 import CustomButton from '../Components/customButton';
 import NotificationCustomCard from '../Components/notificationCustomCard';
@@ -25,13 +22,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addTemplates } from '../redux/templatePage/allTemplates';
 import RecentMessages from '../Components/Dashboard/RecentMessages';
 import { allContacts } from '../redux/contactsPage/contactsFromAPI';
+import Cookies from 'js-cookie';
 
 const Dashboard = () => {
      const [showFAQs, setShowFAQs] = useState(false);
      const [showNotifications, setShowNotifications] = useState(false);
      const [changeFAQsSearchInput, setChangeFAQsSearchInput] = useState("");
+     const [user, setUser] = useState([]);
      const allUsers = useSelector((state) => state.allContacts?.allContacts?.at(0));
-     console.log(allUsers);
 
      // Values from Redux
      const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
@@ -58,7 +56,7 @@ const Dashboard = () => {
           try {
                const updatedData = await Promise.all(
                     completeData.map(async (item) => {
-                         const response = await fetch(`${authInformation?.baseURL}${item.apiRoute}`, {
+                         const response = await fetch(`${import.meta.env.VITE_API_URL}${item.apiRoute}`, {
                               method: "GET",
                               headers: {
                                    "Authorization": authInformation?.token,
@@ -84,8 +82,30 @@ const Dashboard = () => {
 
      useEffect(() => {
           fetchAllData();
-     }, [])
+     }, []);
 
+     // Fetch user data such as username, email and password
+     const userData = async () => {
+          try {
+               const apiResponse = await fetch(`${import.meta.VITE_API_URL}/auth/login`, {
+                    method: "POST",
+                    headers: {
+                         "Authorization": authInformation?.token,
+                         "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ email: Cookies.get("email"), password: Cookies.get("password") })
+               });
+               const result = await apiResponse.json();
+               setUser(result);
+               console.log(result);
+          } catch (error) {
+               console.log(error);
+          }
+     }
+
+     useEffect(() => {
+          userData();
+     }, []);
      return (
 
           <>
@@ -231,7 +251,7 @@ const Dashboard = () => {
                                    {/* Welcome message for Admin  */}
                                    <div className="flex flex-col">
                                         <div>
-                                             <h2 className="font-bold text-2xl">Welcome back, John!</h2>
+                                             <h2 className="font-medium text-2xl">Welcome back, {user?.user?.first_name}</h2>
                                         </div>
                                         <div>
                                              <span className="text-gray-500 text-[14.5px]">

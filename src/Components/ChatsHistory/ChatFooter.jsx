@@ -18,7 +18,7 @@ const ChatFooter = () => {
 
     const sendMessageToCurrentUser = async (receiverId) => {
         try {
-            const apiResponse = await fetch(`${authInformation?.baseURL}/messages/send`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/send`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -25,7 +25,7 @@ const DynamicUser = () => {
     // Get a dynamic user from the Database using his ID
     const getDynamicUser = async () => {
         try {
-            const apiResponse = await fetch(`${authInformation?.baseURL}/users/${id}`, {
+            const apiResponse = await fetch(`${import.meta?.env?.VITE_API_URL}/users/${id}`, {
                 method: "GET",
                 headers: {
                     "Authorization": authInformation?.token
@@ -57,6 +57,7 @@ const DynamicUser = () => {
         getDynamicUser();
     }, []);
 
+    // Update a user based on his ID
     const updateDynamicUser = async () => {
         setIsLoading(true);
         try {

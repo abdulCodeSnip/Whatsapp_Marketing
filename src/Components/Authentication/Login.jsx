@@ -8,12 +8,10 @@ import { redirect, useNavigate } from "react-router-dom";
 
 const AuthForm = () => {
 
-    const baseURL = "http://localhost:3000";
+    const baseURL = "http://whatsapp-app-api.servicsters.com/";
     const [isLogin, setIsLogin] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
-    const [apiResult, setApiResult] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [userData, setUserData] = useState([]);
     const [successOrErr, setSuccessOrErr] = useState("");
     const navigate = useNavigate();
 

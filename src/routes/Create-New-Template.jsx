@@ -22,16 +22,11 @@ const CreateNewTemplate = () => {
      const templateName = useSelector((state) => state.templateName.value);
      const variables = useSelector((state) => state?.addVariables?.variables);
      const messageBody = useSelector((state) => state.messageBody.value);
-
-
-     const authInformation = {
-          baseURL: "http://localhost:3000",
-          token: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTgsImVtYWlsIjoiYXEyMEBpY2xvdWQuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzUyOTE4NzY3LCJleHAiOjE3NTMwMDUxNjd9.Hl5czHvBt5XlqNdZ0ImzG2aD6lyWNLsLeNE6b5haBB8"
-     }
-
+     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0))
+     // Create a new Template and store in database
      const createTemplate = async () => {
           try {
-               const apiResponse = await fetch(`${authInformation.baseURL}/templates`, {
+               const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/templates`, {
                     method: "POST",
                     headers: {
                          "Authorization": authInformation.token,
@@ -62,9 +57,9 @@ const CreateNewTemplate = () => {
 
      const formatVariables = (rawVars) => {
           return rawVars.map(v => ({
-               name: v.variableName || v.name || "variable_name",  // depends on your actual Redux format
+               name: v.variableName || v.name || "variable_name",
                default_value: v.variableDefaultValue,
-               is_required: true // or get from `v` if it's dynamic
+               is_required: true
           }));
      };
 

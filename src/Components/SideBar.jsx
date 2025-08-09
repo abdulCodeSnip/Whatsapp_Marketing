@@ -13,9 +13,11 @@ const SideBar = () => {
      const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
      const dispatch = useDispatch();
      const user = useSelector((state) => state?.loginUser?.userLogin);
+
+     // Authenticate user directly based on the email and password
      const authenticateUser = async () => {
           try {
-               const apiResponse = await fetch(`${authInformation?.baseURL}/auth/login`, {
+               const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
                     method: "POST",
                     headers: {
                          "Authorization": authInformation?.token,

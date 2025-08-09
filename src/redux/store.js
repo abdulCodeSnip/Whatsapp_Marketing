@@ -14,6 +14,7 @@ import allTemplates from "./templatePage/allTemplates";
 import contactsReducer from "./contactsPage/addContacts";
 import importedContacts from "./contactsPage/importContacts";
 import allContacts from "./contactsPage/contactsFromAPI";
+import errorMessage from "./contactsPage/errorMessage";
 
 // Authentication such as Token, BaseURL
 import auth from "./authInformation";
@@ -99,6 +100,7 @@ export const store = configureStore({
 
           // dynamic user chats based on the conversation
           dynamicChats: dynamicChats,
-          // selected user to repla
+
+          errorMessage: errorMessage,
      }
 })
