@@ -87,7 +87,7 @@ const Dashboard = () => {
      // Fetch user data such as username, email and password
      const userData = async () => {
           try {
-               const apiResponse = await fetch(`${import.meta.VITE_API_URL}/auth/login`, {
+               const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
                     method: "POST",
                     headers: {
                          "Authorization": authInformation?.token,
@@ -97,7 +97,6 @@ const Dashboard = () => {
                });
                const result = await apiResponse.json();
                setUser(result);
-               console.log(result);
           } catch (error) {
                console.log(error);
           }

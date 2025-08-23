@@ -31,6 +31,9 @@ import FAQsCard from '../Components/FAQsCard';
 import Header from '../Components/ContactsManagementPage/Header';
 import FooterPagination from '../Components/footerPagination';
 import { useSelector } from 'react-redux';
+import AllMessagesTable from '../Components/Messages/AllMessagesTable';
+import useFetchMessages from '../hooks/useFetchMessages';
+import { current } from '@reduxjs/toolkit';
 
 
 const Messages = () => {
@@ -44,83 +47,10 @@ const Messages = () => {
      const [selectedMessageId, setSelectedMessageId] = useState(null);
      const [selectedMessagesIDs, setSelectedMessagesIDs] = useState([]);
      const [showForwardMessageDialog, setShowForwardMessageDialog] = useState(false);
-     const [showFAQs, setShowFAQs] = useState(false);
-     const [showNotifications, setShowNotifications] = useState(false);
 
-     const [checkAllCheckBoxes, setCheckAllCheckBoxes] = useState(false);
-     const authInformation = useSelector((state) => state?.auth?.authInformation.at(0));
-     const [currenUserDetail, setCurrentUserDetail] = useState([]);
-     const [recentMessages, setRecentMessages] = useState([]);
+     const { isLoading, isError, messages, currentUser } = useFetchMessages(20);
 
-
-     const fetchAllMessages = async () => {
-          try {
-               const apiResponse = await fetch(`${import.meta?.env?.VITE_API_URL}/messages/`, {
-                    method: "GET",
-                    headers: {
-                         "Authorization": authInformation?.token
-                    }
-               });
-
-               const result = await apiResponse.json();
-               if (apiResponse.ok) {
-                    setRecentMessages(result);
-                    console.log(result);
-               }
-          } catch (error) {
-               console.log("Something is wrong !", error);
-          }
-     }
-
-     const id = recentMessages?.receiver?.id;
-     const getUserDetail = async () => {
-          try {
-               const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/${id}`, {
-                    method: "GET",
-                    headers: {
-                         "Authorization": authInformation?.token,
-                    },
-               });
-               const result = await apiResponse.json();
-               if (apiResponse?.ok && apiResponse?.status === 200) {
-                    setCurrentUserDetail(result);
-                    console.log(result);
-               }
-          } catch (error) {
-               console.log("Something is wrong with your request", error);
-          }
-     }
-
-     useEffect(() => {
-          fetchAllMessages();
-          getUserDetail();
-     }, [])
-
-     // Function to handle FAQ button just at the right header corner of Dashboard Page
-     const handleShowFAQs = () => {
-          setShowFAQs(!showFAQs);
-          setShowNotifications(false);
-     }
-
-     // Function to Handle Notification Button
-     const handleShowNotifications = () => {
-          setShowFAQs(false);
-          setShowNotifications(!showNotifications);
-     };
-
-     // Custom Messages for checking, later we'll add real time data in our component
-
-     const [userMessages, setUserMessages] = useState(
-          [
-               {
-                    id: 1, message: "This is all about coding, where everything can be done with code, you just know how to do that",
-                    contactName: "Harry Potter",
-                    contactPhoneNumber: "+1 104112 45234 33",
-                    messageDate: "12/04/2025",
-                    messageTimeStamp: "10:56PM",
-                    messageStatus: "Delivered",
-               },
-          ]);
+     const [userMessages, setUserMessages] = useState([]);
 
      //Handling the Date filter
      const handleShowDateFiltering = () => {
@@ -144,7 +74,6 @@ const Messages = () => {
      }
 
      // Show a dialog or custom bar to the user for selecting "cancel" or "delete", after that process this method
-
      // Delete a message by its id, and get others after deleting that specific message
      const handleDeleteMessage = (id) => {
 
@@ -158,17 +87,6 @@ const Messages = () => {
      const handleMessageForwardDialog = () => {
           setShowForwardMessageDialog(true);
      }
-
-     // A function to check if all the checkboxes are checked or not
-
-     const selecteAllCheckBoxes = () => {
-          if (selectedMessagesIDs.length === userMessages.length) {
-               setSelectedMessagesIDs([]);
-          } else {
-               setSelectedMessagesIDs(userMessages.map((msg) => msg.id));
-          }
-     }
-
 
      // Handling each checkbox individually
      const handleCheckBoxIndividually = (id) => {
@@ -301,102 +219,13 @@ const Messages = () => {
                                    {/* All Messages with All actions, such as replying, deleting, and checking */}
                                    <div className='bg-white rounded-xl shadow-sm overflow-hidden my-10'>
                                         <div className='overflow-x-auto'>
-                                             <table className='min-w-full divide-y divide-gray-200'>
-                                                  <thead className='bg-gray-50'>
-                                                       <tr>
-                                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-10">
-                                                                 <input type="checkbox" className="accent-green-600 w-[18px] h-[18px] rounded-xl outline-none border-green-400 cursor-pointer" checked={selectedMessagesIDs.length === userMessages.length} value={checkAllCheckBoxes} onChange={selecteAllCheckBoxes} />
-                                                            </th>
-                                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
-                                                                 Contact
-                                                            </th>
-                                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                                 Message
-                                                            </th>
-                                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
-                                                                 Status
-                                                            </th>
-                                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                                 Date
-                                                            </th>
-                                                            <th scope="col" className="px-6 py-3 text-left text-xs min-w-[120px] font-medium text-gray-500 uppercase tracking-wider w-10">
-                                                                 Actions
-                                                            </th>
-                                                       </tr>
-                                                  </thead>
 
-                                                  <tbody className="bg-white divide-y divide-gray-200 relative">
-
-
-                                                       {
-                                                            userMessages.map(userMsg => (
-                                                                 <>
-                                                                      <FullMessageOverview
-                                                                           contactName={currenUserDetail?.user?.first_name + " " + currenUserDetail?.user?.last_name}
-                                                                           contactPhoneNumber={currenUserDetail?.user?.phone}
-                                                                           messageDate={(recentMessages?.chat?.at(recentMessages?.chat?.length - 1)?.updated_at)?.split("T")?.at(0)}
-                                                                           messageTimeStamp={(recentMessages?.chat?.at(recentMessages?.chat?.length - 1)?.updated_at)?.split("T")?.at(1)?.split(".").at(0)?.slice(0, 5)}
-                                                                           messageStatus={recentMessages?.chat?.at(recentMessages?.chat?.length - 1)?.status}
-                                                                           messageText={recentMessages?.chat?.at(recentMessages?.chat?.length - 10)?.content}
-                                                                           deleteMessage={() => {
-                                                                                setSelectedMessageId(userMsg.id);
-                                                                                setDeleteMessageDialog(true);
-                                                                           }}
-                                                                           forwardMessage={() => handleMessageForwardDialog()}
-                                                                           isAllChecked={selectedMessagesIDs.includes(userMsg.id)}
-                                                                           handleCheckBox={() => handleCheckBoxIndividually(userMsg.id)}
-                                                                      />
-
-                                                                      {/* if Delete Icon is pressed, then this would be on top of everything */}
-
-
-                                                                      {deleteMessageDialog && (
-                                                                           <div className="fixed inset-0 bg-black/10 bg-opacity-20 z-40">
-                                                                                {/* This div is just for dimming the background if delete messages dialog is opened, otherwise the background would be smooth */}
-                                                                           </div>
-                                                                      )}
-                                                                      {
-                                                                           deleteMessageDialog && selectedMessageId === userMsg.id &&
-                                                                           <div className='fixed top-32 z-50 h-auto right-88 bg-white rounded-2xl border-gray-200 border-1 p-5 w-[550px] shadow-gray-200'>
-                                                                                <DeleteMessageDialog
-                                                                                     title={"Delete Message"}
-                                                                                     contactName={userMsg?.contactName}
-                                                                                     contactPhone={userMsg?.contactPhoneNumber}
-                                                                                     message={userMsg.message}
-                                                                                     footer={"Are you sure you want to delete this message? This action cannot be undone"}
-                                                                                     closeDeleteDialog={() => setDeleteMessageDialog(false)}
-                                                                                     deleteMessageCompletely={() => handleDeleteMessage(selectedMessageId)}
-                                                                                />
-                                                                           </div>
-                                                                      }
-
-                                                                      {/* if Forward Icons is pressed, then this would be on top of everything */}
-
-                                                                      {showForwardMessageDialog && (
-                                                                           <div className="fixed inset-0 bg-black/5 bg-opacity-20 z-40">
-                                                                                {/* This div is just for dimming the background if forward messages dialog is opened, otherwise the background would be smooth */}
-                                                                           </div>
-                                                                      )}
-
-                                                                      {
-                                                                           showForwardMessageDialog &&
-                                                                           <div className='fixed top-4 z-50 h-auto right-88 bg-white rounded-2xl border-gray-200 border-1 p-5 w-[550px] shadow-gray-200'>
-                                                                                <ForwardMessageDialog
-                                                                                     title={"Forward"}
-                                                                                     closeForwardDialog={() => setShowForwardMessageDialog(false)}
-                                                                                />
-                                                                           </div>
-                                                                      }
-                                                                 </>
-                                                            ))
-                                                       }
-
-                                                  </tbody>
-                                             </table>
+                                             {/* Messages table component with actions */}
+                                             <AllMessagesTable />
 
                                              {/* Pagination at last of tables */}
-                                             <div className="px-6 py-4 rounded-bl-xl rounded-br-xl bg-gray-50 border border-gray-200 flex items-center justify-between">
-                                                  <div className="flex flex-row gap-x-3 items-center">
+                                             <div className="px-6 py-4 rounded-bl-xl rounded-br-xl w-full bg-gray-50 border border-gray-200 flex items-center justify-between">
+                                                  <div className="flex flex-row gap-x-3 items-center w-full">
                                                        <span className='text-gray-500 text-sm'>
                                                             Showing 1 to 10 of 88 Results
                                                        </span>

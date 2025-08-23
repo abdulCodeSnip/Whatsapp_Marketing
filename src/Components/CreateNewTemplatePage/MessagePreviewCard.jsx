@@ -9,12 +9,14 @@ import { IoClose } from 'react-icons/io5'
 import { MdOutlineEmojiEmotions } from 'react-icons/md'
 import { PiExclamationMark } from 'react-icons/pi'
 import { useSelector } from 'react-redux'
+import useCreateNewTemplate from '../../hooks/createNewTemplateHooks/useCreateNewTemplate'
 
-const MessagePreviewCard = ({ submitTemplateForApproval, isAllFieldsValid }) => {
+const MessagePreviewCard = ({ isAllFieldsValid, templateBody }) => {
      const [showNotification, setShowNotification] = useState(false);
-     const [errorMsg, setErrorMsg] = useState("");
-     const [successMessage, setSuccessMessage] = useState("");
-
+     const [messageSuccess, setMessageSuccess] = useState({
+          message: "",
+          success: false,
+     })
      // Values from Redux Store
      const messageBody = useSelector((state) => state.messageBody.value);
      const language = useSelector((state) => state.language.value);
@@ -23,40 +25,43 @@ const MessagePreviewCard = ({ submitTemplateForApproval, isAllFieldsValid }) => 
 
      const handleSubmitTemplate = () => {
           if (messageBody?.length <= 0 || language === "" || category === "" || templateName === "") {
-               setErrorMsg("Please fill out all the required fields");
+               setMessageSuccess({ message: "Please fill all the required fields", success: false });
           } else if (messageBody?.length <= 9) {
-               setErrorMsg("Message Body should be at least 10 characters");
+               setMessageSuccess({ message: "Message Body should be at least 10 characters", success: false });
           } else if (templateName?.length <= 5) {
-               setErrorMsg("Please Enter a valid Template Name");
+               setMessageSuccess({ message: "Please enter a valid template name", success: false });
           }
-          if (isAllFieldsValid) {
-               setSuccessMessage("Template Has been submitted for Approval");
+          // check if the template is already in db, ? then show error message
+          if (errorMessage) {
+               setMessageSuccess({ message: errorMessage, success: false });
+          } else {
+               setMessageSuccess({ message: successMessage, success: true });
           }
      }
 
+     const { successMessage, errorMessage, uploadTemplateForApproval } = useCreateNewTemplate();
      // A REGEX to highlight text
 
      const variableRegex = /(\{\{\d+\}\})/g;
      const actualMessagePreview = messageBody.split(variableRegex);
-
      return (
           <>
                {
                     showNotification && (
-                         <div className={`fixed top-16 tracking-wide flex flex-row items-center right-20 p-5 gap-x-2 ${errorMsg ? "bg-red-100" : "bg-green-100"} rounded-xl z-50 shadow-sm`}>
+                         <div className={`fixed top-16 tracking-wide flex flex-row items-center right-20 p-5 gap-x-2 ${!messageSuccess?.success ? "bg-red-100" : "bg-green-100"} rounded-xl z-50 shadow-sm`}>
 
-                              <div className={`border ${errorMsg ? "text-red-600 border-red-600 hover:bg-red-200" : "hover:bg-green-200 text-green-600 border-green-600"} p-[2px] rounded-full`}>
+                              <div className={`border ${!messageSuccess?.success && errorMessage ? "text-red-600 border-red-600 hover:bg-red-200" : "hover:bg-green-200 text-green-600 border-green-600"} p-[2px] rounded-full`}>
                                    {
-                                        errorMsg ? <PiExclamationMark size={10} /> : <GiCheckMark size={10} />
+                                        !messageSuccess?.success ? <PiExclamationMark size={10} /> : <GiCheckMark size={10} />
                                    }
                               </div>
 
-                              <span className={`${errorMsg ? "text-red-600" : "text-green-600"} text-sm`}>
+                              <span className={`${!messageSuccess?.success ? "text-red-600" : "text-green-600"} text-sm`}>
                                    {
-                                        errorMsg ? errorMsg : successMessage
+                                        !messageSuccess?.success ? errorMessage : successMessage
                                    }
                               </span>
-                              <button onClick={() => setShowNotification(false)} className={`cursor-pointer ${errorMsg ? "text-red-600" : "text-green-600"} p-[2px] rounded-full hover:${errorMsg ? "bg-red-200" : "bg-green-200"}`}>
+                              <button onClick={() => setShowNotification(false)} className={`cursor-pointer ${!messageSuccess?.success ? "text-red-600" : "text-green-600"} p-[2px] rounded-full hover:${!messageSuccess?.success ? "bg-red-200" : "bg-green-200"}`}>
                                    <CgClose />
                               </button>
                          </div>
@@ -162,7 +167,7 @@ const MessagePreviewCard = ({ submitTemplateForApproval, isAllFieldsValid }) => 
                               onClick={() => {
                                    handleSubmitTemplate();
                                    setShowNotification(true);
-                                   submitTemplateForApproval();
+                                   uploadTemplateForApproval(templateBody);
                                    setTimeout(() => {
                                         setShowNotification(false);
                                    }, 4000);

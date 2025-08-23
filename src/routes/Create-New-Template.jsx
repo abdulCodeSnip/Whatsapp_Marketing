@@ -10,6 +10,7 @@ import Header from '../Components/CreateNewTemplatePage/Header';
 import Hamburger from '../Components/CreateNewTemplatePage/Hamburger';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
+import useCreateNewTemplate from '../hooks/createNewTemplateHooks/useCreateNewTemplate';
 
 
 const CreateNewTemplate = () => {
@@ -22,38 +23,6 @@ const CreateNewTemplate = () => {
      const templateName = useSelector((state) => state.templateName.value);
      const variables = useSelector((state) => state?.addVariables?.variables);
      const messageBody = useSelector((state) => state.messageBody.value);
-     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0))
-     // Create a new Template and store in database
-     const createTemplate = async () => {
-          try {
-               const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/templates`, {
-                    method: "POST",
-                    headers: {
-                         "Authorization": authInformation.token,
-                         "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                         name: templateName,
-                         language: language,
-                         category_id: parseInt("1"), // ensure it's a number
-                         message: messageBody,
-                         variables: formatVariables(variables),
-                         is_active: true
-                    })
-               });
-
-               const data = await apiResponse.json();
-               console.log("Response:", data);
-
-               if (!apiResponse.ok) {
-                    throw new Error(data.message || "API Error");
-               }
-
-          } catch (error) {
-               console.log("Somthing went wrong at backend" + error.message);
-          }
-     }
-
 
      const formatVariables = (rawVars) => {
           return rawVars.map(v => ({
@@ -75,6 +44,15 @@ const CreateNewTemplate = () => {
      useEffect(() => {
           validateAllFields();
      }, [templateName, category, language, variables])
+
+     const templateBody = {
+          name: templateName,
+          language: language,
+          category_id: parseInt("1"),
+          message: messageBody,
+          variables: formatVariables(variables),
+          is_active: true
+     }
 
      return (
           <>
@@ -130,7 +108,7 @@ const CreateNewTemplate = () => {
                                         <div className='w-full'>
                                              <MessagePreviewCard
                                                   isAllFieldsValid={isAllFieldsValid}
-                                                  submitTemplateForApproval={() => createTemplate()} />
+                                                  templateBody={templateBody} />
                                         </div>
                                    </div>
                               </div>

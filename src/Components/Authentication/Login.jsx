@@ -30,7 +30,7 @@ const AuthForm = () => {
     const registerNewUser = async () => {
         setIsLoading(true);
         try {
-            const apiResponse = await fetch(`${baseURL}/auth/register`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -65,7 +65,7 @@ const AuthForm = () => {
     const loginUser = async () => {
         setIsLoading(true)
         try {
-            const apiResponse = await fetch(`${baseURL}/auth/login`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -74,20 +74,20 @@ const AuthForm = () => {
             });
 
             const result = await apiResponse.json();
-            console.log(result);
             if (apiResponse.status === 401) {
                 setSuccessOrErr("Please Enter right credintials");
             }
-            if (result?.message?.includes("Login")) {
+            if (result?.message?.trim()?.includes("Login")) {
+                Cookies.set("jwtToken", "");
                 Cookies.set("jwtToken", result?.token);
                 Cookies.set("password", userFormData.password);
                 Cookies.set("email", result?.user?.email);
-                redirect("/");
                 navigate("/");
             }
             if (apiResponse.ok) {
                 setSuccessOrErr("Login Successfully");
                 console.log(result?.message);
+                navigate("/")
             }
         } catch (error) {
             console.log(error.message);

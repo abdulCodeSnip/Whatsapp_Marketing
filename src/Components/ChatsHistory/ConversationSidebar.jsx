@@ -5,21 +5,11 @@ import { changeSelectedContact } from '../../redux/chatHistoryPage/selectedConta
 import { dynamicChats, fetchAllChats } from '../../redux/chatHistoryPage/chats';
 
 const ConversationSidebar = () => {
-    console.log(useSelector((state) => state?.dynamicChats));
 
     //values from Redux
     const authInformation = useSelector((state) => state?.auth?.authInformation.at(0));
     const currentUserToConversate = useSelector((state) => state?.selectedContact?.selectedContact);
     const dispatch = useDispatch();
-
-
-    const getCurrenUserInformation = async () => {
-        try {
-
-        } catch (error) {
-
-        }
-    }
 
     // OPtions for user to his username, and his avatar,
     const userChatSideBarUIOPtions = {
@@ -30,6 +20,7 @@ const ConversationSidebar = () => {
             currentUserToConversate?.last_name?.charAt(0)?.toUpperCase(),
     }
 
+    // History of the user if messages are sent
     const getChatHistoryOfCurrenUser = async () => {
         try {
             const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/history/${currentUserToConversate?.id}`, {
@@ -40,7 +31,9 @@ const ConversationSidebar = () => {
             });
 
             const apiResult = await apiResponse.json();
-            dispatch(fetchAllChats(apiResult));
+            if (apiResponse.ok) {
+                dispatch(fetchAllChats(apiResult));
+            }
         } catch (error) {
             console.log("Something is wrong with your request at : ConversationSidebar for fetching chat history....", error)
         }

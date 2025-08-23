@@ -52,7 +52,7 @@ const SideBar = () => {
 
                          {/* Dashboard Page Navigation Link */}
                          <Link to={"/"}
-                              className={`flex items-center px-4 py-3 text-gray-300 transition-all text-sm font-medium rounded-md ${pathname === "/" ? "bg-gray-800" : "bg-gray-900"} hover:text-white hover:bg-gray-800`}
+                              className={`flex items-center px-4 py-3 text-gray-300 transition-all text-sm font-medium rounded-md ${pathname === "/" ? "bg-gray-800 border-l-3 border-l-green-500" : "bg-gray-900"} hover:text-white hover:bg-gray-800`}
                          >
                               <div className="w-6 h-6 flex items-center justify-center mr-3">
                                    <MdOutlineDashboard size={20} />
@@ -62,7 +62,7 @@ const SideBar = () => {
 
                          {/* Messages Page Navigation Link */}
                          <Link to={"/messages"}
-                              className={`flex items-center px-4 transition-all py-3 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-800 ${pathname === "/messages" ? "bg-gray-800" : "bg-gray-900"} hover:text-white`}
+                              className={`flex items-center px-4 transition-all py-3 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-800 ${pathname === "/messages" ? "bg-gray-800 border-l-3 border-l-green-500" : "bg-gray-900"} hover:text-white`}
                          >
                               <div className="w-6 h-6 flex items-center justify-center mr-3">
                                    <RiMessage2Line size={20} />
@@ -72,7 +72,7 @@ const SideBar = () => {
 
                          {/* Templates Page Navigation Link */}
                          <Link to={"/templates"}
-                              className={`flex items-center px-4 py-3 transition-all text-sm font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white ${pathname === "/templates" || pathname === "/templates/create-new-template" ? "bg-gray-800" : "bg-gray-900"}`}
+                              className={`flex items-center px-4 py-3 transition-all text-sm font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white ${pathname === "/templates" || pathname === "/templates/create-new-template" ? "bg-gray-800 border-l-3 border-l-green-500" : "bg-gray-900"}`}
                          >
                               <div className="w-6 h-6 flex items-center justify-center mr-3">
                                    <IoNewspaperOutline size={20} />
@@ -83,7 +83,7 @@ const SideBar = () => {
                          {/* Contacts Page Navigation Link */}
                          <Link to={"/contacts"}
 
-                              className={`flex items-center px-4 py-3 text-sm transition-all font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white ${pathname === "/contacts" ? "bg-gray-800" : "bg-gray-900"}`}
+                              className={`flex items-center px-4 py-3 text-sm transition-all font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white ${pathname === "/contacts" ? "bg-gray-800 border-l-3 border-l-green-500" : "bg-gray-900"}`}
                          >
                               <div className="w-6 h-6 flex items-center justify-center mr-3">
                                    <RiContactsBookLine size={20} />
@@ -93,7 +93,7 @@ const SideBar = () => {
 
                          {/* Chat History Page Navigation Link */}
                          <Link to={"/chat-history"}
-                              className={`flex items-center px-4 py-3 text-sm transition-all font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white ${pathname === "/chat-history" ? "bg-gray-800" : "bg-gray-900"}`}
+                              className={`flex items-center px-4 py-3 text-sm transition-all font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white ${pathname === "/chat-history" ? "bg-gray-800 border-l-3 border-l-green-500" : "bg-gray-900"}`}
                          >
                               <div className="w-6 h-6 flex items-center justify-center mr-3">
                                    <FaHistory size={20} />
@@ -103,7 +103,7 @@ const SideBar = () => {
 
                          {/* Settings Page Navigation Link */}
                          <Link to={"/settings"}
-                              className={`flex items-center px-4 py-3 text-sm transition-all font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white ${pathname === "/settings" ? "bg-gray-800" : "bg-gray-900"}`}
+                              className={`flex items-center px-4 py-3 text-sm transition-all font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white ${pathname === "/settings" ? "bg-gray-800 border-l-3 border-l-green-500" : "bg-gray-900"}`}
                          >
                               <div className="w-6 h-6 flex items-center justify-center mr-3">
                                    <IoSettingsOutline size={20} />

@@ -31,27 +31,10 @@ const RecentMessages = () => {
     }
 
     const id = recentMessages?.receiver?.id || 12;
-    const getUserDetail = async () => {
-        try {
-            const apiResponse = await fetch(`${authInformation?.baseURL}/users/${id}`, {
-                method: "GET",
-                headers: {
-                    "Authorization": authInformation?.token,
-                },
-            });
-            const result = await apiResponse.json();
-            if (apiResponse?.ok && apiResponse?.status === 200) {
-                setCurrentUserDetail(result);
-                console.log(result);
-            }
-        } catch (error) {
-            console.log("Something is wrong with your request", error);
-        }
-    }
+
 
     useEffect(() => {
         fetchAllMessages();
-        getUserDetail();
     }, [])
 
 

@@ -19,13 +19,9 @@ import { useEffect } from 'react';
 
 function App() {
 
-  const navigate = useNavigate();
   const tokenFromCookies = Cookies.get("jwtToken");
-  useEffect(() => {
-    if (!tokenFromCookies) {
-      navigate("/login");
-    }
-  }, [tokenFromCookies]);
+
+  if (!tokenFromCookies) return <AuthForm />
 
   return (
     <>
