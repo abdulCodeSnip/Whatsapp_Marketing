@@ -17,6 +17,13 @@ const Chats = () => {
     const [newMessage, setNewMessage] = useState("");
     const [isMessageSentFailed, setIsMessageSentFailed] = useState(false);
 
+    /*
+    values from redux, such as 
+    => {allChats of current user}, 
+    => {currentUser (who is logged in)}, 
+    => {authentication (e.g token of current user who is logged in)}, 
+    =>  and the {selectedContact from "contacts route to chat with"}
+    */
     const allChats = useSelector((state) => state?.dynamicChats?.allChats);
     const user = useSelector((state) => state?.loginUser?.userLogin);
     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
@@ -24,6 +31,7 @@ const Chats = () => {
 
     const [showSendMessageViaTemplate, setShowSendMessageViaTemplate] = useState(false);
 
+    // Check if the there is something exists inside the chats of "current user in chat", if not then return an empty array of "chats"
     useEffect(() => {
         if (allChats?.chat) {
             setDynamicChats(allChats);
@@ -32,6 +40,7 @@ const Chats = () => {
         }
     }, [allChats]);
 
+    // The connection for sockets to acheive realtime communication, {messages from whatsapp, and then from application to whatsapp} means "bi-directional communication"
     useEffect(() => {
         if (!user?.first_name) return;
 
@@ -58,6 +67,7 @@ const Chats = () => {
         };
     }, [user]);
 
+    // this function will send the message to sockets as well as to whatsapp of the "user with currently opened chat"
     const handleUpdatedMessages = async () => {
         if (!newMessage.trim()) return;
 
@@ -106,6 +116,7 @@ const Chats = () => {
         }
     };
 
+    // This function will only return the icon for a particular media type. because we havent store the data into a cloud services that's why only "icons" would be shown here, instead of "real image or real video"
     const mediaTypeIcon = (mediaType) => {
         switch (mediaType) {
             case "document":
@@ -119,6 +130,7 @@ const Chats = () => {
         }
     };
 
+    // this function will set the media type and the file name of "just picked file" to send to server
     const handleAddMediaMessage = (mediaType, fileName) => {
         const newMediaMessage = {
             from: "me",
@@ -136,6 +148,7 @@ const Chats = () => {
     return (
         <>
             {/* Chat messages */}
+
             <div className="h-screen overflow-auto p-5">
                 <div className="space-y-5">
                     {dynamicChats?.chat?.map((mychat, index) => {

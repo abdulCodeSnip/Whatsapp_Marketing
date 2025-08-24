@@ -1,5 +1,4 @@
-
-import { Route, Routes, useNavigate } from 'react-router-dom'
+import { Route, Routes, Navigate } from 'react-router-dom'
 import './App.css'
 import Dashboard from "./routes/Dashboard";
 import Messages from './routes/Messages';
@@ -14,108 +13,148 @@ import SendNewMessage from './routes/SendNewMessage';
 import DynamicUser from './routes/DynamicUser';
 import AuthForm from './Components/Authentication/Login';
 import Cookies from 'js-cookie';
-import { useEffect } from 'react';
 
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const tokenFromCookies = Cookies.get("jwtToken");
+  
+  if (!tokenFromCookies) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return children;
+};
+
+// Public Route Component (redirects to dashboard if already logged in)
+const PublicRoute = ({ children }) => {
+  const tokenFromCookies = Cookies.get("jwtToken");
+  
+  if (tokenFromCookies) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return children;
+};
 
 function App() {
-
-  const tokenFromCookies = Cookies.get("jwtToken");
-  if (!tokenFromCookies) return (
-    <AuthForm />
-  )
-
   return (
-    <>
-      <Routes>
+    <Routes>
+      {/* Public Route - Login */}
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <AuthForm />
+          </PublicRoute>
+        }
+      />
 
-        {/* Dashboard Route */}
-        <Route
-          path="/"
-          element={
+      {/* Protected Routes */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
             <Dashboard />
-          } />
+          </ProtectedRoute>
+        } 
+      />
 
-        {/* Messages Route */}
-        <Route
-          path="/messages"
-          element={
+      <Route
+        path="/messages"
+        element={
+          <ProtectedRoute>
             <Messages />
-          } />
+          </ProtectedRoute>
+        } 
+      />
 
-        {/* Templates Route */}
-        <Route
-          path={"/templates"}
-          element={
+      <Route
+        path="/templates"
+        element={
+          <ProtectedRoute>
             <Templates />
-          }
-        />
+          </ProtectedRoute>
+        }
+      />
 
-        {/* Contacts Route */}
-        <Route
-          path={"/contacts"}
-          element={
+      <Route
+        path="/contacts"
+        element={
+          <ProtectedRoute>
             <Contacts />
-          }
-        />
+          </ProtectedRoute>
+        }
+      />
 
-        {/* Chat History Route */}
-        <Route
-          path="/chat-history"
-          element={
+      <Route
+        path="/chat-history"
+        element={
+          <ProtectedRoute>
             <ChatHistory />
-          } />
+          </ProtectedRoute>
+        } 
+      />
 
-        {/* Settings Route */}
-        <Route
-          path="/settings"
-          element={
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
             <Settings />
-          } />
+          </ProtectedRoute>
+        } 
+      />
 
-        {/* Create New Template Route */}
-        <Route
-          path={"/templates/create-new-template"}
-          element={
+      <Route
+        path="/templates/create-new-template"
+        element={
+          <ProtectedRoute>
             <CreateNewTemplate />
-          } />
+          </ProtectedRoute>
+        } 
+      />
 
-        {/* Dynamic Template though this route */}
-        <Route
-          path={"/templates/:id"}
-          element={
+      <Route
+        path="/templates/:id"
+        element={
+          <ProtectedRoute>
             <DynamicTemplate />
-          } />
+          </ProtectedRoute>
+        } 
+      />
 
-        {/* Import Contacts Route, for importing and processing contacts */}
-        <Route
-          path={"/import-contacts"}
-          element={
+      <Route
+        path="/import-contacts"
+        element={
+          <ProtectedRoute>
             <ImportContacts />
-          }
-        />
+          </ProtectedRoute>
+        }
+      />
 
-        {/* Send New Message with some information */}
-        <Route
-          path={"/componse-new-message"}
-          element={
+      <Route
+        path="/componse-new-message"
+        element={
+          <ProtectedRoute>
             <SendNewMessage />
-          }
-        />
+          </ProtectedRoute>
+        }
+      />
 
-        {/* Dynamic User to Edit the user */}
-        <Route
-          path={"/contacts/:id"}
-          element={
+      <Route
+        path="/contacts/:id"
+        element={
+          <ProtectedRoute>
             <DynamicUser />
-          }
-        />
+          </ProtectedRoute>
+        }
+      />
 
-        <Route
-          path='/login'
-          element={<AuthForm />}
-        />
-      </Routes>
-    </>
+      {/* Catch all route - redirect to login if not authenticated, dashboard if authenticated */}
+      <Route
+        path="*"
+        element={<Navigate to="/" replace />}
+      />
+    </Routes>
   )
 }
 

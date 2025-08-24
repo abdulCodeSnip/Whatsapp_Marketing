@@ -70,8 +70,7 @@ const CreateNewTemplate = () => {
 
                               {/* Main Content */}
                               <div className='max-w-7xl mx-auto'>
-                                   <Hamburger firstLink={"Dashboard"} secondLink={"Templates"} thirdLink={"Create New Template"} />
-
+                                   
                                    {/* Useful message for Admin */}
                                    <div className='flex flex-row items-center justify-between my-5 gap-x-3'>
                                         <div>

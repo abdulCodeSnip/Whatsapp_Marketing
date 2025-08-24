@@ -5,12 +5,15 @@ import { MdArrowRightAlt } from 'react-icons/md'
 import { RiWhatsappFill } from 'react-icons/ri'
 import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
+import useFetchTemplates from '../../hooks/useFetchTemplates'
+import Spinner from '../Spinner'
 
 
 const WhatsappConnectionSetting = () => {
 
     const currentUser = useSelector((state) => state?.loginUser?.userLogin);
     const allTemplates = useSelector((state) => state?.allTemplates?.allTemplates);
+    const { templates, isError, isLoading } = useFetchTemplates();
     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
 
     const [apiConfiguration, setApiConfiguration] = useState([]);
@@ -33,8 +36,10 @@ const WhatsappConnectionSetting = () => {
 
     useEffect(() => {
         getWhatsappAPIConfiguration();
-        console.log(apiConfiguration);
     }, [])
+
+    // Loading spinner if the component is loading data from the server
+    if (isLoading) return <Spinner />
     return (
         <div className='w-full h-[100%] overflow-y-auto rounded-xl divide-y divide-gray-200 bg-white shadow-sm'>
             <div className='p-6'>
@@ -98,16 +103,17 @@ const WhatsappConnectionSetting = () => {
                         <span className='text-gray-500 text-sm'>Approved, and Pending WhatsApp message templates for your business account</span>
                     </div>
 
+                    {/* Templates table, that will showcase the templates existing.... */}
                     <div className='w-full rounded-lg border border-gray-300 divide-y divide-gray-200'>
                         {
-                            allTemplates?.slice(0, 3)?.map((template, index) => (
+                            templates?.templates?.slice(0, 3)?.map((template, index) => (
                                 <div key={index} className='flex flex-row items-center justify-between px-3 py-2'>
                                     <div className='flex flex-col'>
                                         <h2 className='text-gray-800 font-medium text-sm'>{template?.name}</h2>
                                         <span className='text-gray-500 text-xs'>{template?.category?.name}</span>
                                     </div>
-                                    <div className={`${template?.status?.toLowerCase() === "pending" ? "bg-yellow-100" : template?.status?.toLowerCase() === "active" ||  template?.status?.toLowerCase() === "approved" ? "bg-green-100" : "bg-red-100"} px-2 py-1 rounded-full text-xs`}>
-                                        <span className={`${template?.status?.toLowerCase() === "active" ||  template?.status?.toLowerCase() === "approved" ? "text-green-700" : template?.status?.toLowerCase() === "pending" ? "text-yellow-700" : "text-red-700"}`}>{template?.status}</span>
+                                    <div className={`${template?.status?.toLowerCase() === "pending" ? "bg-yellow-100" : template?.status?.toLowerCase() === "active" || template?.status?.toLowerCase() === "approved" ? "bg-green-100" : "bg-red-100"} px-2 py-1 rounded-full text-xs`}>
+                                        <span className={`${template?.status?.toLowerCase() === "active" || template?.status?.toLowerCase() === "approved" ? "text-green-700" : template?.status?.toLowerCase() === "pending" ? "text-yellow-700" : "text-red-700"}`}>{template?.status}</span>
                                     </div>
                                 </div>
                             ))

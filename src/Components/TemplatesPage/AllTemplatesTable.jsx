@@ -16,6 +16,8 @@ const AllTemplatesTable = () => {
     const [selectedTemplateId, setSelectedTemplateId] = useState(null);
     const [successMsgOnDelete, setSuccessMsgOnDelete] = useState("");
     const [selectedPage, setSelectedPage] = useState(null);
+
+    // an object used for navigating user "pragrammatically"
     const navigate = useNavigate();
 
     // Custom hook to fetch templates
@@ -62,10 +64,11 @@ const AllTemplatesTable = () => {
     useEffect(() => {
         handlePaginationButtons(selectedPage)
     }, [selectedPage])
-    if (isLoading) return <Spinner />
+    
     return (
         <>
             <div className='bg-white flex flex-row items-center justify-between p-[14px] shadow-xs rounded-xl'>
+
                 {/* Search in Templates, also with "Category Sorting", "Status Sorting" */}
                 <div className='flex flex-row items-center justify-between gap-x-5'>
                     <div className='flex flex-col items-start justify-center gap-1'>

@@ -17,7 +17,6 @@ const AllContactsTable = ({ replyToMessage, editContact, actions }) => {
 
      const [allContacts, setAllContacts] = useState([]);
      const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
-     const [selectContactForReply, setSelectContactForReply] = useState([]);
 
      const tableHead = [
           {
@@ -71,6 +70,7 @@ const AllContactsTable = ({ replyToMessage, editContact, actions }) => {
      useEffect(() => {
           getAllContacts();
      }, []);
+     
      return (
           <div className='flex w-full flex-col space-y-5'>
                {/* Bulk Buttons for sorting and searching through contacts */}

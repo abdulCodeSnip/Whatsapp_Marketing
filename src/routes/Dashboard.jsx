@@ -7,7 +7,7 @@ import { BsFileEarmarkPlus } from "react-icons/bs";
 import { LuNewspaper } from "react-icons/lu";
 import { TbUserPlus } from "react-icons/tb";
 import { FaArrowRight } from "react-icons/fa6";
-import { Link, } from 'react-router-dom';
+import { Link, useLocation, } from 'react-router-dom';
 import CustomInput from '../Components/customInput';
 import DashboardCard from '../Components/dashboardCard';
 import CustomLinkButton from '../Components/customLinkButton';
@@ -28,7 +28,10 @@ const Dashboard = () => {
      const [showFAQs, setShowFAQs] = useState(false);
      const [showNotifications, setShowNotifications] = useState(false);
      const [changeFAQsSearchInput, setChangeFAQsSearchInput] = useState("");
-     const [user, setUser] = useState([]);
+     const [user, setUser] = useState(null);
+     const [isLoading, setIsLoading] = useState(true);
+     const [error, setError] = useState(null);
+     
      const allUsers = useSelector((state) => state.allContacts?.allContacts?.at(0));
 
      // Values from Redux
@@ -47,68 +50,157 @@ const Dashboard = () => {
                apiRoute: "/templates",
                apiData: []
           }
-     ])
+     ]);
+
+     // Get JWT token from cookies
+     const getAuthToken = () => {
+          return Cookies.get("jwtToken");
+     };
 
      // Fetch data from APIs
-
-     // This function will return data about messages, about templates and about contacts...
      const fetchAllData = async () => {
           try {
+               setIsLoading(true);
+               setError(null);
+               
+               const token = getAuthToken();
+               
+               if (!token) {
+                    throw new Error('No authentication token found');
+               }
+
                const updatedData = await Promise.all(
                     completeData.map(async (item) => {
                          const response = await fetch(`${import.meta.env.VITE_API_URL}${item.apiRoute}`, {
                               method: "GET",
                               headers: {
-                                   "Authorization": authInformation?.token,
+                                   "Authorization": `Bearer ${token}`, // Fixed: Added Bearer prefix
+                                   "Content-Type": "application/json"
                               },
                          });
+
+                         if (!response.ok) {
+                              throw new Error(`Failed to fetch ${item.apiRoute}: ${response.status}`);
+                         }
 
                          const result = await response.json();
 
                          return {
                               ...item,
-                              apiData: result, // Or result.data depending on your API structure
+                              apiData: result,
                          };
                     })
                );
 
                setCompleteData(updatedData);
-               dispatch(addTemplates(updatedData.at(1)?.apiData?.templates));
-               dispatch(allContacts(updatedData.at(0)?.apiData?.users));
+               
+               // Dispatch to Redux store
+               const templatesData = updatedData.find(item => item.apiRoute === "/templates")?.apiData?.templates;
+               const contactsData = updatedData.find(item => item.apiRoute === "/contacts")?.apiData?.users;
+               
+               if (templatesData) {
+                    dispatch(addTemplates(templatesData));
+               }
+               
+               if (contactsData) {
+                    dispatch(allContacts(contactsData));
+               }
+               
           } catch (error) {
                console.error("Error fetching data:", error);
+               setError(error.message);
+          } finally {
+               setIsLoading(false);
           }
      };
-
-     useEffect(() => {
-          fetchAllData();
-     }, []);
 
      // Fetch user data such as username, email and password
      const userData = async () => {
           try {
+               const token = getAuthToken();
+               const email = Cookies.get("email");
+               const password = Cookies.get("password");
+               
+               if (!token || !email || !password) {
+                    throw new Error('Missing authentication credentials');
+               }
+
                const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
                     method: "POST",
                     headers: {
-                         "Authorization": authInformation?.token,
+                         "Authorization": `Bearer ${token}`, // Fixed: Added Bearer prefix
                          "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ email: Cookies.get("email"), password: Cookies.get("password") })
+                    body: JSON.stringify({ email, password })
                });
+               
+               if (!apiResponse.ok) {
+                    throw new Error(`Failed to fetch user data: ${apiResponse.status}`);
+               }
+               
                const result = await apiResponse.json();
                setUser(result);
+               
           } catch (error) {
-               console.log(error);
+               console.error("Error fetching user data:", error);
+               setError(error.message);
           }
+     };
+
+     const { pathname } = useLocation();
+
+     // Fetch data on component mount
+     useEffect(() => {
+          const initializeData = async () => {
+               await Promise.all([
+                    fetchAllData(),
+                    userData()
+               ]);
+          };
+          
+          initializeData();
+     }, []); // Remove pathname dependency to prevent unnecessary refetches
+
+     // Show loading state
+     if (isLoading) {
+          return (
+               <div className="flex overflow-hidden h-screen">
+                    <SideBar />
+                    <div className='flex-1 flex flex-col overflow-hidden'>
+                         <Header />
+                         <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
+                              <div className="max-w-7xl mx-auto">
+                                   <div className="flex items-center justify-center h-64">
+                                        <div className="text-lg text-gray-600">Loading dashboard data...</div>
+                                   </div>
+                              </div>
+                         </main>
+                    </div>
+               </div>
+          );
      }
 
-     useEffect(() => {
-          userData();
-     }, []);
+     // Show error state
+     if (error) {
+          return (
+               <div className="flex overflow-hidden h-screen">
+                    <SideBar />
+                    <div className='flex-1 flex flex-col overflow-hidden'>
+                         <Header />
+                         <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
+                              <div className="max-w-7xl mx-auto">
+                                   <div className="flex items-center justify-center h-64">
+                                        <div className="text-lg text-red-600">Error: {error}</div>
+                                   </div>
+                              </div>
+                         </main>
+                    </div>
+               </div>
+          );
+     }
+
      return (
-
           <>
-
                {/* Custom Notification Bar if notification icons is pressed */}
                {
                     showNotifications && (
@@ -153,7 +245,6 @@ const Dashboard = () => {
                     )}
 
                {/* Custom FAQs bar if the FAQs Icons is pressed */}
-
                {
                     showFAQs && (
                          <div className="fixed top-[14%] right-[21%] w-[650px] space-y-2  bg-white border border-gray-300 rounded-2xl shadow-lg z-50">
@@ -177,7 +268,6 @@ const Dashboard = () => {
                               </div>
 
                               {/* Common FAQs and Some video tutorial Options for Admin convinience */}
-
                               <div className="flex flex-row justify-between p-5 items-start gap-x-5">
                                    <div className="flex flex-col gap-4 justify-center">
                                         <h2 className="text-gray-800 font-semibold text-lg">
@@ -250,7 +340,7 @@ const Dashboard = () => {
                                    {/* Welcome message for Admin  */}
                                    <div className="flex flex-col">
                                         <div>
-                                             <h2 className="font-medium text-2xl">Welcome back, {user?.user?.first_name}</h2>
+                                             <h2 className="font-medium text-2xl">Welcome back, {user?.user?.first_name || 'User'}</h2>
                                         </div>
                                         <div>
                                              <span className="text-gray-500 text-[14.5px]">
@@ -396,7 +486,6 @@ const Dashboard = () => {
                          </main>
 
                     </div>
-
 
                </div>
           </>

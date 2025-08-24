@@ -1,37 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { MdOutlineDashboard, MdOutlineKeyboardArrowRight } from "react-icons/md";
-import { RiMessage2Line, RiContactsBookLine, RiCheckDoubleLine, RiSendPlaneLine } from "react-icons/ri";
-import { IoNewspaperOutline, IoSettingsOutline, IoClose } from "react-icons/io5";
-import { FaArrowLeft, FaBell, FaHistory, FaSearch } from "react-icons/fa";
-import { TbLayoutDashboard } from "react-icons/tb";
-import { CiSearch } from "react-icons/ci";
-import { BsQuestionCircle, BsFileEarmarkPlus } from "react-icons/bs";
-import { LuBellRing } from "react-icons/lu";
-import { FiUser } from "react-icons/fi";
-import { TbUserPlus } from "react-icons/tb";
-import { FaArrowRight, FaRotate } from "react-icons/fa6";
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import CustomInput from '../Components/customInput';
-import DashboardCard from '../Components/dashboardCard';
-import CustomLinkButton from '../Components/customLinkButton';
-import MessageCard from '../Components/messageCard';
-import CampaignCard from '../Components/campaignCard';
-import CustomButton from '../Components/customButton';
-import NotificationCustomCard from '../Components/notificationCustomCard';
-import { AiOutlinePlaySquare } from "react-icons/ai";
-import { BiPlus, BiRightArrow, BiVideo } from 'react-icons/bi';
-import ClickableCustomButton from '../Components/clickableCustomButton';
-import { TfiHeadphone } from 'react-icons/tfi';
-import TemplateListingCard from '../Components/templateListingCard';
-import DeleteMessageDialog from '../Components/deleteMessageDialog';
-import DeleteTemplateCard from '../Components/deleteTemplateCard';
-import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
-import FAQsCard from '../Components/FAQsCard';
 import SideBar from '../Components/SideBar';
 import Hamburger from '../Components/CreateNewTemplatePage/Hamburger';
 import Header from '../Components/ContactsManagementPage/Header';
-import { useSelector } from 'react-redux';
-import useFetchTemplates from '../hooks/useFetchTemplates';
 import AllTemplatesTable from '../Components/TemplatesPage/AllTemplatesTable';
 
 const Templates = () => {

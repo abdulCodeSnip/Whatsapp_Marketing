@@ -9,7 +9,6 @@ import { useEffect, useState } from "react";
 import AddContactsDialog from "../Components/ContactsManagementPage/AddContactsDialog";
 import { useDispatch, useSelector } from "react-redux";
 import { LuUsersRound } from "react-icons/lu";
-import { addNewContactToDB } from "../redux/contactsPage/addContacts";
 
 
 const Contacts = () => {
@@ -22,7 +21,6 @@ const Contacts = () => {
      // Values from Redux
      const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
      const errorMessage = useSelector((state) => state?.errorMessage?.message);
-     const dispatch = useDispatch();
 
      const navigate = useNavigate();
 
@@ -131,7 +129,7 @@ const Contacts = () => {
                                    </div>
                               }
 
-                              {/* Iif Contact has been save, then we just show a Popup */}
+                              {/* If Contact has been save, then we just show a Popup */}
                               {
                                    isContactSaved &&
                                    <div className={`fixed top-20 right-8 rounded-l-2xl rounded-tr-2xl ${errorMessage?.type === "Success" ? "text-green-600 bg-green-100" : "text-red-600 bg-red-100"} shadow-xl font-medium text-sm z-30 p-3`}>

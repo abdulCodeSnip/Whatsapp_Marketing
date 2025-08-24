@@ -90,28 +90,14 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
                               <span className='text-red-600 font-medium text-base ml-1'>*</span>
                          </label>
                          <div className='flex flex-row '>
-                              <select id="countryCode"
-                                   name="countryCode"
-                                   value={userContactData.countryCode}
-                                   required
-                                   onChange={(e) => setUserContactData({ ...userContactData, countryCode: e.target.value })}
-                                   className='border border-gray-300 rounded-l-xl px-3 py-2 cursor-pointer text-sm font-medium text-gray-800 outline-green-500'>
-                                   <option value="">Code</option>
-                                   <option value="+1">+1</option>
-                                   <option value="+44">+44</option>
-                                   <option value="+91">+91</option>
-                                   <option value="+92">+92</option>
-                                   <option value="+61">+61</option>
-                                   <option value="+34">+34</option>
-                              </select>
                               <input
                                    type="tel"
                                    id="contactPhone"
                                    value={userContactData.phone}
                                    onChange={(e) =>
                                         setUserContactData({ ...userContactData, phone: e.target.value })}
-                                   placeholder='Phone number'
-                                   className='border border-gray-300 outline-green-500 rounded-r-xl w-full px-3 py-2' />
+                                   placeholder='Phone number with Country Code'
+                                   className='border border-gray-300 outline-green-500 rounded-xl w-full px-3 py-2' />
                          </div>
                          <div className='text-gray-500 text-xs tracking-wide my-1'>
                               <span>Include country code (e.g., +1 for U.S)</span>
@@ -121,7 +107,7 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
                     {/* User Email */}
                     <div className='my-3'>
                          <label htmlFor='contactEmail' className='text-gray-800 text-sm font-medium block tracking-wide'>
-                              Email (Optional)
+                              Email 
                          </label>
                          <input
                               type="email"
@@ -133,18 +119,7 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
                               className='border border-gray-300 outline-green-500 rounded-xl w-full px-3 py-2 my-1' />
                     </div>
 
-                    {/* User Tags such as Customer, marketing and anything else */}
-                    <div>
-                         <h2 className='text-sm font-medium text-gray-600 block'>Tags</h2>
-                         <div className='flex flex-row items-center gap-x-2'>
-                              <div className='bg-blue-100 font-medium text-xs text-blue-600 px-3 py-1 rounded-full w-[90px] flex items-center justify-between my-2 flex-row '>
-                                   <h2>Customer</h2>
-                                   <button className='cursor-pointer'><CgClose size={13} /></button>
-                              </div>
-                         </div>
-                    </div>
-
-                    {/* Button to submit Contact */}
+                    {/* Button to submit Contact, and store in database */}
                     <div className='flex flex-row items-end justify-end'>
                          <button
                               disabled={userContactData.name === "" || userContactData.phone === ""}
@@ -154,7 +129,7 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
                                    closeDialog();
                                    registerNewUser();
                               }}
-                              className='bg-green-500 text-white cursor-pointer disabled:cursor-auto font-medium text-sm tracking-wide px-3 py-2 rounded-lg shadow-md disabled:opacity-85'>
+                              className='bg-green-500 disabled:cursor-not-allowed text-white cursor-pointer font-medium text-sm tracking-wide px-3 py-2 rounded-lg shadow-md disabled:opacity-85'>
                               <span>Save Contact</span>
                          </button>
                     </div>
