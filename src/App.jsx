@@ -20,8 +20,9 @@ import { useEffect } from 'react';
 function App() {
 
   const tokenFromCookies = Cookies.get("jwtToken");
-
-  if (!tokenFromCookies) return <AuthForm />
+  if (!tokenFromCookies) return (
+    <AuthForm />
+  )
 
   return (
     <>

@@ -1,12 +1,14 @@
+// Chats.jsx
 import React, { useEffect, useState } from "react";
-import { MdOutlineEmojiEmotions, MdOutlineWatchLater } from "react-icons/md";
+import { MdOutlineWatchLater } from "react-icons/md";
+import { TiDocumentText } from "react-icons/ti";
 import { useSelector } from "react-redux";
-import { BiCheckDouble } from "react-icons/bi";
-import { FiPaperclip } from "react-icons/fi";
+import { BiCheckDouble, BiVideo } from "react-icons/bi";
 import { RiSendPlaneFill } from "react-icons/ri";
-import { Link } from "react-router-dom"
 import { io } from "socket.io-client";
 import SendTemplateMessage from "./SendTemplateMessage";
+import PickAndSendFile from "./PickAndSendFile";
+import { HiPhoto } from "react-icons/hi2";
 
 let socket;
 
@@ -15,7 +17,6 @@ const Chats = () => {
     const [newMessage, setNewMessage] = useState("");
     const [isMessageSentFailed, setIsMessageSentFailed] = useState(false);
 
-    // Redux values
     const allChats = useSelector((state) => state?.dynamicChats?.allChats);
     const user = useSelector((state) => state?.loginUser?.userLogin);
     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
@@ -23,7 +24,6 @@ const Chats = () => {
 
     const [showSendMessageViaTemplate, setShowSendMessageViaTemplate] = useState(false);
 
-    // Load existing chats
     useEffect(() => {
         if (allChats?.chat) {
             setDynamicChats(allChats);
@@ -32,7 +32,6 @@ const Chats = () => {
         }
     }, [allChats]);
 
-    // Setup socket for realtime communication with backend
     useEffect(() => {
         if (!user?.first_name) return;
 
@@ -41,17 +40,13 @@ const Chats = () => {
         socket.connect();
 
         socket.on("connect", () => {
-            // same as HTML: connectUser event
             socket.emit("connectUser", {
                 username: `${user.first_name} ${user.last_name}`,
                 id: user.id,
             });
-            console.log("✅ Connected:", socket.id);
         });
 
-        // Listen incoming
         socket.on("recieve-message", (data) => {
-            console.log("📥 Incoming:", data);
             setDynamicChats((prev) => ({
                 ...prev,
                 chat: [...(prev.chat || []), { from: data.username, content: data.message, status: "received" }],
@@ -63,7 +58,6 @@ const Chats = () => {
         };
     }, [user]);
 
-    // Send message (exact same as HTML → uses fetch)
     const handleUpdatedMessages = async () => {
         if (!newMessage.trim()) return;
 
@@ -74,7 +68,6 @@ const Chats = () => {
         };
 
         try {
-            // 1️⃣ Save & forward via API (your DB + WhatsApp)
             const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/send`, {
                 method: "POST",
                 headers: {
@@ -93,7 +86,6 @@ const Chats = () => {
                 setIsMessageSentFailed(true);
             }
 
-            // 2️⃣ Same as HTML → also hit webhook/whatsapp
             await fetch(`${import.meta.env.VITE_API_URL}/webhook/whatsapp`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -103,7 +95,6 @@ const Chats = () => {
                 }),
             });
 
-            // 3️⃣ Update UI instantly
             setDynamicChats((prev) => ({
                 ...prev,
                 chat: [...(prev.chat || []), newChatMessage],
@@ -115,6 +106,32 @@ const Chats = () => {
         }
     };
 
+    const mediaTypeIcon = (mediaType) => {
+        switch (mediaType) {
+            case "document":
+                return <TiDocumentText color="red" size={28} />;
+            case "image":
+                return <HiPhoto color="green" size={28} />;
+            case "video":
+                return <BiVideo color="green" size={28} />;
+            default:
+                return null;
+        }
+    };
+
+    const handleAddMediaMessage = (mediaType, fileName) => {
+        const newMediaMessage = {
+            from: "me",
+            media_type: mediaType,
+            content: fileName,
+            status: "sent",
+        };
+
+        setDynamicChats((prev) => ({
+            ...prev,
+            chat: [...(prev.chat || []), newMediaMessage],
+        }));
+    };
 
     return (
         <>
@@ -123,16 +140,27 @@ const Chats = () => {
                 <div className="space-y-5">
                     {dynamicChats?.chat?.map((mychat, index) => {
                         const isFromMe = mychat?.from?.toLowerCase() === "me";
+                        const mediaType = mychat?.media_type?.toLowerCase();
+                        const messageStatus = mychat?.status;
+
                         return (
                             <div key={index} className={`flex w-full ${isFromMe ? "justify-end" : "justify-start"} mb-2`}>
                                 <div
                                     className={`max-w-xs px-4 py-2 rounded-lg shadow ${isFromMe ? "bg-green-100 text-right" : "bg-gray-200 text-left"
                                         }`}
                                 >
-                                    <p className="text-sm">{mychat?.content}</p>
-                                    <div className="text-xs flex items-center gap-1 mt-1 text-gray-600">
-                                        {mychat?.status === "sent" ? <BiCheckDouble /> : <MdOutlineWatchLater />}
-                                        <span>{mychat?.status}</span>
+                                    <div className="flex flex-row items-center gap-2">
+                                        {mediaType && (
+                                            <div className="p-1 border bg-white/20 rounded">
+                                                {mediaTypeIcon(mediaType)}
+                                            </div>
+                                        )}
+                                        <p className="text-sm break-words">{mychat?.content?.text?.body || mychat?.content}</p>
+                                    </div>
+                                    <div className="text-xs flex justify-end items-center gap-1 mt-1 text-gray-600">
+                                        <span>
+                                            {messageStatus === "sent" ? <BiCheckDouble /> : <MdOutlineWatchLater />}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -144,11 +172,7 @@ const Chats = () => {
             {/* Footer input */}
             <div className="border-t border-gray-200 bg-white shadow-md p-4 sticky bottom-0 w-full">
                 <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 text-gray-600">
-                        <FiPaperclip size={22} className="cursor-pointer" />
-                        <MdOutlineEmojiEmotions size={24} className="cursor-pointer" />
-                    </div>
-
+                    <PickAndSendFile onFileSent={handleAddMediaMessage} />
                     <input
                         type="text"
                         placeholder="Type a message..."
@@ -156,7 +180,6 @@ const Chats = () => {
                         onChange={(e) => setNewMessage(e.target.value)}
                         className="flex-1 border border-gray-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
                     />
-
                     <button
                         onClick={handleUpdatedMessages}
                         className="ml-2 flex items-center justify-center bg-green-500 rounded-full p-2 disabled:opacity-50"
@@ -167,26 +190,23 @@ const Chats = () => {
                 </div>
             </div>
 
-            {/* if normal message cannot be send then try using templates */}
-            {isMessageSentFailed &&
+            {isMessageSentFailed && (
                 <div className="fixed z-40 bg-white text-xl top-10 right-10 shadow-xl p-4 rounded-xl rounded-tr-none space-y-3">
                     <div>
-                        <h2>
-                            Message Failure
-                        </h2>
+                        <h2>Message Failure</h2>
                     </div>
-                    <button onClick={() => setShowSendMessageViaTemplate(true)} className="text-sm text-gray-800 cursor-pointer p-2 border-1 border-gray-200 rounded-lg">
-                        <span>Try using templates</span>
+                    <button
+                        onClick={() => setShowSendMessageViaTemplate(true)}
+                        className="text-sm text-gray-800 cursor-pointer p-2 border border-gray-200 rounded-lg"
+                    >
+                        Try using templates
                     </button>
                 </div>
-            }
+            )}
 
-            {
-                showSendMessageViaTemplate && (
-                    <SendTemplateMessage closeTemplateDialog={() => setShowSendMessageViaTemplate(false)}/>
-                )
-            }
-
+            {showSendMessageViaTemplate && (
+                <SendTemplateMessage closeTemplateDialog={() => setShowSendMessageViaTemplate(false)} />
+            )}
         </>
     );
 };

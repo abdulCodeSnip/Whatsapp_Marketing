@@ -16,9 +16,10 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
           email: "",
           role: "user",
      });
+     // register new user or create new contacts
      const registerNewUser = async () => {
           try {
-               const apiResponse = await fetch(`http://whatsapp-app-api.servicsters.com/auth/register`, {
+               const apiResponse = await fetch(`${import.meta.env?.VITE_API_URL}/auth/register`, {
                     method: "POST",
                     headers: {
                          "Content-Type": "application/json"
@@ -34,7 +35,6 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
                });
 
                const result = await apiResponse.json();
-               console.log(result?.message);
                if (apiResponse.ok) {
                     const message = { content: "Contact added successfully!", type: "Success" }
                     dispatch(changingErrorMessageOnSuccess(message))

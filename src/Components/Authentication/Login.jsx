@@ -8,7 +8,6 @@ import { redirect, useNavigate } from "react-router-dom";
 
 const AuthForm = () => {
 
-    const baseURL = "http://whatsapp-app-api.servicsters.com/";
     const [isLogin, setIsLogin] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -50,8 +49,14 @@ const AuthForm = () => {
             if (apiResponse.ok) {
                 console.log(result);
                 Cookies.set("jwtToken", result?.token);
-                Cookies.set("password", result?.password);
-                setIsLogin(true);
+                Cookies.set("password", userFormData.password);
+                Cookies.set("email", result?.user?.email || userFormData.email);
+                
+                setSuccessOrErr("Registration successful! Redirecting...");
+                // Navigate after successful registration
+                setTimeout(() => {
+                    navigate("/", { replace: true });
+                }, 1000);
             }
 
         } catch (error) {
@@ -63,7 +68,9 @@ const AuthForm = () => {
 
     // Login User
     const loginUser = async () => {
-        setIsLoading(true)
+        setIsLoading(true);
+        setSuccessOrErr(""); // Clear previous errors
+        
         try {
             const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
                 method: "POST",
@@ -74,33 +81,34 @@ const AuthForm = () => {
             });
 
             const result = await apiResponse.json();
+            
             if (apiResponse.status === 401) {
-                setSuccessOrErr("Please Enter right credintials");
+                setSuccessOrErr("Please Enter right credentials");
+                return; // Stop execution here
             }
-            if (result?.message?.trim()?.includes("Login")) {
-                Cookies.set("jwtToken", "");
+            
+            if (apiResponse.ok && result?.token) {
                 Cookies.set("jwtToken", result?.token);
                 Cookies.set("password", userFormData.password);
                 Cookies.set("email", result?.user?.email);
-                navigate("/");
-            }
-            if (apiResponse.ok) {
-                setSuccessOrErr("Login Successfully");
-                console.log(result?.message);
-                navigate("/")
+
+                setSuccessOrErr("Login Successfully! Redirecting...");
+                
+                // Navigate after successful login with a small delay
+                setTimeout(() => {
+                    navigate("/", { replace: true });
+                }, 1000);
+            } else {
+                setSuccessOrErr("Login failed. Please try again.");
             }
         } catch (error) {
             console.log(error.message);
+            setSuccessOrErr("An error occurred. Please try again.");
+        } finally {
+            setIsLoading(false);
         }
     }
 
-    useEffect(() => {
-        if (successOrErr.includes("login Successfully")) {
-            redirect("/");
-        } else {
-            redirect("/login");
-        }
-    }, [successOrErr])
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-200 p-4">
             <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-8 space-y-6">
@@ -108,7 +116,7 @@ const AuthForm = () => {
                     {isLogin ? "Login to Your Account" : "Create an Account"}
                 </h2>
 
-                <form className="space-y-4">
+                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
                     {!isLogin && (
                         <>
                             <div>
@@ -187,8 +195,10 @@ const AuthForm = () => {
                             {showPassword ? <IoEyeOff /> : <IoEye />}
                         </button>
                         {
-                            successOrErr && isLogin && (
-                                <span className={`text-xs ${successOrErr.includes("Login Successfully") ? "text-green-600" : "text-red-600"}`}>{successOrErr}</span>
+                            successOrErr && (
+                                <span className={`text-xs ${successOrErr.includes("Successfully") || successOrErr.includes("successful") ? "text-green-600" : "text-red-600"}`}>
+                                    {successOrErr}
+                                </span>
                             )
                         }
                     </div>
@@ -198,9 +208,10 @@ const AuthForm = () => {
                         onClick={() => {
                             isLogin ? loginUser() : registerNewUser();
                         }}
-                        className="w-full bg-green-600 disabled:opacity-80 font-medium text-sm text-white py-2 rounded-lg hover:bg-green-700 cursor-pointer transition-all"
+                        disabled={isLoading}
+                        className="w-full bg-green-600 disabled:opacity-50 font-medium text-sm text-white py-2 rounded-lg hover:bg-green-700 cursor-pointer transition-all"
                     >
-                        {isLogin ? "Login" : "Register"}
+                        {isLoading ? (isLogin ? "Logging in..." : "Registering...") : (isLogin ? "Login" : "Register")}
                     </button>
                 </form>
 
@@ -209,6 +220,7 @@ const AuthForm = () => {
                     <button
                         className="text-indigo-600 hover:underline font-medium"
                         onClick={toggleForm}
+                        disabled={isLoading}
                     >
                         {isLogin ? "Register here" : "Login here"}
                     </button>

@@ -33,42 +33,42 @@ const SettingSideBar = () => {
                 content: ""
 
             },
-            {
-                id: 3,
-                text: "Notification Settings",
-                icon: <BiBell size={14} color='gray' />,
-                content: ""
-            },
-            {
-                id: 4,
-                text: "Message Templates",
-                icon: <HiOutlineNewspaper size={14} color='gray' />,
-                content: ""
-            },
-            {
-                id: 5,
-                text: "App Appearance",
-                icon: <RiPaletteLine size={14} color='gray' />,
-                content: ""
-            },
-            {
-                id: 6,
-                text: "Security & Privacy",
-                icon: <MdSecurity size={14} color='gray' />,
-                content: ""
-            },
-            {
-                id: 7,
-                text: "Billing & Subscription",
-                icon: <IoCardOutline size={14} color='gray' />,
-                content: ""
-            },
-            {
-                id: 8,
-                text: "Integration",
-                icon: <RiRobot3Line size={14} color='gray' />,
-                content: ""
-            }
+            // {
+            //     id: 3,
+            //     text: "Notification Settings",
+            //     icon: <BiBell size={14} color='gray' />,
+            //     content: ""
+            // },
+            // {
+            //     id: 4,
+            //     text: "Message Templates",
+            //     icon: <HiOutlineNewspaper size={14} color='gray' />,
+            //     content: ""
+            // },
+            // {
+            //     id: 5,
+            //     text: "App Appearance",
+            //     icon: <RiPaletteLine size={14} color='gray' />,
+            //     content: ""
+            // },
+            // {
+            //     id: 6,
+            //     text: "Security & Privacy",
+            //     icon: <MdSecurity size={14} color='gray' />,
+            //     content: ""
+            // },
+            // {
+            //     id: 7,
+            //     text: "Billing & Subscription",
+            //     icon: <IoCardOutline size={14} color='gray' />,
+            //     content: ""
+            // },
+            // {
+            //     id: 8,
+            //     text: "Integration",
+            //     icon: <RiRobot3Line size={14} color='gray' />,
+            //     content: ""
+            // }
         ]
 
     const handlingActiveButton = (e) => {
@@ -81,27 +81,29 @@ const SettingSideBar = () => {
 
     return (
         <div className='w-[300px] bg-white h-[100%] border border-gray-300 space-y-6 flex flex-col justify-between'>
-            <div className='p-5 flex flex-col items-start justify-center flex-wrap space-y-3'>
-                <h2 className='text-gray-900 font-medium text-xl'>
-                    Settings
-                </h2>
-                <span className='text-gray-500 text-sm w-[200px]'>
-                    Manage your account and preferences
-                </span>
-            </div>
-            <div className='flex flex-col' onClick={handlingActiveButton}>
-                {
-                    sidebarOptions.map((option) => (
-                        <button key={option.id} id={option.id} name={`Option-${option.id}`} className={` ${"Option-" + String(option.id) === activeButton ? "bg-gray-100 border-l-3 border-l-green-500 outline-none" : "bg-white border-none outline-none"} flex items-center outline-none gap-x-2 py-3 hover:bg-gray-100 transition-all cursor-pointer text-sm font-medium flex-row w-full p-2 px-3`}>
-                            {
-                                option.icon
-                            }
-                            {
-                                option.text
-                            }
-                        </button>
-                    ))
-                }
+            <div>
+                <div className='p-5 flex flex-col items-start justify-center flex-wrap space-y-3'>
+                    <h2 className='text-gray-900 font-medium text-xl'>
+                        Settings
+                    </h2>
+                    <span className='text-gray-500 text-sm w-[200px]'>
+                        Manage your account and preferences
+                    </span>
+                </div>
+                <div className='flex flex-col' onClick={handlingActiveButton}>
+                    {
+                        sidebarOptions.map((option) => (
+                            <button key={option.id} id={option.id} name={`Option-${option.id}`} className={` ${"Option-" + String(option.id) === activeButton ? "bg-gray-100 border-l-3 border-l-green-500 outline-none" : "bg-white border-none outline-none"} flex items-center outline-none gap-x-2 py-3 hover:bg-gray-100 transition-all cursor-pointer text-sm font-medium flex-row w-full p-2 px-3`}>
+                                {
+                                    option.icon
+                                }
+                                {
+                                    option.text
+                                }
+                            </button>
+                        ))
+                    }
+                </div>
             </div>
             <div className='bg-gray-100 p-2'>
                 <Link to={"/"} className='text-gray-700 gap-x-2 flex flex-row items-center bg-gray-100'>

@@ -79,6 +79,7 @@ const WhatsappConnectionSetting = () => {
                 </div>
             </div>
 
+            {/* The API Configuration, of current user, this will only show to admin only.... */}
             <div className='p-6 space-y-4'>
                 <div className='space-y-2'>
                     <h2 className='text-gray-800 font-medium text-md'>API Configuration</h2>
@@ -105,8 +106,8 @@ const WhatsappConnectionSetting = () => {
                                         <h2 className='text-gray-800 font-medium text-sm'>{template?.name}</h2>
                                         <span className='text-gray-500 text-xs'>{template?.category?.name}</span>
                                     </div>
-                                    <div className={`${template?.status?.toLowerCase() === "pending" ? "bg-yellow-100" : template?.status?.toLowerCase() === "active" ? "bg-green-100" : "bg-red-100"} px-2 py-1 rounded-full text-xs`}>
-                                        <span className={`${template?.status?.toLowerCase() === "active" ? "text-green-700" : template?.status?.toLowerCase() === "pending" ? "text-yellow-700" : "text-red-700"}`}>{template?.status}</span>
+                                    <div className={`${template?.status?.toLowerCase() === "pending" ? "bg-yellow-100" : template?.status?.toLowerCase() === "active" ||  template?.status?.toLowerCase() === "approved" ? "bg-green-100" : "bg-red-100"} px-2 py-1 rounded-full text-xs`}>
+                                        <span className={`${template?.status?.toLowerCase() === "active" ||  template?.status?.toLowerCase() === "approved" ? "text-green-700" : template?.status?.toLowerCase() === "pending" ? "text-yellow-700" : "text-red-700"}`}>{template?.status}</span>
                                     </div>
                                 </div>
                             ))
