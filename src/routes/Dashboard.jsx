@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import dotenv from "dotenv";
 import { RiMessage2Line, RiCheckDoubleLine, RiSendPlaneLine } from "react-icons/ri";
 import { IoClose } from "react-icons/io5";
 import { FaUserFriends } from "react-icons/fa";
@@ -23,6 +22,7 @@ import { addTemplates } from '../redux/templatePage/allTemplates';
 import RecentMessages from '../Components/Dashboard/RecentMessages';
 import { allContacts } from '../redux/contactsPage/contactsFromAPI';
 import Cookies from 'js-cookie';
+import Spinner from '../Components/Spinner';
 
 const Dashboard = () => {
      const [showFAQs, setShowFAQs] = useState(false);
@@ -31,12 +31,9 @@ const Dashboard = () => {
      const [user, setUser] = useState(null);
      const [isLoading, setIsLoading] = useState(true);
      const [error, setError] = useState(null);
-     
-     const allUsers = useSelector((state) => state.allContacts?.allContacts?.at(0));
 
-     // Values from Redux
-     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
-     const allTemplates = useSelector((state) => state?.allTemplates?.allTemplates);
+     const loggedInUser = useSelector((state) => state?.loginUser?.userLogin);
+
 
      const dispatch = useDispatch();
 
@@ -62,9 +59,9 @@ const Dashboard = () => {
           try {
                setIsLoading(true);
                setError(null);
-               
+
                const token = getAuthToken();
-               
+
                if (!token) {
                     throw new Error('No authentication token found');
                }
@@ -93,19 +90,19 @@ const Dashboard = () => {
                );
 
                setCompleteData(updatedData);
-               
+
                // Dispatch to Redux store
                const templatesData = updatedData.find(item => item.apiRoute === "/templates")?.apiData?.templates;
                const contactsData = updatedData.find(item => item.apiRoute === "/contacts")?.apiData?.users;
-               
+
                if (templatesData) {
                     dispatch(addTemplates(templatesData));
                }
-               
+
                if (contactsData) {
                     dispatch(allContacts(contactsData));
                }
-               
+
           } catch (error) {
                console.error("Error fetching data:", error);
                setError(error.message);
@@ -120,7 +117,7 @@ const Dashboard = () => {
                const token = getAuthToken();
                const email = Cookies.get("email");
                const password = Cookies.get("password");
-               
+
                if (!token || !email || !password) {
                     throw new Error('Missing authentication credentials');
                }
@@ -133,14 +130,14 @@ const Dashboard = () => {
                     },
                     body: JSON.stringify({ email, password })
                });
-               
+
                if (!apiResponse.ok) {
                     throw new Error(`Failed to fetch user data: ${apiResponse.status}`);
                }
-               
+
                const result = await apiResponse.json();
                setUser(result);
-               
+
           } catch (error) {
                console.error("Error fetching user data:", error);
                setError(error.message);
@@ -157,7 +154,7 @@ const Dashboard = () => {
                     userData()
                ]);
           };
-          
+
           initializeData();
      }, []); // Remove pathname dependency to prevent unnecessary refetches
 
@@ -169,10 +166,8 @@ const Dashboard = () => {
                     <div className='flex-1 flex flex-col overflow-hidden'>
                          <Header />
                          <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
-                              <div className="max-w-7xl mx-auto">
-                                   <div className="flex items-center justify-center h-64">
-                                        <div className="text-lg text-gray-600">Loading dashboard data...</div>
-                                   </div>
+                              <div className="max-w-7xl mx-auto items-center justify-center h-screen w-screen">
+                                   <Spinner />
                               </div>
                          </main>
                     </div>

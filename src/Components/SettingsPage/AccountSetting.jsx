@@ -22,48 +22,9 @@ const AccountSetting = () => {
         email: user?.email,
         phone: user?.phone
     })
-    const getUserDetail = async () => {
-        try {
-            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/${user?.id}`, {
-                method: "GET",
-                headers: {
-                    "Authorization": authInformation?.token
-                }
-            });
-            const result = await apiResponse.json();
-            setUserDetail(result);
-            if (apiResponse.ok) {
-                console.log(result);
-            }
-        } catch (error) {
-            console.log(error);
-        }
-    }
+   
     const [checked, setChecked] = useState([]);
     const navigate = useNavigate();
-    console.log(user);
-
-    useEffect(() => {
-        getUserDetail();
-        console.log(userDetail)
-    }, [user?.id])
-
-    const changePassword = async () => {
-        try {
-            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/${user?.id}/change-password`, {
-                method: "POST",
-                headers: {
-                    "Authorization": Cookies.get("jwtToken"),
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ current_password: passwordValues.currentPwd, new_password: passwordValues.newPwd })
-            });
-            const result = await apiResponse.json();
-            console.log(result);
-        } catch (error) {
-            console.log(error);
-        }
-    }
 
     const updateDynamicUser = async () => {
         setIsLoading(true);

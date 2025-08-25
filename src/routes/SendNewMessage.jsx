@@ -5,9 +5,6 @@ import AddRecipentsToMessage from '../Components/SendNewMessage/AddRecipentsToMe
 
 const SendNewMessage = () => {
 
-    // fetch users from API
-
-
     return (
         <div className='h-screen overflow-hidden flex'>
 

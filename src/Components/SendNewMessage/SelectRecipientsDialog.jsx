@@ -110,10 +110,10 @@ const SelectRecipientsDialog = ({ closeDialog }) => {
                     <span className='text-gray-500 text-sm'>{addingContactsToStore?.length + ": "} recipients selected</span>
                 </div>
                 <div className="flex flex-row items-center gap-x-3">
-                    <button className='bg-gray-100  cursor-pointer rounded-lg border border-gray-300 text-gray-600 px-3 py-2 shadow-sm font-medium text-sm'>
+                    <button onClick={closeDialog} className='bg-gray-100  cursor-pointer rounded-lg border border-gray-300 text-gray-600 px-3 py-2 shadow-sm font-medium text-sm'>
                         Cancel
                     </button>
-                    <button className='bg-green-500 cursor-pointer  rounded-lg px-3 py-3 shadow-sm border-gray-200 border text-white font-medium text-sm'>
+                    <button onClick={closeDialog} className='bg-green-500 cursor-pointer  rounded-lg px-3 py-3 shadow-sm border-gray-200 border text-white font-medium text-sm'>
                         Add Selected
                     </button>
                 </div>

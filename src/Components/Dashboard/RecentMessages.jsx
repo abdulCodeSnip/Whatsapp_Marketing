@@ -7,13 +7,13 @@ import { useSelector } from 'react-redux'
 const RecentMessages = () => {
 
     const authInformation = useSelector((state) => state?.auth?.authInformation.at(0));
-    const [currenUserDetail, setCurrentUserDetail] = useState([]);
     const [recentMessages, setRecentMessages] = useState([]);
+
 
 
     const fetchAllMessages = async () => {
         try {
-            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/history`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/chats`, {
                 method: "GET",
                 headers: {
                     "Authorization": authInformation?.token
@@ -23,20 +23,20 @@ const RecentMessages = () => {
             const result = await apiResponse.json();
             if (apiResponse.ok) {
                 setRecentMessages(result);
-                console.log(result);
             }
         } catch (error) {
-
+            console.log(error.message);
         }
     }
-
-    const id = recentMessages?.receiver?.id || 12;
 
 
     useEffect(() => {
         fetchAllMessages();
     }, [])
 
+
+    const latestUserConversation = recentMessages?.contacts?.at(recentMessages?.contacts?.length - 1);
+    const latestUserConversationLogo = latestUserConversation?.first_name?.at(0)?.toUpperCase() + " " + latestUserConversation?.last_name?.at(0)?.toUpperCase();
 
     return (
         <div className="p-5 border-1 border-gray-200 w-full rounded-xl shadow-sm shadow-gray-100 bg-white">
@@ -49,13 +49,8 @@ const RecentMessages = () => {
 
             {
                 <MessageCard
-                    userName={currenUserDetail?.user?.first_name + " " + currenUserDetail?.user?.last_name}
-                    userProfileLogo={currenUserDetail?.user?.first_name?.charAt(0)?.toUpperCase() + currenUserDetail?.user?.last_name?.charAt(0)?.toUpperCase()}
-                    messageStatus={recentMessages?.chat?.at(recentMessages?.chat?.length - 1)?.status}
-                    msgDeliveredTime={(recentMessages?.chat?.at(recentMessages?.chat?.length - 1)?.updated_at)?.split("T")?.at(1)?.split(".").at(0)?.slice(0, 5)}
-                    phoneNumber={currenUserDetail?.phone}
-                    msgSmallOverview={recentMessages?.chat?.at(recentMessages?.chat?.length - 10)?.content}
-
+                    userName={latestUserConversation?.first_name + " " + latestUserConversation?.last_name}
+                    userProfileLogo={latestUserConversationLogo}
                 />
             }
 

@@ -7,16 +7,27 @@ import { LuMessageSquareMore } from 'react-icons/lu';
 import { RiSortAsc } from 'react-icons/ri';
 import FooterPagination from '../footerPagination';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { changeSelectedContact } from '../../redux/chatHistoryPage/selectedContactConversation';
 
 const AllContactsTable = ({ replyToMessage, editContact, actions }) => {
 
      const [searchContacts, setSearchContacts] = useState("");
+     const [shouldNavigateToChat, setShouldNavigateToChat] = useState(false);
      const navigate = useNavigate()
 
      const [allContacts, setAllContacts] = useState([]);
      const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
+     const currentSelectedContact = useSelector((state) => state?.selectedContact?.selectedContact);
+     const dispatch = useDispatch();
+
+     // Effect to handle navigation after contact selection
+     useEffect(() => {
+          if (shouldNavigateToChat && currentSelectedContact) {
+               navigate(`/chat-history`);
+               setShouldNavigateToChat(false);
+          }
+     }, [currentSelectedContact, shouldNavigateToChat, navigate]);
 
      const tableHead = [
           {
@@ -65,11 +76,15 @@ const AllContactsTable = ({ replyToMessage, editContact, actions }) => {
           }
      }
 
-     const dispatch = useDispatch();
+     const handleChatIconClick = (contact) => {
+          dispatch(changeSelectedContact(contact));
+          setShouldNavigateToChat(true);
+     };
 
+     const {pathname} = useLocation();
      useEffect(() => {
           getAllContacts();
-     }, []);
+     }, [pathname]);
      
      return (
           <div className='flex w-full flex-col space-y-5'>
@@ -97,6 +112,8 @@ const AllContactsTable = ({ replyToMessage, editContact, actions }) => {
                               <CiImport />
                               <span>Export</span>
                          </button>
+
+                         {/* This button will handle the "sending template message" */}
                          <button className="flex flex-row items-center justify-center gap-x-1 border-1 border-gray-300 px-3 py-2 rounded-lg font-medium text-gray-700 tracking-wider cursor-pointer focus:border-green-500 shadow-xs">
                               <BiDotsVertical />
                          </button>
@@ -167,29 +184,6 @@ const AllContactsTable = ({ replyToMessage, editContact, actions }) => {
                                                             {contact?.role?.charAt(0).toUpperCase() + contact?.role?.slice(1)}
                                                        </div>
                                                   </td>
-                                                  {/*Contacts Tags */}
-                                                  {/* <td scope='col' className='px-6 py-4 whitespace-nowrap'>
-                                                       <div className='flex flex-row'>
-                                                            <div className={`
-                                                            "bg-yellow-100 text-yellow-700
-                                                                 font-medium text-[12px] px-2 py-1 rounded-full flex items-center justify-items-center ${contact?.tag?.toLowerCase() === "" || contact?.tag === null || contact?.tag === undefined ? "text-gray-300 tracking-wide" : contact?.tag?.toLowerCase() === "vip" ? "bg-indigo-100 text-indigo-600" : contact?.tag?.toLowerCase() === "support" ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-600"}`}>
-                                                                 <span>
-                                                                      {
-                                                                           contact?.tag ? contact?.tag : "null"
-                                                                      }
-                                                                 </span>
-                                                            </div>
-                                                            <div className={`
-                                                            "bg-yellow-100 text-yellow-700
-                                                                 font-medium text-[12px] px-2 py-1 rounded-full flex items-center justify-items-center ${contact?.tag?.toLowerCase() === "" || contact?.tag === null || contact?.tag === undefined ? "text-gray-300 tracking-wide" : contact?.tag?.toLowerCase() === "vip" ? "bg-indigo-100 text-indigo-600" : contact?.tag?.toLowerCase() === "support" ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-600"}`}>
-                                                                 <span>
-                                                                      {
-                                                                           contact?.tag ? contact.tag : "null"
-                                                                      }
-                                                                 </span>
-                                                            </div>
-                                                       </div>
-                                                  </td> */}
 
                                                   {/* Last Interaction Data */}
                                                   <td scope='col' className='px-6 py-4 whitespace-nowrap'>
@@ -210,11 +204,7 @@ const AllContactsTable = ({ replyToMessage, editContact, actions }) => {
                                                        <div className="flex flex-row items-center justify-between gap-x-2">
 
                                                             {/* Pressed on this icons and a dialog for replay would open */}
-                                                            <button onClick={() => {
-                                                                 replyToMessage;
-                                                                 dispatch(changeSelectedContact(contact))
-                                                                 navigate(`/chat-history`);
-                                                            }} className='cursor-pointer p-2 rounded-full hover:text-green-400 text-gray-500 hover:bg-gray-100 transition-all'>
+                                                            <button onClick={() => handleChatIconClick(contact)} className='cursor-pointer p-2 rounded-full hover:text-green-400 text-gray-500 hover:bg-gray-100 transition-all'>
                                                                  <LuMessageSquareMore size={18} />
                                                             </button>
                                                             {/* Pressed on this Icon and a dialog for editing a contact would open */}
@@ -222,7 +212,7 @@ const AllContactsTable = ({ replyToMessage, editContact, actions }) => {
                                                                  <BiPencil size={18} />
                                                             </button>
 
-                                                            <button onClick={actions} className='cursor-pointer p-2 rounded-full hover:text-green-400 text-gray-500 hover:bg-gray-100 transition-all'>
+                                                            <button onClick={() => console.log(contact)} className='cursor-pointer p-2 rounded-full hover:text-green-400 text-gray-500 hover:bg-gray-100 transition-all'>
                                                                  <BsThreeDotsVertical size={18} />
                                                             </button>
                                                        </div>

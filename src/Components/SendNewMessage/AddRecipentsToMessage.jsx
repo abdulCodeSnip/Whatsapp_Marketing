@@ -22,8 +22,7 @@ const AddRecipentsToMessage = () => {
     const auth = useSelector((state) => state?.auth?.authInformation);
     const addedAndSelectedContacts = useSelector((state) => state.allContacts?.selectedContacts);
     const errorOrSuccessMsg = useSelector((state) => state?.errorOrSuccessMessage?.errorMessage);
-
-
+    
     const dispatch = useDispatch();
 
     const fetchUsersFromAPI = async () => {
@@ -85,8 +84,8 @@ const AddRecipentsToMessage = () => {
                     addedAndSelectedContacts && (
                         <div className='flex flex-row items-center gap-x-3'>
                             {
-                                addedAndSelectedContacts?.map((selectedContact) => (
-                                    <button className='flex flex-row items-center justify-center bg-gray-100 rounded-xl px-3 py-1 text-xs text-gray-600'>
+                                addedAndSelectedContacts?.map((selectedContact, index) => (
+                                    <button key={index} className='flex flex-row items-center justify-center bg-gray-100 rounded-xl px-3 py-1 text-xs text-gray-600'>
                                         {
                                             selectedContact?.first_name + " " + selectedContact?.last_name
                                         }

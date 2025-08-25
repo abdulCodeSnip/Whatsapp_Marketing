@@ -1,39 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import { MdOutlineDashboard, MdArticle, MdMessage } from "react-icons/md";
-import { RiMessage2Line, RiContactsBookLine, RiCheckDoubleLine, RiSendPlaneLine } from "react-icons/ri";
-import { IoNewspaperOutline, IoSettingsOutline, IoClose } from "react-icons/io5";
-import { FaArrowLeft, FaHistory, FaSearch } from "react-icons/fa";
+import { RiCheckDoubleLine, RiSendPlaneLine } from "react-icons/ri";
 import { CiSearch, CiCalendar } from "react-icons/ci";
-import { BsQuestionCircle, BsFileEarmarkPlus } from "react-icons/bs";
-import { LuBellRing } from "react-icons/lu";
-import { FiUser } from "react-icons/fi";
-import { TbUserPlus } from "react-icons/tb";
-import { FaArrowLeftLong, FaArrowRight } from "react-icons/fa6";
 import { Link, useLocation } from 'react-router-dom';
 import CustomInput from '../Components/customInput';
-import NotificationCustomCard from '../Components/notificationCustomCard';
-import { AiOutlinePlaySquare } from "react-icons/ai";
-import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
-
-
-import { BiCalendar, BiCalendarAlt, BiVideo } from 'react-icons/bi';
-import ClickableCustomButton from '../Components/clickableCustomButton';
-import { TfiHeadphone } from 'react-icons/tfi';
-import { CgCalendar } from 'react-icons/cg';
 import FilterButton from '../Components/filterButton';
-import FullMessageOverview from '../Components/fullMessageOverview';
 import FilterCard from '../Components/filterCard';
-import DeleteMessageDialog from '../Components/deleteMessageDialog';
-import ForwardMessageDialog from '../Components/forwardMessageDialog';
 import { HiSortDescending } from 'react-icons/hi';
 import SideBar from '../Components/SideBar';
-import FAQsCard from '../Components/FAQsCard';
 import Header from '../Components/ContactsManagementPage/Header';
 import FooterPagination from '../Components/footerPagination';
-import { useSelector } from 'react-redux';
 import AllMessagesTable from '../Components/Messages/AllMessagesTable';
-import useFetchMessages from '../hooks/useFetchMessages';
-import { current } from '@reduxjs/toolkit';
 
 
 const Messages = () => {
@@ -42,15 +18,6 @@ const Messages = () => {
      const [showDateFilterDialog, setShowDateFilterDialog] = useState(false);
      const [showSortByFilterDialog, setShowSortByFilterDialog] = useState(false);
      const [showStatusFilterDialog, setShowStatusFilterDialog] = useState(false);
-
-     const [deleteMessageDialog, setDeleteMessageDialog] = useState(false);
-     const [selectedMessageId, setSelectedMessageId] = useState(null);
-     const [selectedMessagesIDs, setSelectedMessagesIDs] = useState([]);
-     const [showForwardMessageDialog, setShowForwardMessageDialog] = useState(false);
-
-     const { isLoading, isError, messages, currentUser } = useFetchMessages(20);
-
-     const [userMessages, setUserMessages] = useState([]);
 
      //Handling the Date filter
      const handleShowDateFiltering = () => {
@@ -71,34 +38,6 @@ const Messages = () => {
           setShowSortByFilterDialog(false);
           setShowDateFilterDialog(false);
           setShowStatusFilterDialog(!showStatusFilterDialog);
-     }
-
-     // Show a dialog or custom bar to the user for selecting "cancel" or "delete", after that process this method
-     // Delete a message by its id, and get others after deleting that specific message
-     const handleDeleteMessage = (id) => {
-
-          // Delete a message only by clicking a particular contact
-          setUserMessages(prev => prev.filter(msg => msg.id !== id));
-          setDeleteMessageDialog(false);
-
-     }
-
-     // Handle Message Forwarding Dialog 
-     const handleMessageForwardDialog = () => {
-          setShowForwardMessageDialog(true);
-     }
-
-     // Handling each checkbox individually
-     const handleCheckBoxIndividually = (id) => {
-          setSelectedMessagesIDs((previous) => {
-               if (previous.includes(id)) {
-                    // UnCheck, it will return all other elements which was unchecked
-                    return previous.filter((msgId) => msgId !== id);
-               } else {
-                    // Checked
-                    return [...previous, id];
-               }
-          });
      }
 
      return (

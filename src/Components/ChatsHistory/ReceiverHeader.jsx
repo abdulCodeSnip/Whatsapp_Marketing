@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
+import useSendTemplateMessage from '../../hooks/templateMessage/useSendTemplateMessage';
+import { IoCheckmark } from 'react-icons/io5';
 
 const ReceiverHeader = () => {
 
@@ -7,6 +9,7 @@ const ReceiverHeader = () => {
 
     const selectedContact = useSelector((state) => state?.selectedContact?.selectedContact);
     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
+    const [successfullySentTemplate, setSuccessfullySentTemplate] = useState(false);
 
     // Get Complete User Detail
 
@@ -29,7 +32,20 @@ const ReceiverHeader = () => {
 
     useEffect(() => {
         getUserDetail();
-    }, [selectedContact])
+    }, [selectedContact]);
+
+    const { isTemplateMessageSent, isTemplateMessageSentErr, sendTemplateMessage, templateMessageSentResponse } = useSendTemplateMessage(authInformation);
+    useEffect(() => {
+        setSuccessfullySentTemplate(isTemplateMessageSent);
+
+    }, [isTemplateMessageSent]);
+
+    if (successfullySentTemplate) {
+        setTimeout(() => {
+            setSuccessfullySentTemplate(false);
+        }, 4000);
+    }
+
     return (
         <>
             {selectedContact.length !== 0 &&
@@ -46,8 +62,17 @@ const ReceiverHeader = () => {
                             <span className='text-gray-500 text-sm'>{userDetail?.user?.phone}</span>
                         </div>
                     </div>
-                </header>)
+
+                    <button onClick={() => sendTemplateMessage(userDetail?.user?.id, 22)} className='text-gray-800 border-1 px-3 py-2 cursor-pointer border-gray-200 rounded-lg'>Send Template</button>
+
+                </header>
+                )
             }
+            {successfullySentTemplate && (
+                <div className='fixed top-15 z-50 bg-green-100 px-3 py-2 rounded-lg text-green-800 text-sm right-20 shadow-lg'>
+                    <span>Tempate Sent successfully</span>
+                </div>
+            )}
         </>
     )
 }

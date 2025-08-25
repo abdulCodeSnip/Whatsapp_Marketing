@@ -32,7 +32,7 @@ const FullMessageOverview = ({
 
      useEffect(() => {
           changeAvatar();
-     });
+     }, []);
 
 
 

@@ -15,6 +15,12 @@ const ConversationSidebar = () => {
 
     // History of the user if messages are sent
     const getChatHistoryOfCurrenUser = async () => {
+        // Add null check here
+        if (!currentUserToConversate?.id) {
+            console.log("No contact selected yet");
+            return;
+        }
+
         try {
             const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/history/${currentUserToConversate?.id}`, {
                 method: "GET",

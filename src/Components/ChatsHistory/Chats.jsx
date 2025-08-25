@@ -202,24 +202,6 @@ const Chats = () => {
                     </button>
                 </div>
             </div>
-
-            {isMessageSentFailed && (
-                <div className="fixed z-40 bg-white text-xl top-10 right-10 shadow-xl p-4 rounded-xl rounded-tr-none space-y-3">
-                    <div>
-                        <h2>Message Failure</h2>
-                    </div>
-                    <button
-                        onClick={() => setShowSendMessageViaTemplate(true)}
-                        className="text-sm text-gray-800 cursor-pointer p-2 border border-gray-200 rounded-lg"
-                    >
-                        Try using templates
-                    </button>
-                </div>
-            )}
-
-            {showSendMessageViaTemplate && (
-                <SendTemplateMessage closeTemplateDialog={() => setShowSendMessageViaTemplate(false)} />
-            )}
         </>
     );
 };
