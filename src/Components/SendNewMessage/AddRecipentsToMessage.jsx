@@ -1,54 +1,39 @@
-import React, { useEffect, useState } from 'react'
+import { Fragment, useState } from 'react'
 import { BiCheck, BiUserPlus } from 'react-icons/bi';
-import { BsExclamationCircle, BsExclamationCircleFill } from 'react-icons/bs';
-import { CgClose, CgUserAdd } from 'react-icons/cg';
-import { FaRegNewspaper } from 'react-icons/fa';
-import { IoNewspaperOutline } from 'react-icons/io5';
+import { BsExclamationCircleFill } from 'react-icons/bs';
+import { CgClose } from 'react-icons/cg';
 import { useDispatch, useSelector } from 'react-redux';
 import MessageContent from './MessageContent';
 import SelectRecipientsDialog from './SelectRecipientsDialog';
-import { addingSelectedContacts, allContacts, removeSelectedContacts } from '../../redux/contactsPage/contactsFromAPI';
-import CustomToggle from './CustomToggle';
+import { removeSelectedContacts } from '../../redux/contactsPage/contactsFromAPI';
 import ScheduleMessage from './ScheduleMessage';
-import { scheduleMessage } from '../../redux/sendNewMessage/sendMessage';
-import { errorOrSuccessMessage } from '../../redux/sendNewMessage/errorMessage';
+import useFetchAllContacts from '../../hooks/Contacts Hook/useFetchAllContacts';
+import Spinner from "../../Components/Spinner";
 
 const AddRecipentsToMessage = () => {
 
     const [searchContacts, setSearchContacts] = useState("");
     const [showRecipientsDialog, setShowRecipientsDialog] = useState(false);
 
-    // Values from Redux to manange everything globally
-    const auth = useSelector((state) => state?.auth?.authInformation);
+    // Values from Redux to manange everything globally, selected contacts for message to be send, and selectedTemplate
     const addedAndSelectedContacts = useSelector((state) => state.allContacts?.selectedContacts);
     const errorOrSuccessMsg = useSelector((state) => state?.errorOrSuccessMessage?.errorMessage);
-    
+    const selectedTemplate = useSelector((state) => state?.selectedTemplate?.selected);
+
     const dispatch = useDispatch();
 
-    const fetchUsersFromAPI = async () => {
-        try {
-            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/contacts`, {
-                method: "GET",
-                headers: {
-                    "Authorization": auth?.at(0)?.token
-                }
-            });
-
-            const result = await apiResponse.json();
-            if (apiResponse.ok) {
-                dispatch(allContacts(result))
-            }
-        } catch (error) {
-            console.log("Something went wrong at the backend " + error.message);
-        }
-    }
-    useEffect(() => {
-        fetchUsersFromAPI();
-    }, [])
+    // A custom hook that will give us all the contacts from the database
+    const { isLoading, isError } = useFetchAllContacts();
 
     const removeSelectedContactFromList = (contact) => {
         dispatch(removeSelectedContacts(contact));
     }
+
+    if (isLoading || isError) return (
+        <div className='h-screen w-screen items-center justify-center'>
+            <Spinner size="small" />
+        </div>
+    )
 
     return (
         <div className='bg-white rounded-xl shadow-sm flex flex-col divide-y divide-gray-300'>
@@ -99,10 +84,10 @@ const AddRecipentsToMessage = () => {
                     )
                 }
 
-                {/* Search for contacts through an Input */}
+                {/* Search for contacts through an Input inside the dialog for contacts */}
                 <div className='flex flex-row items-center justify-between gap-5'>
                     <div className='w-full'>
-                        <input type="text" className='px-3 py-2 rounded-xl border border-gray-300 outline-green-500 w-full' placeholder='Search contacts or groups to send message .....' onChange={(e) => setSearchContacts(e.target.value)} />
+                        <input type="text" id='searchContactsToAdd' name='searchContactsToAdd' className='px-3 py-2 rounded-xl border border-gray-300 outline-green-500 w-full' placeholder='Search contacts to send message .....' onChange={(e) => setSearchContacts(e.target.value)} />
                     </div>
 
                     {/* Add Recipients Button to select groups of contacts for sending message */}
@@ -112,15 +97,6 @@ const AddRecipentsToMessage = () => {
                             <span>Add Recipients</span>
                         </button>
                     </div>
-                </div>
-
-                {/* Option for individual contacts */}
-                <div className='flex flex-row items-center text-gray-700 gap-x-1'>
-                    <input type="checkbox" id='individualContacts' name="individualContacts" className='accent-green-600 w-4 h-4' />
-                    <label htmlFor="individualContacts">
-                        Send individually to each recipient
-                    </label>
-                    <BsExclamationCircle />
                 </div>
             </div>
 
@@ -140,9 +116,6 @@ const AddRecipentsToMessage = () => {
                     </>
                 )
             }
-            <div>
-                <ScheduleMessage />
-            </div>
         </div>
     )
 }

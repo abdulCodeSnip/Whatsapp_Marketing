@@ -22,6 +22,7 @@ import auth from "./authInformation";
 // Send New Message such as preview, content and selecting contacts, and also for attachments
 import attachments from "./sendNewMessage/attachments";
 import messageContent from "./sendNewMessage/sendMessage";
+import selectedTemplate from "./sendNewMessage/selectedTemplate";
 
 // Authenticate User
 import loginUser from "./authentication/loginUser";
@@ -83,6 +84,8 @@ export const store = configureStore({
           messageContent: messageContent,
           // error message for fields
           errorOrSuccessMessage: errorOrSuccessMessage,
+          // selected template for sending new message
+          selectedTemplate: selectedTemplate,
 
 
           // login user, so, user can move to every page with a profile and integrity
@@ -102,5 +105,6 @@ export const store = configureStore({
           dynamicChats: dynamicChats,
 
           errorMessage: errorMessage,
+          
      }
 })

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { Fragment, useEffect, useState } from 'react'
 import useFetchTemplates from '../../hooks/useFetchTemplates'
 import Spinner from '../Spinner';
 import TemplateListingCard from '../templateListingCard';
@@ -21,7 +21,7 @@ const AllTemplatesTable = () => {
     const navigate = useNavigate();
 
     // Custom hook to fetch templates
-    const { isLoading, isError, templates } = useFetchTemplates();
+    const { isLoading, isError, fetchedTemplates } = useFetchTemplates();
 
 
     // Sorting of Templates Based on "Search Value", "Category", "Status"
@@ -57,6 +57,7 @@ const AllTemplatesTable = () => {
         }
     }
 
+    //pagination for move from one page to another page
     const handlePaginationButtons = (value) => {
         setSelectedPage(value);
     }
@@ -64,7 +65,7 @@ const AllTemplatesTable = () => {
     useEffect(() => {
         handlePaginationButtons(selectedPage)
     }, [selectedPage])
-    
+
     return (
         <>
             <div className='bg-white flex flex-row items-center justify-between p-[14px] shadow-xs rounded-xl'>
@@ -74,6 +75,8 @@ const AllTemplatesTable = () => {
                     <div className='flex flex-col items-start justify-center gap-1'>
                         <p className='text-gray-700 font-medium text-sm mx-2'>Search Template</p>
                         <input
+                            name='searchInputsByName'
+                            id="searchInputsByName"
                             value={searchTemplatesByName}
                             onChange={(e) => {
                                 handleSearchTemplates("searchByName", e.target.value);
@@ -86,7 +89,7 @@ const AllTemplatesTable = () => {
                     {/* Category Sorting Button with Multiple Options */}
                     <div className='flex flex-col items-start justify-center gap-1'>
                         <p className='text-gray-700 font-medium text-sm'>Category</p>
-                        <select onChange={(e) => handleSearchTemplates("sortByCategory", e.target.value)} className='px-4 py-2 rounded-lg border-1 text-gray-700 cursor-pointer border-gray-300 focus:border-black'>
+                        <select name='sortByCategory' id='sortByCategory' onChange={(e) => handleSearchTemplates("sortByCategory", e.target.value)} className='px-4 py-2 rounded-lg border-1 text-gray-700 cursor-pointer border-gray-300 focus:border-black'>
                             <option value={""}>All Category</option>
                             <option value={"Marketing"}>Marketing</option>
                             <option value={"Transactional"}>Transactional</option>
@@ -100,6 +103,7 @@ const AllTemplatesTable = () => {
                     <div className='flex flex-col items-start justify-center gap-1'>
                         <p className='text-gray-700 font-medium text-sm'>Status</p>
                         <select
+                            name="sortByStatus" id='sortByStatus'
                             onChange={(e) => handleSearchTemplates("sortByStatus", e.target.value)}
                             className='pl-3 pr-12 shadow-sm appearance-auto py-2 rounded-lg cursor-pointer border-1 text-gray-700 border-gray-300 focus:border-black'>
                             <option value={""}>All Statuses</option>
@@ -135,13 +139,13 @@ const AllTemplatesTable = () => {
                         <tbody className='bg-white divide-y divide-gray-200 space-y-2'>
                             {
                                 // Default templates, we'll add real time templates later
-                                templates?.templates?.filter((mytemp) => mytemp?.name?.toLowerCase()?.includes
+                                fetchedTemplates?.templates?.filter((mytemp) => mytemp?.name?.toLowerCase()?.includes
                                     (searchTemplatesByName.toLowerCase()) &&
                                     (sortByCategory === "" || mytemp?.category?.name?.toLowerCase() === sortByCategory?.toLowerCase()) &&
                                     (sortByStatus === "" || mytemp?.status?.toLowerCase() === sortByStatus?.toLowerCase())
                                 )
                                     .map((template) =>
-                                        <>
+                                        <Fragment key={template?.id}>
                                             <TemplateListingCard
                                                 templateName={
                                                     template?.name?.split(" ")?.map(tname => tname.charAt(0).toUpperCase() + tname.slice(1) + " ")}
@@ -168,7 +172,7 @@ const AllTemplatesTable = () => {
                                                     />
                                                 </div>
                                             }
-                                        </>
+                                        </Fragment>
                                     )
                             }
 

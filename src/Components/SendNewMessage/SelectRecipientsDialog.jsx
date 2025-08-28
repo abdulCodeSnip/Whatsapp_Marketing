@@ -3,6 +3,7 @@ import { BiSearch } from 'react-icons/bi'
 import { CgClose } from 'react-icons/cg'
 import { useDispatch, useSelector } from 'react-redux';
 import { addingSelectedContacts } from '../../redux/contactsPage/contactsFromAPI';
+import useFetchAllContacts from '../../hooks/Contacts Hook/useFetchAllContacts';
 
 const SelectRecipientsDialog = ({ closeDialog }) => {
 
@@ -10,42 +11,39 @@ const SelectRecipientsDialog = ({ closeDialog }) => {
     const [searchContacts, setSearchContacts] = useState("");
 
     // Getting Contacts from Redux Store
-    const addingContactsToStore = useSelector((state) => state.allContacts?.selectedContacts);
-    const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
+    const selectedContacts = useSelector((state) => state.allContacts?.selectedContacts);
+
     const [contacts, setContacts] = useState([]);
 
     const dispatch = useDispatch();
 
+    const { isLoading, isError, fetchContacts } = useFetchAllContacts();
+
+    // If there is a returned "contacts" from "custom hook" then we'll store that contacts in our local state
     useEffect(() => {
-        const allContactsFromAPI = async () => {
+        if (fetchContacts?.length > 0) {
+            setContacts(fetchContacts);
+        }
+    }, [fetchContacts]);
 
-            try {
-                const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/users`, {
-                    method: "GET",
-                    headers: {
-                        "Authorization": authInformation?.token
-                    }
-                });
+    if (isLoading) {
+        return <div>Loading contacts...</div>;
+    }
 
-                const result = await apiResponse.json();
-                setContacts(result?.users);
-            } catch (error) {
-                console.log(error);
-            }
-        };
-        allContactsFromAPI();
-    }, []);
+    if (isError) {
+        return <div>Error loading contacts</div>;
+    }
+
     // Handling buttons using Event Deligation
     const handlingMultipleButtons = (e) => {
         setActiveButton(e?.target?.textContent);
     }
 
 
+    // Select contact if not selected for sending message, and if "that contact is selected" then, we're removing that contact from the "global list" or "redux"
+
     const handleSelectedContacts = (contact) => {
-        const existingContact = contacts?.find((existing) => existing?.id === contact?.id);
-        if (existingContact) {
-            dispatch(addingSelectedContacts(contact));
-        }
+        dispatch(addingSelectedContacts(contact))
     }
 
     return (
@@ -67,19 +65,6 @@ const SelectRecipientsDialog = ({ closeDialog }) => {
                         <BiSearch size={15} color='gray' />
                     </div>
                 </div>
-
-                {/* Buttons for selecting contacts */}
-                <div onClick={handlingMultipleButtons} className='flex flex-row gap-x-3'>
-                    <button className={`flex flex-row cursor-pointer items-center justify-center px-3 py-1 rounded-full ${activeButton === "Recent Contacts" ? "bg-green-500 text-white" : "bg-gray-100 text-gray-600"} font-medium text-sm`}>
-                        Recent Contacts
-                    </button>
-                    <button className={`flex flex-row cursor-pointer items-center justify-center px-3 py-1 rounded-full ${activeButton === "All Contacts" ? "bg-green-500 text-white" : "bg-gray-100 text-gray-600"} font-medium text-sm`}>
-                        All Contacts
-                    </button>
-                    <button className={`flex flex-row cursor-pointer items-center justify-center px-3 py-1 rounded-full ${activeButton === "Groups" ? "bg-green-500 text-white" : "bg-gray-100 text-gray-600"} font-medium text-sm`}>
-                        Groups
-                    </button>
-                </div>
             </div>
 
             <div className='flex flex-col items-center w-full divide-y divide-gray-200 h-[200px] overflow-y-auto'>
@@ -92,7 +77,7 @@ const SelectRecipientsDialog = ({ closeDialog }) => {
                                 <div onClick={() => handleSelectedContacts(contact)} key={index} className='flex flex-row w-full px-4 py-3 cursor-pointer hover:bg-gray-50'>
                                     <div className='flex items-center justify-center gap-x-2'>
                                         <div>
-                                            <input type="checkbox" onChange={() => handleSelectedContacts(contact)} checked={!!addingContactsToStore.find((selected) => selected?.id === contact?.id)} name={contact?.id} id={"contact" + index} className='cursor-pointer accent-green-600 h-4 w-4' />
+                                            <input type="checkbox" onChange={() => handleSelectedContacts(contact)} checked={!!selectedContacts.find((selected) => selected?.id === contact?.id)} name={contact?.id} id={"contact" + index} className='cursor-pointer accent-green-600 h-4 w-4' />
                                         </div>
                                         <div className='flex flex-col'>
                                             <span className='text-gray-800 font-medium text-sm'>{contactName} </span>
@@ -107,7 +92,7 @@ const SelectRecipientsDialog = ({ closeDialog }) => {
 
             <div className="flex flex-row items-start justify-between gap-x-3 bg-gray-100 p-5">
                 <div className=''>
-                    <span className='text-gray-500 text-sm'>{addingContactsToStore?.length + ": "} recipients selected</span>
+                    <span className='text-gray-500 text-sm'>{selectedContacts?.length + ": "} recipients selected</span>
                 </div>
                 <div className="flex flex-row items-center gap-x-3">
                     <button onClick={closeDialog} className='bg-gray-100  cursor-pointer rounded-lg border border-gray-300 text-gray-600 px-3 py-2 shadow-sm font-medium text-sm'>

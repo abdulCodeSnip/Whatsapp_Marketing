@@ -405,7 +405,7 @@ const Dashboard = () => {
                                              <CustomLinkButton
                                                   title={"Send New Message"}
                                                   buttonName={"sendNewMessageButton"}
-                                                  href={"/messages"}
+                                                  href={"/compose-new-message"}
                                                   buttonIcon={
                                                        <RiSendPlaneLine size={15} color="#4CAF50" />
                                                   }

@@ -66,10 +66,9 @@ const FullMessageOverview = ({
 
      return (
           <tr className="hover:bg-gray-50">
-
                {/* Checkbox to check all the messages. */}
                <td className="px-6 py-4 whitespace-nowrap ">
-                    <input type="checkbox" checked={isAllChecked} onChange={handleCheckBox} className='accent-green-600 h-[18px] w-[18px] cursor-pointer' />
+                    <input type="checkbox" id="checkboxForSelectingMessages" name="checkboxForSelectingMessages" checked={isAllChecked} onChange={handleCheckBox} className='accent-green-600 h-[18px] w-[18px] cursor-pointer' />
                </td>
 
                {/* Contact information with name and phone number */}

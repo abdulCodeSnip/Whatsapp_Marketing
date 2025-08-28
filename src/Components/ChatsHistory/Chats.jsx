@@ -9,6 +9,7 @@ import { io } from "socket.io-client";
 import SendTemplateMessage from "./SendTemplateMessage";
 import PickAndSendFile from "./PickAndSendFile";
 import { HiPhoto } from "react-icons/hi2";
+import Spinner from "../Spinner";
 
 let socket;
 
@@ -16,6 +17,7 @@ const Chats = () => {
     const [dynamicChats, setDynamicChats] = useState({ chat: [] });
     const [newMessage, setNewMessage] = useState("");
     const [isMessageSentFailed, setIsMessageSentFailed] = useState(false);
+
 
     /*
     values from redux, such as 
@@ -29,9 +31,8 @@ const Chats = () => {
     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
     const currentUserToConversate = useSelector((state) => state?.selectedContact?.selectedContact);
 
-    const [showSendMessageViaTemplate, setShowSendMessageViaTemplate] = useState(false);
-
-    // Check if the there is something exists inside the chats of "current user in chat", if not then return an empty array of "chats"
+    // Check if the there is something exists inside the chats of "current user in chat", if not then return an empty array of "chats", 
+    // here in this function if the user send a message then the chats array would be dynamically "changed"
     useEffect(() => {
         if (allChats?.chat) {
             setDynamicChats(allChats);
@@ -145,6 +146,11 @@ const Chats = () => {
         }));
     };
 
+    if (!dynamicChats) return (
+        <Spinner size="small" />
+    );
+    
+
     return (
         <>
             {/* Chat messages */}
@@ -195,7 +201,7 @@ const Chats = () => {
                     />
                     <button
                         onClick={handleUpdatedMessages}
-                        className="ml-2 flex items-center justify-center bg-green-500 rounded-full p-2 disabled:opacity-50"
+                        className="ml-2 flex items-center cursor-pointer justify-center bg-green-500 rounded-full p-2 disabled:opacity-50"
                         disabled={newMessage.trim() === ""}
                     >
                         <RiSendPlaneFill size={20} color="white" />

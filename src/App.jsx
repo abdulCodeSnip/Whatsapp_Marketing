@@ -132,7 +132,7 @@ function App() {
       />
 
       <Route
-        path="/componse-new-message"
+        path="/compose-new-message"
         element={
           <ProtectedRoute>
             <SendNewMessage />

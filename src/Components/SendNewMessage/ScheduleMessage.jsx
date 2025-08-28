@@ -1,28 +1,27 @@
 import React, { useEffect, useState } from 'react'
 import CustomToggle from './CustomToggle'
 import { CgStopwatch } from 'react-icons/cg';
-import { AiOutlineSave } from 'react-icons/ai';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { errorOrSuccessMessage } from '../../redux/sendNewMessage/errorMessage';
+import useSendNewMessage from '../../hooks/sendNewMessage/useSendNewMessage';
 
-const ScheduleMessage = () => {
+const ScheduleMessage = ({sendTemplate}) => {
     const [scheduled, setScheduled] = useState(false);
-    const [saveAsTemplate, setSaveAsTemplate] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [errorMessageOnSending, setErrorMessageOnSending] = useState("");
 
     const [time, setTime] = useState("");
     const [date, setDate] = useState("");
 
-    // Values from redux
-    const authInformation = useSelector((state) => state?.auth?.authInformation[0]);
+    // Values from redux, such as "selected contacts for message being sent", "content of the message"
     const selectedContacts = useSelector((state) => state?.allContacts?.selectedContacts);
     const messageContent = useSelector((state) => state?.messageContent?.content);
-    const errorOrSuccessMsg = useSelector((state) => state?.errorOrSuccessMessage?.errorMessage);
-    const dispatch = useDispatch();
+    const selectedTemplate = useSelector((state) => state?.selectedTemplate?.selected);
 
+    // An object for navigating the screen to 
     const navigate = useNavigate();
 
+    // handling date for scheduling messages
     useEffect(() => {
         const now = new Date();
 
@@ -38,197 +37,31 @@ const ScheduleMessage = () => {
         setDate(`${year}-${month}-${day}`);
     }, []);
 
-    const fetchAllContacts = async () => {
-        try {
-            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/contacts`, {
-                method: "GET",
-                headers: {
-                    "Authorization": authInformation?.token // Added Bearer prefix
-                }
-            });
+    const scheduledDateTime = new Date(`${date}T${time}:00`).toISOString();
 
-            if (!apiResponse.ok) {
-                throw new Error(`HTTP error! status: ${apiResponse.status}`);
-            }
+    // Custom hook that is responsible for sending, scheduling, sending-bulk messages, with appropiate data
+    const { isMessageScheduling, isMessageSending, scheduleMSG, errorInSendingMessage, scheduleMessages, sendBulkMessages, sendMessage, successMessageOnSent } =
+        useSendNewMessage(scheduledDateTime);
 
-            const result = await apiResponse.json();
-            console.log("Contacts fetched:", result);
-        } catch (error) {
-            console.error("Error fetching contacts:", error);
-            dispatch(errorOrSuccessMessage({
-                message: "Failed to fetch contacts",
-                type: "Error"
-            }));
+    /*
+    ** Send message from custom hooks, based on conditions, if only one contact is selected, then send a normal message, 
+    if multiple contacts, then "send Bulk messages",
+
+    ** Error Handling: if no contact is selected then don't allow the user to send the message and show an error message
+    */
+   
+    const handleSendOrScheduleMessages = async () => {
+        if (selectedTemplate) {
+            await sendTemplate()
         }
-    }
-
-    useEffect(() => {
-        if (authInformation?.token) {
-            fetchAllContacts();
-        }
-    }, [authInformation?.token]) // Added dependency
-
-    // Send a scheduled message from frontend to backend
-    const sendScheduleMessage = async () => {
-        try {
-            setLoading(true);
-
-            const promises = selectedContacts?.map(async (selected) => {
-                try {
-                    // Format the datetime properly for ISO string
-                    const scheduledDateTime = new Date(`${date}T${time}:00`).toISOString();
-
-                    const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/schedule`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": authInformation?.token
-                        },
-                        body: JSON.stringify({
-                            receiver_id: selected?.id,
-                            content: messageContent,
-                            scheduled_at: scheduledDateTime,
-                        })
-                    });
-
-                    if (!apiResponse.ok) {
-                        const errorData = await apiResponse.json().catch(() => ({}));
-                        throw new Error(`Failed for user ${selected?.id}: ${errorData.message || apiResponse.status}`);
-                    }
-
-                    const result = await apiResponse.json();
-                    console.log(`Scheduled message for ${selected?.id}: `, result);
-                    return result;
-                } catch (error) {
-                    console.error(`Error scheduling message for ${selected?.id}: `, error);
-                    throw error;
-                }
-            });
-
-            await Promise.all(promises);
-            dispatch(errorOrSuccessMessage({
-                message: "Messages scheduled successfully",
-                type: "Success"
-            }));
-
-        } catch (error) {
-            console.error("Error scheduling messages:", error);
-            dispatch(errorOrSuccessMessage({
-                message: "Failed to schedule messages",
-                type: "Error"
-            }));
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    // Send message to users directly from the frontend to backend, "Need USER_IDs of users"
-    const sendMessageDirectly = async () => {
-        try {
-            setLoading(true);
-
-            const formattedData = selectedContacts?.map((contact) => ({
-                phone: contact?.phone,
-                customer_name: `${contact?.first_name || ''} ${contact?.last_name || ''} `.trim()
-            }));
-
-            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/send-bulk`, {
-                method: "POST",
-                headers: {
-                    "Authorization": authInformation?.token, // Added Bearer prefix
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    csv_data: formattedData,
-                    content: messageContent
-                })
-            });
-
-            if (!apiResponse.ok) {
-                const errorData = await apiResponse.json().catch(() => ({}));
-                throw new Error(`HTTP error! status: ${apiResponse.status}, message: ${errorData.message || 'Unknown error'} `);
-            }
-
-            const result = await apiResponse.json();
-            console.log("Messages sent:", result);
-
-            dispatch(errorOrSuccessMessage({
-                message: "Messages sent successfully",
-                type: "Success"
-            }));
-
-        } catch (error) {
-            console.error("Error sending messages:", error);
-            dispatch(errorOrSuccessMessage({
-                message: `Failed to send messages: ${error.message} `,
-                type: "Error"
-            }));
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    const handleSendOrScheduleMessage = async () => {
-        // Clear any previous messages
-        dispatch(errorOrSuccessMessage({ message: "", type: "" }));
-
-        // Validation
-        if (!messageContent || messageContent.length < 10) {
-            dispatch(errorOrSuccessMessage({
-                message: "Please Enter at least 10 characters",
-                type: "Error"
-            }));
-            return;
-        }
-
-        if (!selectedContacts || selectedContacts.length <= 0) {
-            dispatch(errorOrSuccessMessage({
-                message: "Please select at least one contact",
-                type: "Error"
-            }));
-            return;
-        }
-
-        if (!authInformation?.token) {
-            dispatch(errorOrSuccessMessage({
-                message: "Authentication token is missing",
-                type: "Error"
-            }));
-            return;
-        }
-
-        // Additional validation for scheduled messages
-        if (scheduled) {
-            if (!date || !time) {
-                dispatch(errorOrSuccessMessage({
-                    message: "Please select both date and time for scheduled message",
-                    type: "Error"
-                }));
-                return;
-            }
-
-            // Check if scheduled time is in the future
-            const scheduledDateTime = new Date(`${date}T${time}:00`);
-            const now = new Date();
-
-            if (scheduledDateTime <= now) {
-                dispatch(errorOrSuccessMessage({
-                    message: "Scheduled time must be in the future",
-                    type: "Error"
-                }));
-                return;
-            }
-        }
-
-        // Execute the appropriate function
-        try {
-            if (scheduled) {
-                await sendScheduleMessage();
-            } else {
-                await sendMessageDirectly();
-            }
-        } catch (error) {
-            console.error("Error in handleSendOrScheduleMessage:", error);
+        else if (selectedContacts?.length <= 0) {
+            setErrorMessageOnSending("Please select at least one contact");
+        } else if (selectedContacts?.length === 1 && !scheduled) {
+            await sendMessage();
+        } else if (selectedContacts?.length > 1 && !scheduled) {
+            await sendBulkMessages();
+        } else if (selectedContacts?.length > 0 && scheduledDateTime && scheduled) {
+            await scheduleMessages(scheduledDateTime);
         }
     }
 
@@ -239,35 +72,23 @@ const ScheduleMessage = () => {
             </div>
 
             {/* Toggle for message as Scheduled message */}
-            <div className='flex flex-row items-center justify-between w-full'>
-                <div className='flex flex-row items-center justify-center gap-x-2'>
-                    <div className='text-gray-800'>
-                        <CgStopwatch size={19} />
+            {!selectedTemplate && (
+                <div className='flex flex-row items-center justify-between w-full'>
+                    <div className='flex flex-row items-center justify-center gap-x-2'>
+                        <div className='text-gray-800'>
+                            <CgStopwatch size={19} />
+                        </div>
+                        <h2 className='text-gray-800 text-sm'>
+                            Schedule Message
+                        </h2>
                     </div>
-                    <h2 className='text-gray-800 text-sm'>
-                        Schedule Message
-                    </h2>
-                </div>
-                <div>
-                    <CustomToggle checked={scheduled} setChecked={() => setScheduled(!scheduled)} />
-                </div>
-            </div>
-
-            {/* Toggle for Saving message as templates */}
-            <div className='flex flex-row items-center justify-between w-full'>
-                <div className='flex flex-row items-center justify-center gap-x-2'>
-                    <div className='text-gray-800'>
-                        <AiOutlineSave size={19} />
+                    <div>
+                        <CustomToggle checked={scheduled} setChecked={() => setScheduled(!scheduled)} />
                     </div>
-                    <h2 className='text-gray-800 text-sm'>
-                        Save as Template
-                    </h2>
                 </div>
-                <div>
-                    <CustomToggle checked={saveAsTemplate} setChecked={() => setSaveAsTemplate(!saveAsTemplate)} />
-                </div>
-            </div>
+            )}
 
+            {/* if schedule message then show, then allow user to select date and time for sending that scheduled message */}
             {scheduled && (
                 <div>
                     <div className='flex flex-row items-center justify-between w-full gap-6'>
@@ -296,21 +117,7 @@ const ScheduleMessage = () => {
                 </div>
             )}
 
-            {saveAsTemplate && (
-                <div className='px-5 py-2 space-y-2'>
-                    <label htmlFor="templateName" className='text-gray-800 block'>Template Name</label>
-                    <div className='flex flex-col'>
-                        <input
-                            type="text"
-                            id="templateName"
-                            placeholder='e.g Product Announcement'
-                            className='w-full px-3 py-2 rounded-xl border border-gray-200 outline-green-500'
-                        />
-                        <span className='text-gray-500 text-xs'>This template will be available for future messages</span>
-                    </div>
-                </div>
-            )}
-
+            {/* Buttons to either send a message or just move back to the home page */}
             <div className='flex flex-row items-center justify-end gap-5'>
                 <button
                     onClick={() => navigate("/")}
@@ -320,14 +127,12 @@ const ScheduleMessage = () => {
                     Cancel
                 </button>
                 <button
-                    onClick={handleSendOrScheduleMessage}
-                    disabled={loading}
-                    className={`flex flex - row items - center justify - center px - 4 py - 2 rounded - lg cursor - pointer border border - gray - 200 outline - green - 500 ${loading
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : 'bg-green-500 hover:opacity-95'
-                        } text - white shadow - sm`}
+                    onClick={handleSendOrScheduleMessages}
+                    disabled={(loading || messageContent === "") && !selectedTemplate}
+                    className={`flex flex-row items-center justify-center px-4 py-2 rounded-lg cursor-pointer border border-gray-200 outline-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed bg-green-500 hover:opacity-95 text-white shadow-sm`}
                 >
-                    {loading ? 'Processing...' : (scheduled ? "Schedule Message" : "Send Message")}
+                    {
+                        isMessageScheduling && scheduled ? "Scheduling Message..." : isMessageSending ? "Message Sending..." : scheduled ? "Schedule Message" : selectedTemplate ? "Send Template": "Send Message"}
                 </button>
             </div>
         </div>

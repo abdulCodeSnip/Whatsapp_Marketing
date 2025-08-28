@@ -2,18 +2,17 @@ import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux';
 
 const useFetchTemplates = () => {
-    const [templates, setTemplates] = useState([]);
+    const [fetchedTemplates, setFetchedTemplates] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState("");
     const [successMsgOnDelete, setSuccessMsgOnDelete] = useState("");
     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
-    const baseURL = import.meta.env.VITE_API_URL;
 
     // Fetch All templates from Backend
     const fetchAllTemplates = async () => {
         setIsLoading(true);
         try {
-            const apiResponse = await fetch(`${baseURL}/templates`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/templates`, {
                 method: "GET",
                 headers: {
                     "Authorization": authInformation?.token
@@ -21,11 +20,11 @@ const useFetchTemplates = () => {
             });
             const result = await apiResponse.json();
             if (apiResponse.ok) {
-                setTemplates(result);
+                setFetchedTemplates(result);
             }
         } catch (error) {
             setIsError(error?.message);
-            console.log("Error at fetching template in \"useFetchTemplates()\" hook ");
+            console.log("Error at fetching template in \"useFetchTemplates()\" hook ", error);
         } finally {
             setIsLoading(false);
         }
@@ -35,11 +34,12 @@ const useFetchTemplates = () => {
 
     useEffect(() => {
         fetchAllTemplates();
-    }, [])
+    }, []);
+
     return {
         isError,
         isLoading,
-        templates,
+        fetchedTemplates,
         successMsgOnDelete
     }
 }

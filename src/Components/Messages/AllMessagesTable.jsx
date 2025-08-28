@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { Fragment, useState } from 'react'
 import useFetchMessages from '../../hooks/useFetchMessages';
 import FullMessageOverview from '../fullMessageOverview';
 import DeleteMessageDialog from '../deleteMessageDialog';
@@ -7,8 +7,6 @@ import ForwardMessageDialog from '../forwardMessageDialog';
 const AllMessagesTable = () => {
 
     const [userMessages, setUserMessages] = useState([]);
-    const [currentUserDetail, setCurrentUserDetail] = useState([]);
-    const [recentMessages, setRecentMessages] = useState([]);
     const [selectedMessagesIDs, setSelectedMessagesIDs] = useState([]);
     const [deleteMessageDialog, setDeleteMessageDialog] = useState(false);
     const [showForwardMessageDialog, setShowForwardMessageDialog] = useState(false);
@@ -47,7 +45,7 @@ const AllMessagesTable = () => {
             <thead className='bg-gray-50'>
                 <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider w-10">
-                        <input type="checkbox" className="accent-green-600 w-[18px] h-[18px] rounded-xl outline-none border-green-400 cursor-pointer" />
+                        <input name="checkbox" id="checkbox" type="checkbox" className="accent-green-600 w-[18px] h-[18px] rounded-xl outline-none border-green-400 cursor-pointer" />
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
                         Contact
@@ -69,7 +67,7 @@ const AllMessagesTable = () => {
             <tbody className="bg-white divide-y divide-gray-200 relative">
 
                 {
-                    messages.map(userMsg => {
+                    messages?.map(userMsg => {
                         const contactName = currentUser?.user?.first_name + " " + currentUser?.user?.last_name;
                         const contactPhone = currentUser?.user?.phone;
                         const messageText = userMsg?.chat?.at(userMsg?.chat?.length - 1)?.content;
@@ -77,8 +75,9 @@ const AllMessagesTable = () => {
                         const messageTimeStamp = userMsg?.chat?.at(userMsg?.chat?.length - 1)?.updated_at?.split("T")?.at(1)?.slice(0, 8);
                         const messageStatus = userMsg?.chat?.at(userMsg?.chat?.length - 1)?.status;
                         return (
-                            <>
+                            <Fragment key={userMsg}>
                                 <FullMessageOverview
+                                    key={userMsg}
                                     contactName={contactName}
                                     contactPhoneNumber={contactPhone}
                                     messageDate={messageDate}
@@ -96,8 +95,6 @@ const AllMessagesTable = () => {
                                 />
 
                                 {/* if Delete Icon is pressed, then this would be on top of everything */}
-
-
                                 {deleteMessageDialog && (
                                     <div className="fixed inset-0 bg-black/40 bg-opacity-20 z-40">
                                         {/* This div is just for dimming the background if delete messages dialog is opened, otherwise the background would be smooth */}
@@ -135,11 +132,10 @@ const AllMessagesTable = () => {
                                         />
                                     </div>
                                 }
-                            </>
+                            </Fragment>
                         )
                     })
                 }
-
             </tbody>
         </table>
     )

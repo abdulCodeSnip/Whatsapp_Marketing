@@ -143,7 +143,7 @@ const SideBar = () => {
                          </div>
                          <div className="ml-3">
                               <p className="text-sm font-medium text-white">{user?.first_name + " " + user?.last_name}</p>
-                              <p className="text-xs text-gray-400">{user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)}</p>
+                              <p className="text-xs text-gray-400">{String (user?.role?.charAt(0).toUpperCase()) + String (user?.role?.slice(1)) }</p>
                          </div>
                     </div>
 
