@@ -30,10 +30,10 @@ const Dashboard = () => {
      const [changeFAQsSearchInput, setChangeFAQsSearchInput] = useState("");
      const [user, setUser] = useState(null);
      const [isLoading, setIsLoading] = useState(true);
+     const [isDataLoading, setIsDataLoading] = useState(true);
      const [error, setError] = useState(null);
 
      const loggedInUser = useSelector((state) => state?.loginUser?.userLogin);
-
 
      const dispatch = useDispatch();
 
@@ -42,10 +42,14 @@ const Dashboard = () => {
           {
                apiRoute: "/contacts",
                apiData: [],
+               isLoading: true,
+               error: null
           },
           {
                apiRoute: "/templates",
-               apiData: []
+               apiData: [],
+               isLoading: true,
+               error: null
           }
      ]);
 
@@ -54,10 +58,45 @@ const Dashboard = () => {
           return Cookies.get("jwtToken");
      };
 
+     // Safely get data count with fallbacks
+     const getDataCount = (data, routeName) => {
+          try {
+               if (!data || !data.apiData) return 0;
+               
+               const internalArray = Object.values(data.apiData)?.[0];
+               if (Array.isArray(internalArray)) {
+                    return internalArray.length;
+               }
+               
+               // Fallback for different data structures
+               if (routeName === "contacts" && data.apiData.users) {
+                    return Array.isArray(data.apiData.users) ? data.apiData.users.length : 0;
+               }
+               if (routeName === "templates" && data.apiData.templates) {
+                    return Array.isArray(data.apiData.templates) ? data.apiData.templates.length : 0;
+               }
+               
+               return 0;
+          } catch (error) {
+               console.error(`Error getting count for ${routeName}:`, error);
+               return 0;
+          }
+     };
+
+     // Safely format route name
+     const formatRouteName = (apiRoute) => {
+          try {
+               const routeName = apiRoute?.split("/").filter(Boolean)[0];
+               return routeName ? routeName.charAt(0).toUpperCase() + routeName.slice(1) : "Unknown";
+          } catch (error) {
+               return "Unknown";
+          }
+     };
+
      // Fetch data from APIs
      const fetchAllData = async () => {
           try {
-               setIsLoading(true);
+               setIsDataLoading(true);
                setError(null);
 
                const token = getAuthToken();
@@ -68,38 +107,50 @@ const Dashboard = () => {
 
                const updatedData = await Promise.all(
                     completeData.map(async (item) => {
-                         const response = await fetch(`${import.meta.env.VITE_API_URL}${item.apiRoute}`, {
-                              method: "GET",
-                              headers: {
-                                   "Authorization": `Bearer ${token}`, // Fixed: Added Bearer prefix
-                                   "Content-Type": "application/json"
-                              },
-                         });
+                         try {
+                              const response = await fetch(`${import.meta.env.VITE_API_URL}${item.apiRoute}`, {
+                                   method: "GET",
+                                   headers: {
+                                        "Authorization": `Bearer ${token}`,
+                                        "Content-Type": "application/json"
+                                   },
+                              });
 
-                         if (!response.ok) {
-                              throw new Error(`Failed to fetch ${item.apiRoute}: ${response.status}`);
+                              if (!response.ok) {
+                                   throw new Error(`Failed to fetch ${item.apiRoute}: ${response.status}`);
+                              }
+
+                              const result = await response.json();
+
+                              return {
+                                   ...item,
+                                   apiData: result || {},
+                                   isLoading: false,
+                                   error: null
+                              };
+                         } catch (error) {
+                              console.error(`Error fetching ${item.apiRoute}:`, error);
+                              return {
+                                   ...item,
+                                   apiData: {},
+                                   isLoading: false,
+                                   error: error.message
+                              };
                          }
-
-                         const result = await response.json();
-
-                         return {
-                              ...item,
-                              apiData: result,
-                         };
                     })
                );
 
                setCompleteData(updatedData);
 
-               // Dispatch to Redux store
+               // Dispatch to Redux store with safe data extraction
                const templatesData = updatedData.find(item => item.apiRoute === "/templates")?.apiData?.templates;
                const contactsData = updatedData.find(item => item.apiRoute === "/contacts")?.apiData?.users;
 
-               if (templatesData) {
+               if (Array.isArray(templatesData)) {
                     dispatch(addTemplates(templatesData));
                }
 
-               if (contactsData) {
+               if (Array.isArray(contactsData)) {
                     dispatch(allContacts(contactsData));
                }
 
@@ -107,13 +158,14 @@ const Dashboard = () => {
                console.error("Error fetching data:", error);
                setError(error.message);
           } finally {
-               setIsLoading(false);
+               setIsDataLoading(false);
           }
      };
 
      // Fetch user data such as username, email and password
      const userData = async () => {
           try {
+               setIsLoading(true);
                const token = getAuthToken();
                const email = Cookies.get("email");
                const password = Cookies.get("password");
@@ -125,7 +177,7 @@ const Dashboard = () => {
                const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
                     method: "POST",
                     headers: {
-                         "Authorization": `Bearer ${token}`, // Fixed: Added Bearer prefix
+                         "Authorization": `Bearer ${token}`,
                          "Content-Type": "application/json",
                     },
                     body: JSON.stringify({ email, password })
@@ -136,11 +188,14 @@ const Dashboard = () => {
                }
 
                const result = await apiResponse.json();
-               setUser(result);
+               setUser(result || {});
 
           } catch (error) {
                console.error("Error fetching user data:", error);
                setError(error.message);
+               setUser({}); // Set empty object to prevent undefined access
+          } finally {
+               setIsLoading(false);
           }
      };
 
@@ -159,15 +214,23 @@ const Dashboard = () => {
      }, []); // Remove pathname dependency to prevent unnecessary refetches
 
      // Show loading state
-     if (isLoading) {
+     if (isLoading || isDataLoading) {
           return (
                <div className="flex overflow-hidden h-screen">
                     <SideBar />
                     <div className='flex-1 flex flex-col overflow-hidden'>
                          <Header />
                          <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
-                              <div className="max-w-7xl mx-auto items-center justify-center h-screen w-screen">
-                                   <Spinner />
+                              <div className="max-w-7xl mx-auto">
+                                   <div className="flex items-center justify-center h-64">
+                                        <div className="flex flex-col items-center gap-4">
+                                             <Spinner size="large" />
+                                             <div className="text-center">
+                                                  <h3 className="text-lg font-medium text-gray-900">Loading Dashboard</h3>
+                                                  <p className="text-gray-500">Please wait while we fetch your data...</p>
+                                             </div>
+                                        </div>
+                                   </div>
                               </div>
                          </main>
                     </div>
@@ -185,7 +248,21 @@ const Dashboard = () => {
                          <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
                               <div className="max-w-7xl mx-auto">
                                    <div className="flex items-center justify-center h-64">
-                                        <div className="text-lg text-red-600">Error: {error}</div>
+                                        <div className="text-center">
+                                             <div className="text-red-500 mb-4">
+                                                  <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                                  </svg>
+                                             </div>
+                                             <h3 className="text-lg font-medium text-gray-900 mb-2">Unable to load dashboard</h3>
+                                             <p className="text-gray-500 mb-4">{error}</p>
+                                             <button
+                                                  onClick={() => window.location.reload()}
+                                                  className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                                             >
+                                                  Try Again
+                                             </button>
+                                        </div>
                                    </div>
                               </div>
                          </main>
@@ -335,7 +412,9 @@ const Dashboard = () => {
                                    {/* Welcome message for Admin  */}
                                    <div className="flex flex-col">
                                         <div>
-                                             <h2 className="font-medium text-2xl">Welcome back, {user?.user?.first_name || 'User'}</h2>
+                                             <h2 className="font-medium text-2xl">
+                                                  Welcome back, {user?.user?.first_name || user?.first_name || 'User'}
+                                             </h2>
                                         </div>
                                         <div>
                                              <span className="text-gray-500 text-[14.5px]">
@@ -362,30 +441,50 @@ const Dashboard = () => {
                                         {/* Dynamic Cards */}
                                         {
                                              completeData?.map((data, index) => {
-                                                  const routeName = data?.apiRoute?.split("/").filter(Boolean)[0];
-                                                  const formattedName = routeName
-                                                       ? routeName.charAt(0).toUpperCase() + routeName.slice(1)
-                                                       : "Unknown";
-
-                                                  const internalArray = Object.values(data.apiData)?.[0]; // <- dynamic "users" or "templates"
-                                                  const internalLength = Array.isArray(internalArray) ? internalArray.length : 0;
+                                                  const routeName = data?.apiRoute?.split("/").filter(Boolean)[0] || "unknown";
+                                                  const formattedName = formatRouteName(data?.apiRoute);
+                                                  const dataCount = getDataCount(data, routeName);
 
                                                   return (
                                                        <div key={index}>
-                                                            <DashboardCard
-                                                                 cardIcon={
-                                                                      formattedName === "Contacts" ?
-                                                                           <FaUserFriends size={23} color="#FDD835" />
-                                                                           : formattedName === "Templates" ?
-                                                                                <LuNewspaper size={23} color="indigo" /> :
-                                                                                <RiCheckDoubleLine size={23} color="#42A5F5" />
-                                                                 }
-                                                                 cardHeader={formattedName}
-                                                                 cardFooter={"from last week"}
-                                                                 cardInternalValue={internalLength}
-                                                                 growthDownPercentage={"1.2%"}
-                                                                 iconBackgroundColor={formattedName === "Templates" ? "#C5CAE9" : formattedName === "Contacts" ? "#FFF9C4" : "#dbeafe"}
-                                                            />
+                                                            {data.isLoading ? (
+                                                                 <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                                                                      <div className="flex items-center justify-center h-20">
+                                                                           <div className="flex flex-col items-center gap-2">
+                                                                                <Spinner size="small" />
+                                                                                <span className="text-xs text-gray-500">Loading {formattedName.toLowerCase()}...</span>
+                                                                           </div>
+                                                                      </div>
+                                                                 </div>
+                                                            ) : data.error ? (
+                                                                 <div className="bg-white rounded-lg p-6 shadow-sm border border-red-200">
+                                                                      <div className="flex items-center justify-center h-20">
+                                                                           <div className="text-center">
+                                                                                <div className="text-red-500 mb-1">
+                                                                                     <svg className="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                                     </svg>
+                                                                                </div>
+                                                                                <span className="text-xs text-red-600">Failed to load {formattedName.toLowerCase()}</span>
+                                                                           </div>
+                                                                      </div>
+                                                                 </div>
+                                                            ) : (
+                                                                 <DashboardCard
+                                                                      cardIcon={
+                                                                           formattedName === "Contacts" ?
+                                                                                <FaUserFriends size={23} color="#FDD835" />
+                                                                                : formattedName === "Templates" ?
+                                                                                     <LuNewspaper size={23} color="indigo" /> :
+                                                                                     <RiCheckDoubleLine size={23} color="#42A5F5" />
+                                                                      }
+                                                                      cardHeader={formattedName}
+                                                                      cardFooter={"from last week"}
+                                                                      cardInternalValue={dataCount}
+                                                                      growthDownPercentage={"1.2%"}
+                                                                      iconBackgroundColor={formattedName === "Templates" ? "#C5CAE9" : formattedName === "Contacts" ? "#FFF9C4" : "#dbeafe"}
+                                                                 />
+                                                            )}
                                                        </div>
                                                   );
                                              })

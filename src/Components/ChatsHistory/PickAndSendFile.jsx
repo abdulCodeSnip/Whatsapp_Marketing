@@ -89,7 +89,7 @@ const PickAndSendFile = ({ onFileSent }) => {
             ref={fileRef}
           />
         </button>
-        <MdOutlineEmojiEmotions size={24} className="cursor-pointer" />
+        {/* <MdOutlineEmojiEmotions size={24} className="cursor-pointer" /> */}
       </div>
 
       {/* File preview modal */}
