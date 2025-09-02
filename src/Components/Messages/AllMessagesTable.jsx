@@ -1,10 +1,10 @@
-import React, { Fragment, useState, useMemo } from 'react'
+import React, { Fragment, useState } from 'react'
 import useFetchMessages from '../../hooks/useFetchMessages';
 import FullMessageOverview from '../fullMessageOverview';
 import DeleteMessageDialog from '../deleteMessageDialog';
 import ForwardMessageDialog from '../forwardMessageDialog';
 
-const AllMessagesTable = ({ searchQuery = "" }) => {
+const AllMessagesTable = ({ searchQuery = "", filteredMessages = [] }) => {
 
     const [userMessages, setUserMessages] = useState([]);
     const [selectedMessagesIDs, setSelectedMessagesIDs] = useState([]);
@@ -39,29 +39,6 @@ const AllMessagesTable = ({ searchQuery = "" }) => {
     }
 
     const { isLoading, isError, messages, currentUser } = useFetchMessages(20);
-
-    // Filter messages based on search query
-    const filteredMessages = useMemo(() => {
-        if (!searchQuery.trim()) {
-            return messages || [];
-        }
-
-        const query = searchQuery.toLowerCase().trim();
-        
-        return (messages || []).filter(userMsg => {
-            const contactName = (currentUser?.user?.first_name + " " + currentUser?.user?.last_name).toLowerCase();
-            const contactPhone = currentUser?.user?.phone?.toLowerCase() || "";
-            const messageText = userMsg?.chat?.at(userMsg?.chat?.length - 1)?.content?.toLowerCase() || "";
-            const messageStatus = userMsg?.chat?.at(userMsg?.chat?.length - 1)?.status?.toLowerCase() || "";
-
-            return (
-                contactName.includes(query) ||
-                contactPhone.includes(query) ||
-                messageText.includes(query) ||
-                messageStatus.includes(query)
-            );
-        });
-    }, [messages, currentUser, searchQuery]);
 
     return (
         <table className='min-w-full divide-y divide-gray-200'>

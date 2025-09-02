@@ -1,9 +1,37 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import ClickableCustomButton from './clickableCustomButton';
 
-const FilterCard = ({ filterName, filteringOptions, isAllChecked }) => {
+const FilterCard = ({ 
+     filterName, 
+     dateFilter, 
+     onApplyDateFilter, 
+     statusFilter, 
+     onApplyStatusFilter, 
+     sortBy, 
+     onApplySortFilter 
+}) => {
 
      const [isButtonActive, setIsButtonActive] = useState(false);
+     const [localStartDate, setLocalStartDate] = useState(dateFilter?.startDate || '');
+     const [localEndDate, setLocalEndDate] = useState(dateFilter?.endDate || '');
+
+     // Sync local state with prop changes
+     useEffect(() => {
+          setLocalStartDate(dateFilter?.startDate || '');
+          setLocalEndDate(dateFilter?.endDate || '');
+     }, [dateFilter]);
+
+     const handleApplyDateFilter = () => {
+          onApplyDateFilter(localStartDate, localEndDate);
+     };
+
+     const handleStatusChange = (statusType, checked) => {
+          onApplyStatusFilter(statusType, checked);
+     };
+
+     const handleSortOptionClick = (sortType) => {
+          onApplySortFilter(sortType);
+     };
 
      return (
           <div className={`bg-white p-3 rounded-lg shadow-md border-gray-200 ${isButtonActive ? "border-green-500" : "border-gray-300 "} flex ${filterName !== "Date Range" ? "flex-row" : "flex-col"}items-center justify-between`}>
@@ -21,6 +49,8 @@ const FilterCard = ({ filterName, filteringOptions, isAllChecked }) => {
                                              type="date"
                                              name="startDate"
                                              id="startDate"
+                                             value={localStartDate}
+                                             onChange={(e) => setLocalStartDate(e.target.value)}
                                              className="text-gray-700 border-gray-200 p-2 border-1 rounded-xl"
                                         />
                                    </div>
@@ -32,6 +62,8 @@ const FilterCard = ({ filterName, filteringOptions, isAllChecked }) => {
                                              type="date"
                                              name="endDate"
                                              id="endDate"
+                                             value={localEndDate}
+                                             onChange={(e) => setLocalEndDate(e.target.value)}
                                              className="text-gray-700 border-gray-200 p-2 border-1 rounded-xl"
                                         />
                                    </div>
@@ -39,7 +71,9 @@ const FilterCard = ({ filterName, filteringOptions, isAllChecked }) => {
 
                               {/* Button aligned to flex-end */}
                               <div className="flex justify-end">
-                                   <button className="text-white font-medium text-xs bg-green-500 rounded-lg px-4 py-2 hover:opacity-90 cursor-pointer">
+                                   <button 
+                                        onClick={handleApplyDateFilter}
+                                        className="text-white font-medium text-xs bg-green-500 rounded-lg px-4 py-2 hover:opacity-90 cursor-pointer">
                                         Apply Filters
                                    </button>
                               </div>
@@ -51,29 +85,29 @@ const FilterCard = ({ filterName, filteringOptions, isAllChecked }) => {
                                    filterName === "Sort By" ?
                                         <div>
                                              <div>
-                                                  <option
-                                                       className="text-gray-400 text-sm px-3 py-2 w-[100%] font-medium cursor-pointer hover:bg-gray-100 rounded-md my-[2px]"
-                                                       value="byNewestDate">
+                                                  <div
+                                                       className={`text-sm px-3 py-2 w-[100%] font-medium cursor-pointer hover:bg-gray-100 rounded-md my-[2px] ${sortBy === 'byNewestDate' ? 'bg-green-100 text-green-700' : 'text-gray-400'}`}
+                                                       onClick={() => handleSortOptionClick('byNewestDate')}>
                                                        Date (Newest First)
-                                                  </option>
+                                                  </div>
 
-                                                  <option
-                                                       className="text-gray-400 text-sm px-3 py-2 w-[100%] font-medium cursor-pointer hover:bg-gray-100 rounded-md my-[2px]"
-                                                       value="byOldestDate">
+                                                  <div
+                                                       className={`text-sm px-3 py-2 w-[100%] font-medium cursor-pointer hover:bg-gray-100 rounded-md my-[2px] ${sortBy === 'byOldestDate' ? 'bg-green-100 text-green-700' : 'text-gray-400'}`}
+                                                       onClick={() => handleSortOptionClick('byOldestDate')}>
                                                        Date (Oldest First)
-                                                  </option>
+                                                  </div>
 
-                                                  <option
-                                                       className="text-gray-400 text-sm px-3 py-2 w-[100%] font-medium cursor-pointer hover:bg-gray-100 rounded-md my-[2px]"
-                                                       value="byStatus">
+                                                  <div
+                                                       className={`text-sm px-3 py-2 w-[100%] font-medium cursor-pointer hover:bg-gray-100 rounded-md my-[2px] ${sortBy === 'byStatus' ? 'bg-green-100 text-green-700' : 'text-gray-400'}`}
+                                                       onClick={() => handleSortOptionClick('byStatus')}>
                                                        Status
-                                                  </option>
+                                                  </div>
 
-                                                  <option
-                                                       className="text-gray-400 text-sm px-3 py-2 w-[100%] font-medium cursor-pointer hover:bg-gray-100 rounded-md my-[2px]"
-                                                       value="byContactNameAsc">
+                                                  <div
+                                                       className={`text-sm px-3 py-2 w-[100%] font-medium cursor-pointer hover:bg-gray-100 rounded-md my-[2px] ${sortBy === 'byContactNameAsc' ? 'bg-green-100 text-green-700' : 'text-gray-400'}`}
+                                                       onClick={() => handleSortOptionClick('byContactNameAsc')}>
                                                        Contact name (A-Z)
-                                                  </option>
+                                                  </div>
 
                                              </div>
                                         </div> :
@@ -83,6 +117,8 @@ const FilterCard = ({ filterName, filteringOptions, isAllChecked }) => {
                                                        type="checkbox"
                                                        id="allStatus"
                                                        name="allStatus"
+                                                       checked={statusFilter?.all || false}
+                                                       onChange={(e) => handleStatusChange('all', e.target.checked)}
                                                        className="accent-green-600 outline-none border cursor-pointer border-gray-200 w-[17px] h-[17px] rounded-lg"
                                                   />
                                                   <label htmlFor="allStatus" className='cursor-pointer w-[130px]'>All</label>
@@ -93,6 +129,8 @@ const FilterCard = ({ filterName, filteringOptions, isAllChecked }) => {
                                                        type="checkbox"
                                                        id="deliveredStatus"
                                                        name="deliveredStatus"
+                                                       checked={statusFilter?.delivered || false}
+                                                       onChange={(e) => handleStatusChange('delivered', e.target.checked)}
                                                        className="accent-green-600 outline-none border cursor-pointer border-gray-200 w-[17px] h-[17px] rounded-lg"
                                                   />
                                                   <label htmlFor="deliveredStatus" className='cursor-pointer w-[130px]'>Delivered</label>
@@ -103,6 +141,8 @@ const FilterCard = ({ filterName, filteringOptions, isAllChecked }) => {
                                                        type="checkbox"
                                                        id="pendingStatus"
                                                        name="pendingStatus"
+                                                       checked={statusFilter?.pending || false}
+                                                       onChange={(e) => handleStatusChange('pending', e.target.checked)}
                                                        className="accent-green-600 outline-none border cursor-pointer border-gray-200 w-[17px] h-[17px] rounded-lg"
                                                   />
                                                   <label htmlFor="pendingStatus" className='cursor-pointer w-[130px]'>Pending</label>
@@ -114,6 +154,8 @@ const FilterCard = ({ filterName, filteringOptions, isAllChecked }) => {
                                                        type="checkbox"
                                                        id="readStatus"
                                                        name="readStatus"
+                                                       checked={statusFilter?.read || false}
+                                                       onChange={(e) => handleStatusChange('read', e.target.checked)}
                                                        className="accent-green-600 outline-none border cursor-pointer border-gray-200 w-[17px] h-[17px] rounded-lg"
                                                   />
                                                   <label htmlFor="readStatus" className='cursor-pointer w-[130px]'>Read</label>
