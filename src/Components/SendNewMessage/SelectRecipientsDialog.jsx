@@ -41,9 +41,22 @@ const SelectRecipientsDialog = ({ closeDialog }) => {
 
 
     // Select contact if not selected for sending message, and if "that contact is selected" then, we're removing that contact from the "global list" or "redux"
-
     const handleSelectedContacts = (contact) => {
         dispatch(addingSelectedContacts(contact))
+    }
+
+    // Handle checkbox change event
+    const handleCheckboxChange = (e, contact) => {
+        e.stopPropagation(); // Prevent event bubbling
+        handleSelectedContacts(contact);
+    }
+
+    // Handle row click (excluding checkbox area)
+    const handleRowClick = (e, contact) => {
+        // Only handle if the click is not on the checkbox
+        if (e.target.type !== 'checkbox') {
+            handleSelectedContacts(contact);
+        }
     }
 
     return (
@@ -74,12 +87,23 @@ const SelectRecipientsDialog = ({ closeDialog }) => {
                             const contactName = contact?.first_name + " " + contact?.last_name;
                             const contactEmail = contact?.email;
                             return (
-                                <div onClick={() => handleSelectedContacts(contact)} key={index} className='flex flex-row w-full px-4 py-3 cursor-pointer hover:bg-gray-50'>
-                                    <div className='flex items-center justify-center gap-x-2'>
-                                        <div>
-                                            <input type="checkbox" onChange={() => handleSelectedContacts(contact)} checked={!!selectedContacts.find((selected) => selected?.id === contact?.id)} name={contact?.id} id={"contact" + index} className='cursor-pointer accent-green-600 h-4 w-4' />
+                                <div 
+                                    key={index} 
+                                    className='flex flex-row w-full px-4 py-3 cursor-pointer hover:bg-gray-50'
+                                    onClick={(e) => handleRowClick(e, contact)}
+                                >
+                                    <div className='flex items-center justify-center gap-x-2 w-full'>
+                                        <div className="flex items-center">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={!!selectedContacts.find((selected) => selected?.id === contact?.id)} 
+                                                onChange={(e) => handleCheckboxChange(e, contact)}
+                                                name={contact?.id} 
+                                                id={"contact" + index} 
+                                                className='cursor-pointer accent-green-600 h-4 w-4' 
+                                            />
                                         </div>
-                                        <div className='flex flex-col'>
+                                        <div className='flex flex-col flex-1'>
                                             <span className='text-gray-800 font-medium text-sm'>{contactName} </span>
                                             <span className='text-gray-500 text-xs'>{contactEmail}</span>
                                         </div>
