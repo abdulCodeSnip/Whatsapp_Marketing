@@ -1,10 +1,10 @@
-import React, { Fragment, useState } from 'react'
+import React, { Fragment, useState, useMemo } from 'react'
 import useFetchMessages from '../../hooks/useFetchMessages';
 import FullMessageOverview from '../fullMessageOverview';
 import DeleteMessageDialog from '../deleteMessageDialog';
 import ForwardMessageDialog from '../forwardMessageDialog';
 
-const AllMessagesTable = () => {
+const AllMessagesTable = ({ searchQuery = "" }) => {
 
     const [userMessages, setUserMessages] = useState([]);
     const [selectedMessagesIDs, setSelectedMessagesIDs] = useState([]);
@@ -40,6 +40,29 @@ const AllMessagesTable = () => {
 
     const { isLoading, isError, messages, currentUser } = useFetchMessages(20);
 
+    // Filter messages based on search query
+    const filteredMessages = useMemo(() => {
+        if (!searchQuery.trim()) {
+            return messages || [];
+        }
+
+        const query = searchQuery.toLowerCase().trim();
+        
+        return (messages || []).filter(userMsg => {
+            const contactName = (currentUser?.user?.first_name + " " + currentUser?.user?.last_name).toLowerCase();
+            const contactPhone = currentUser?.user?.phone?.toLowerCase() || "";
+            const messageText = userMsg?.chat?.at(userMsg?.chat?.length - 1)?.content?.toLowerCase() || "";
+            const messageStatus = userMsg?.chat?.at(userMsg?.chat?.length - 1)?.status?.toLowerCase() || "";
+
+            return (
+                contactName.includes(query) ||
+                contactPhone.includes(query) ||
+                messageText.includes(query) ||
+                messageStatus.includes(query)
+            );
+        });
+    }, [messages, currentUser, searchQuery]);
+
     return (
         <table className='min-w-full divide-y divide-gray-200'>
             <thead className='bg-gray-50'>
@@ -66,8 +89,40 @@ const AllMessagesTable = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200 relative">
 
-                {
-                    messages?.map(userMsg => {
+                {filteredMessages?.length === 0 && searchQuery.trim() ? (
+                    <tr>
+                        <td colSpan="6" className="px-6 py-12 text-center">
+                            <div className="flex flex-col items-center justify-center">
+                                <div className="text-gray-400 mb-2">
+                                    <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg font-medium text-gray-900 mb-1">No messages found</h3>
+                                <p className="text-gray-500 text-sm">
+                                    No messages match your search for "{searchQuery}". Try adjusting your search terms.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                ) : filteredMessages?.length === 0 ? (
+                    <tr>
+                        <td colSpan="6" className="px-6 py-12 text-center">
+                            <div className="flex flex-col items-center justify-center">
+                                <div className="text-gray-400 mb-2">
+                                    <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg font-medium text-gray-900 mb-1">No messages yet</h3>
+                                <p className="text-gray-500 text-sm">
+                                    Start sending messages to see them appear here.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                ) : (
+                    filteredMessages?.map(userMsg => {
                         const contactName = currentUser?.user?.first_name + " " + currentUser?.user?.last_name;
                         const contactPhone = currentUser?.user?.phone;
                         const messageText = userMsg?.chat?.at(userMsg?.chat?.length - 1)?.content;
@@ -135,7 +190,7 @@ const AllMessagesTable = () => {
                             </Fragment>
                         )
                     })
-                }
+                )}
             </tbody>
         </table>
     )

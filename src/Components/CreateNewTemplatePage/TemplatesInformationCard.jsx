@@ -3,10 +3,8 @@ import { onChangeLanguage } from '../../redux/templatePage/languageSlice';
 import { onChangeCategory } from '../../redux/templatePage/categorySlice';
 import { onChangeTemplateName } from '../../redux/templatePage/templateNameSlice';
 import { onChangeMessageBody } from '../../redux/templatePage/messageSlice';
-import useFetchTemplateCategories from '../../hooks/createNewTemplateHooks/useFetchTemplateCategories';
-import Spinner from '../Spinner';
 
-const TemplatesInformationCard = () => {
+const TemplatesInformationCard = ({ categories }) => {
 
      // Values from REDUX
      const language = useSelector((state) => state.language.value);
@@ -31,9 +29,6 @@ const TemplatesInformationCard = () => {
      const handleMessageBody = (e) => {
           dispatch(onChangeMessageBody(e?.target?.value));
      }
-
-     const {categories, isError, isLoading} = useFetchTemplateCategories();
-     if (isLoading) return <Spinner/>
 
      return (
           <div className='bg-white rounded-xl divide-y shadow-sm divide-gray-200 flex flex-col w-full gap-3'>
@@ -72,6 +67,7 @@ const TemplatesInformationCard = () => {
                                    onChange={handleTemplateCategory}
                                    value={category}
                               >
+                                   <option value="">Select a Category</option>
                                    {
                                         categories?.categories?.map(templateCategory => {
                                              return (

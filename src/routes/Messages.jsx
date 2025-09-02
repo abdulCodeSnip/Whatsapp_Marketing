@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { RiCheckDoubleLine, RiSendPlaneLine } from "react-icons/ri";
 import { CiSearch, CiCalendar } from "react-icons/ci";
 import { Link, useLocation } from 'react-router-dom';
@@ -10,6 +10,7 @@ import SideBar from '../Components/SideBar';
 import Header from '../Components/ContactsManagementPage/Header';
 import FooterPagination from '../Components/footerPagination';
 import AllMessagesTable from '../Components/Messages/AllMessagesTable';
+import useFetchMessages from '../hooks/useFetchMessages';
 
 
 const Messages = () => {
@@ -18,6 +19,68 @@ const Messages = () => {
      const [showDateFilterDialog, setShowDateFilterDialog] = useState(false);
      const [showSortByFilterDialog, setShowSortByFilterDialog] = useState(false);
      const [showStatusFilterDialog, setShowStatusFilterDialog] = useState(false);
+
+     // Refs for dropdown containers
+     const dateFilterRef = useRef(null);
+     const statusFilterRef = useRef(null);
+     const sortByFilterRef = useRef(null);
+
+     // Get messages for search count
+     const { messages, currentUser } = useFetchMessages(20);
+
+     // Calculate filtered messages count for display
+     const getFilteredCount = () => {
+          if (!searchMessages.trim()) {
+               return messages?.length || 0;
+          }
+
+          const query = searchMessages.toLowerCase().trim();
+          
+          return (messages || []).filter(userMsg => {
+               const contactName = (currentUser?.user?.first_name + " " + currentUser?.user?.last_name).toLowerCase();
+               const contactPhone = currentUser?.user?.phone?.toLowerCase() || "";
+               const messageText = userMsg?.chat?.at(userMsg?.chat?.length - 1)?.content?.toLowerCase() || "";
+               const messageStatus = userMsg?.chat?.at(userMsg?.chat?.length - 1)?.status?.toLowerCase() || "";
+
+               return (
+                    contactName.includes(query) ||
+                    contactPhone.includes(query) ||
+                    messageText.includes(query) ||
+                    messageStatus.includes(query)
+               );
+          }).length;
+     };
+
+     const filteredCount = getFilteredCount();
+     const totalCount = messages?.length || 0;
+
+     // Handle outside click to close dropdowns
+     useEffect(() => {
+          const handleClickOutside = (event) => {
+               // Check if click is outside date filter
+               if (dateFilterRef.current && !dateFilterRef.current.contains(event.target)) {
+                    setShowDateFilterDialog(false);
+               }
+               // Check if click is outside status filter
+               if (statusFilterRef.current && !statusFilterRef.current.contains(event.target)) {
+                    setShowStatusFilterDialog(false);
+               }
+               // Check if click is outside sort by filter
+               if (sortByFilterRef.current && !sortByFilterRef.current.contains(event.target)) {
+                    setShowSortByFilterDialog(false);
+               }
+          };
+
+          // Add event listener when any dropdown is open
+          if (showDateFilterDialog || showStatusFilterDialog || showSortByFilterDialog) {
+               document.addEventListener('mousedown', handleClickOutside);
+          }
+
+          // Cleanup event listener
+          return () => {
+               document.removeEventListener('mousedown', handleClickOutside);
+          };
+     }, [showDateFilterDialog, showStatusFilterDialog, showSortByFilterDialog]);
 
      //Handling the Date filter
      const handleShowDateFiltering = () => {
@@ -89,7 +152,7 @@ const Messages = () => {
                                         <div className="flex flex-row justify-between gap-x-2 w-[38%] relative">
 
                                              {/* Filter messages by starting and ending date*/}
-                                             <div>
+                                             <div ref={dateFilterRef}>
                                                   <FilterButton
                                                        icon={
                                                             <CiCalendar
@@ -100,58 +163,59 @@ const Messages = () => {
                                                        title={"Date Range"}
                                                        handleClick={handleShowDateFiltering}
                                                   />
+                                                  {
+                                                       showDateFilterDialog &&
+                                                       <div className="absolute top-14 z-50 right-50">
+                                                            <FilterCard
+                                                                 filterName={"Date Range"}
+                                                            />
+                                                       </div>
+                                                  }
                                              </div>
 
-                                             {
-                                                  showDateFilterDialog &&
-                                                  <div className="absolute top-14 z-50 right-50">
-                                                       <FilterCard
-                                                            filterName={"Date Range"}
-                                                       />
-                                                  </div>
-                                             }
-
                                              {/* Filter messages by status */}
-                                             <FilterButton
-                                                  title={"Status"}
-                                                  icon={
-                                                       <RiCheckDoubleLine size={20}
-                                                            className="text-gray-600"
-                                                       />
+                                             <div ref={statusFilterRef}>
+                                                  <FilterButton
+                                                       title={"Status"}
+                                                       icon={
+                                                            <RiCheckDoubleLine size={20}
+                                                                 className="text-gray-600"
+                                                            />
+                                                       }
+                                                       handleClick={handleShowStatusFilering}
+
+                                                  />
+                                                  {
+                                                       showStatusFilterDialog &&
+                                                       <div className="absolute top-14 z-50 right-40">
+                                                            <FilterCard
+                                                                 filterName={"Status"}
+                                                            />
+                                                       </div>
                                                   }
-                                                  handleClick={handleShowStatusFilering}
-
-                                             />
-
-                                             {
-                                                  showStatusFilterDialog &&
-                                                  <div className="absolute top-14 z-50 right-40">
-                                                       <FilterCard
-                                                            filterName={"Status"}
-                                                       />
-                                                  </div>
-                                             }
+                                             </div>
 
                                              {/* Filter messages by sorting e.g(newer, older, name, status etc.) */}
-                                             <FilterButton
-                                                  title={"Sort by"}
-                                                  icon={
-                                                       <HiSortDescending
-                                                            size={20}
-                                                            className="text-gray-600"
-                                                       />
+                                             <div ref={sortByFilterRef}>
+                                                  <FilterButton
+                                                       title={"Sort by"}
+                                                       icon={
+                                                            <HiSortDescending
+                                                                 size={20}
+                                                                 className="text-gray-600"
+                                                            />
+                                                       }
+                                                       handleClick={handleShowSortByFiltering}
+                                                  />
+                                                  {
+                                                       showSortByFilterDialog &&
+                                                       <div className="absolute top-14 z-50 right-10">
+                                                            <FilterCard
+                                                                 filterName={"Sort By"}
+                                                            />
+                                                       </div>
                                                   }
-                                                  handleClick={handleShowSortByFiltering}
-                                             />
-
-                                             {
-                                                  showSortByFilterDialog &&
-                                                  <div className="absolute top-14 z-50 right-10">
-                                                       <FilterCard
-                                                            filterName={"Sort By"}
-                                                       />
-                                                  </div>
-                                             }
+                                             </div>
                                         </div>
                                    </div>
 
@@ -160,13 +224,17 @@ const Messages = () => {
                                         <div className='overflow-x-auto'>
 
                                              {/* Messages table component with actions */}
-                                             <AllMessagesTable />
+                                             <AllMessagesTable searchQuery={searchMessages} />
 
                                              {/* Pagination at last of tables */}
                                              <div className="px-6 py-4 rounded-bl-xl rounded-br-xl w-full bg-gray-50 border border-gray-200 flex items-center justify-between">
                                                   <div className="flex flex-row gap-x-3 items-center w-full">
                                                        <span className='text-gray-500 text-sm'>
-                                                            Showing 1 to 10 of 88 Results
+                                                            {searchMessages.trim() ? (
+                                                                 `Showing ${filteredCount} of ${totalCount} Results ${filteredCount !== totalCount ? '(filtered)' : ''}`
+                                                            ) : (
+                                                                 `Showing 1 to ${Math.min(10, totalCount)} of ${totalCount} Results`
+                                                            )}
                                                        </span>
                                                        <div className="text-sm border border-gray-200 px-3 py-1 rounded-full">
                                                             <select className="outline-none" name="messagesPerPage">

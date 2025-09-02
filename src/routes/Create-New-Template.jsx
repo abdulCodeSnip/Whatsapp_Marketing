@@ -11,11 +11,16 @@ import Hamburger from '../Components/CreateNewTemplatePage/Hamburger';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import useCreateNewTemplate from '../hooks/createNewTemplateHooks/useCreateNewTemplate';
+import useFetchTemplateCategories from '../hooks/createNewTemplateHooks/useFetchTemplateCategories';
+import Spinner from '../Components/Spinner';
 
 
 const CreateNewTemplate = () => {
 
      const [isAllFieldsValid, setIsAllFieldsValid] = useState(false);
+
+     // Fetch categories at the main component level
+     const { categories, isLoading: categoriesLoading, isError: categoriesError } = useFetchTemplateCategories();
 
      // Values from Redux
      const language = useSelector((state) => state.language.value);
@@ -34,7 +39,7 @@ const CreateNewTemplate = () => {
 
 
      const validateAllFields = () => {
-          if (category === "" || templateName === "" || category === "" || language === "") {
+          if (category === "" || templateName === "" || language === "") {
                setIsAllFieldsValid(false);
           } else {
                setIsAllFieldsValid(true);
@@ -42,16 +47,57 @@ const CreateNewTemplate = () => {
      }
 
      useEffect(() => {
-          validateAllFields();
-     }, [templateName, category, language, variables])
+          // Only validate after categories are loaded to avoid premature validation
+          if (!categoriesLoading) {
+               validateAllFields();
+          }
+     }, [templateName, category, language, variables, categoriesLoading])
 
      const templateBody = {
           name: templateName,
           language: language,
-          category_id: parseInt("1"),
+          category_id: parseInt(category || "1"),
           message: messageBody,
           variables: formatVariables(variables),
           is_active: true
+     }
+
+     // Show loading spinner while categories are being fetched
+     if (categoriesLoading) {
+          return (
+               <div className='flex h-screen overflow-hidden'>
+                    <SideBar />
+                    <div className='flex flex-1 flex-col h-screen overflow-hidden'>
+                         <Header />
+                         <main className='flex-1 p-6 bg-gray-50 overflow-y-auto flex items-center justify-center'>
+                              <div className='text-center'>
+                                   <Spinner />
+                                   <p className='mt-4 text-gray-600'>Loading template categories...</p>
+                              </div>
+                         </main>
+                    </div>
+               </div>
+          );
+     }
+
+     // Show error if categories failed to load
+     if (categoriesError) {
+          return (
+               <div className='flex h-screen overflow-hidden'>
+                    <SideBar />
+                    <div className='flex flex-1 flex-col h-screen overflow-hidden'>
+                         <Header />
+                         <main className='flex-1 p-6 bg-gray-50 overflow-y-auto flex items-center justify-center'>
+                              <div className='text-center'>
+                                   <div className='bg-red-50 border border-red-200 rounded-lg p-6'>
+                                        <h3 className='text-red-800 font-medium mb-2'>Failed to Load Categories</h3>
+                                        <p className='text-red-600 text-sm'>Unable to fetch template categories. Please refresh the page to try again.</p>
+                                   </div>
+                              </div>
+                         </main>
+                    </div>
+               </div>
+          );
      }
 
      return (
@@ -91,7 +137,7 @@ const CreateNewTemplate = () => {
                                         <div className='flex flex-col space-y-6 w-full'>
 
                                              {/* Template Information Card */}
-                                             <TemplatesInformationCard />
+                                             <TemplatesInformationCard categories={categories} />
 
                                              {/* Message Information Card */}
                                              <MessageInformationCard />

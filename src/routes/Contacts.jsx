@@ -17,6 +17,7 @@ const Contacts = () => {
      const [editContact, setEditContact] = useState(false);
      const [replyToMessage, setReplyToMessage] = useState(false);
      const [allContacts, setAllContacts] = useState([]);
+     const [refreshContacts, setRefreshContacts] = useState(false);
 
      // Values from Redux
      const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
@@ -42,8 +43,16 @@ const Contacts = () => {
 
      useEffect(() => {
           getAllContacts();
-     }, [])
+     }, [refreshContacts])
 
+     const handleContactSaved = () => {
+          setShowAddContactDialog(false);
+          setIsContactSaved(true);
+          setRefreshContacts(prev => !prev); // Trigger refresh
+          setTimeout(() => {
+               setIsContactSaved(false);
+          }, 3000);
+     };
 
      return (
           <div className="flex overflow-hidden h-screen">
@@ -112,12 +121,19 @@ const Contacts = () => {
                                                   <LuUsersRound />
                                                   <span className="font-medium text-sm text-gray-800">All Contacts</span>
                                              </div>
-                                             <span className="font-medium text-sm p-2 rounded-full bg-green-200">{allContacts?.users?.length}</span>
+                                             <span className="font-medium text-sm p-2 rounded-full bg-green-200">
+                                                  {allContacts?.users?.length || 0}
+                                             </span>
                                         </div>
                                    </div>
                                    {/* All contacts would be fetched through this div */}
                                    <div className="w-full flex-col">
-                                        <AllContactsTable editContact={() => setEditContact(true)} replyToMessage={() => setReplyToMessage(true)} />
+                                        <AllContactsTable 
+                                             editContact={() => setEditContact(true)} 
+                                             replyToMessage={() => setReplyToMessage(true)}
+                                             allContacts={allContacts}
+                                             onContactsChange={setAllContacts}
+                                        />
                                    </div>
                               </div>
 
@@ -144,13 +160,7 @@ const Contacts = () => {
                                         <div className='fixed top-0 z-50 h-auto right-88 bg-white rounded-2xl border-gray-200 border-1 w-[550px] shadow-gray-200'>
                                              <AddContactsDialog
                                                   title={"Add New Contact"}
-                                                  saveContact={() => {
-                                                       setShowAddContactDialog(false);
-                                                       setIsContactSaved(true);
-                                                       setTimeout(() => {
-                                                            setIsContactSaved(false);
-                                                       }, 3000);
-                                                  }}
+                                                  saveContact={handleContactSaved}
                                                   closeDialog={() => setShowAddContactDialog(false)}
                                              />
                                         </div>
