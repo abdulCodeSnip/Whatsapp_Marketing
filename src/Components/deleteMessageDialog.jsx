@@ -30,12 +30,12 @@ const DeleteMessageDialog = ({ title, contactName, contactPhone, message, footer
                     </div>
 
                     <div className='flex flex-col items-center justify-center '>
-                         <span className='text-gray-500 text-sm m-5 p-3 bg-gray-50 rounded-xl'>
+                         {/* <span className='text-gray-500 text-sm m-5 p-3 bg-gray-50 rounded-xl'>
                               {
                                    message
                               }
-                         </span>
-                         <span className='text-gray-500 text-[15px] mb-5'>
+                         </span> */}
+                         <span className='text-gray-500 text-[15px] mb-5 mt-5'>
                               {footer}
                          </span>
                     </div>

@@ -39,7 +39,7 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
                     const message = { content: "Contact added successfully!", type: "Success" }
                     dispatch(changingErrorMessageOnSuccess(message))
                } else if (apiResponse.status === 400) {
-                    const message = { content: "Contact already exists", type: "Error" };
+                    const message = { content: "User with email or phone number already exists", type: "Error" };
                     dispatch(changingErrorMessageOnSuccess(message));
                }
 

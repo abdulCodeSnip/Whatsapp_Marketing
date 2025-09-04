@@ -40,16 +40,14 @@ const MessageCard = ({ userName, phoneNumber, userProfileLogo, messageStatus, ms
                          {/* Logo and Title */}
                          <div className="flex flex-row items-center gap-x-3">
                               <div>
-                                   <h2
-                                        className={`rounded-full p-3 font-medium h-10 w-10 flex items-center justify-center ${profileBgColor} ${profileTextColor}`}
+                                   <div
+                                        className={`rounded-full font-medium h-10 w-10 flex items-center justify-center text-xs whitespace-nowrap ${profileBgColor} ${profileTextColor}`}
                                    >
-                                        {
-                                             userProfileLogo
-                                        }
-                                   </h2>
+                                        {userProfileLogo}
+                                   </div>
                               </div>
 
-                              <div className="flex flex-col items-center justify-center" >
+                              <div className="flex flex-col items-start justify-center" >
 
                                    <h2 className="font-medium text-[14px]">
                                         {

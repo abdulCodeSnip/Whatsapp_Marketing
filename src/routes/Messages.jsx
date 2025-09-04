@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { RiCheckDoubleLine, RiSendPlaneLine } from "react-icons/ri";
 import { CiSearch, CiCalendar } from "react-icons/ci";
 import { Link, useLocation } from 'react-router-dom';
@@ -10,6 +10,7 @@ import SideBar from '../Components/SideBar';
 import Header from '../Components/ContactsManagementPage/Header';
 import FooterPagination from '../Components/footerPagination';
 import AllMessagesTable from '../Components/Messages/AllMessagesTable';
+import useFetchMessages from '../hooks/useFetchMessages';
 
 
 const Messages = () => {
@@ -18,6 +19,196 @@ const Messages = () => {
      const [showDateFilterDialog, setShowDateFilterDialog] = useState(false);
      const [showSortByFilterDialog, setShowSortByFilterDialog] = useState(false);
      const [showStatusFilterDialog, setShowStatusFilterDialog] = useState(false);
+
+     // Filter states
+     const [dateFilter, setDateFilter] = useState({
+          startDate: '',
+          endDate: ''
+     });
+     const [statusFilter, setStatusFilter] = useState({
+          all: true,
+          delivered: false,
+          pending: false,
+          read: false
+     });
+     const [sortBy, setSortBy] = useState('byNewestDate'); // Default sort
+
+     // Refs for dropdown containers
+     const dateFilterRef = useRef(null);
+     const statusFilterRef = useRef(null);
+     const sortByFilterRef = useRef(null);
+
+     // Get messages for search count
+     const { messages, currentUser } = useFetchMessages(20);
+
+     // Apply date filter
+     const applyDateFilter = (startDate, endDate) => {
+          setDateFilter({ startDate, endDate });
+          setShowDateFilterDialog(false);
+     };
+
+     // Apply status filter
+     const applyStatusFilter = (statusType, checked) => {
+          if (statusType === 'all') {
+               setStatusFilter({
+                    all: checked,
+                    delivered: false,
+                    pending: false,
+                    read: false
+               });
+          } else {
+               setStatusFilter(prev => ({
+                    ...prev,
+                    all: false,
+                    [statusType]: checked
+               }));
+          }
+     };
+
+     // Apply sort filter
+     const applySortFilter = (sortType) => {
+          setSortBy(sortType);
+          setShowSortByFilterDialog(false);
+     };
+
+     // Clear all filters
+     const clearAllFilters = () => {
+          setSearchMessages("");
+          setDateFilter({ startDate: '', endDate: '' });
+          setStatusFilter({ all: true, delivered: false, pending: false, read: false });
+          setSortBy('byNewestDate');
+     };
+
+     // Check if any filters are active
+     const hasActiveFilters = () => {
+          return searchMessages.trim() || 
+                 dateFilter.startDate || 
+                 dateFilter.endDate || 
+                 !statusFilter.all || 
+                 sortBy !== 'byNewestDate';
+     };
+
+     // Calculate filtered messages count for display
+     const getFilteredCount = () => {
+          if (!searchMessages.trim() && !dateFilter.startDate && !dateFilter.endDate && statusFilter.all && sortBy === 'byNewestDate') {
+               return messages?.length || 0;
+          }
+
+          return getFilteredAndSortedMessages().length;
+     };
+
+     // Get filtered and sorted messages
+     const getFilteredAndSortedMessages = () => {
+          let filtered = messages || [];
+
+          // Apply search filter
+          if (searchMessages.trim()) {
+               const query = searchMessages.toLowerCase().trim();
+               filtered = filtered.filter(userMsg => {
+                    const contactName = (currentUser?.user?.first_name + " " + currentUser?.user?.last_name).toLowerCase();
+                    const contactPhone = currentUser?.user?.phone?.toLowerCase() || "";
+                    const messageText = userMsg?.chat?.at(userMsg?.chat?.length - 1)?.content?.toLowerCase() || "";
+                    const messageStatus = userMsg?.chat?.at(userMsg?.chat?.length - 1)?.status?.toLowerCase() || "";
+
+                    return (
+                         contactName.includes(query) ||
+                         contactPhone.includes(query) ||
+                         messageText.includes(query) ||
+                         messageStatus.includes(query)
+                    );
+               });
+          }
+
+          // Apply date filter
+          if (dateFilter.startDate || dateFilter.endDate) {
+               filtered = filtered.filter(userMsg => {
+                    const messageDate = userMsg?.chat?.at(userMsg?.chat?.length - 1)?.updated_at?.split("T")?.at(0);
+                    if (!messageDate) return false;
+
+                    const msgDate = new Date(messageDate);
+                    const startDate = dateFilter.startDate ? new Date(dateFilter.startDate) : null;
+                    const endDate = dateFilter.endDate ? new Date(dateFilter.endDate) : null;
+
+                    if (startDate && endDate) {
+                         return msgDate >= startDate && msgDate <= endDate;
+                    } else if (startDate) {
+                         return msgDate >= startDate;
+                    } else if (endDate) {
+                         return msgDate <= endDate;
+                    }
+                    return true;
+               });
+          }
+
+          // Apply status filter
+          if (!statusFilter.all) {
+               filtered = filtered.filter(userMsg => {
+                    const messageStatus = userMsg?.chat?.at(userMsg?.chat?.length - 1)?.status?.toLowerCase() || "";
+                    
+                    return (
+                         (statusFilter.delivered && messageStatus === 'delivered') ||
+                         (statusFilter.pending && messageStatus === 'pending') ||
+                         (statusFilter.read && messageStatus === 'read')
+                    );
+               });
+          }
+
+          // Apply sorting
+          filtered.sort((a, b) => {
+               const aDate = new Date(a?.chat?.at(a?.chat?.length - 1)?.updated_at || 0);
+               const bDate = new Date(b?.chat?.at(b?.chat?.length - 1)?.updated_at || 0);
+               const aContactName = currentUser?.user?.first_name + " " + currentUser?.user?.last_name;
+               const bContactName = currentUser?.user?.first_name + " " + currentUser?.user?.last_name;
+               const aStatus = a?.chat?.at(a?.chat?.length - 1)?.status || "";
+               const bStatus = b?.chat?.at(b?.chat?.length - 1)?.status || "";
+
+               switch (sortBy) {
+                    case 'byNewestDate':
+                         return bDate - aDate;
+                    case 'byOldestDate':
+                         return aDate - bDate;
+                    case 'byStatus':
+                         return aStatus.localeCompare(bStatus);
+                    case 'byContactNameAsc':
+                         return aContactName.localeCompare(bContactName);
+                    default:
+                         return bDate - aDate;
+               }
+          });
+
+          return filtered;
+     };
+
+     const filteredCount = getFilteredCount();
+     const totalCount = messages?.length || 0;
+
+     // Handle outside click to close dropdowns
+     useEffect(() => {
+          const handleClickOutside = (event) => {
+               // Check if click is outside date filter
+               if (dateFilterRef.current && !dateFilterRef.current.contains(event.target)) {
+                    setShowDateFilterDialog(false);
+               }
+               // Check if click is outside status filter
+               if (statusFilterRef.current && !statusFilterRef.current.contains(event.target)) {
+                    setShowStatusFilterDialog(false);
+               }
+               // Check if click is outside sort by filter
+               if (sortByFilterRef.current && !sortByFilterRef.current.contains(event.target)) {
+                    setShowSortByFilterDialog(false);
+               }
+          };
+
+          // Add event listener when any dropdown is open
+          if (showDateFilterDialog || showStatusFilterDialog || showSortByFilterDialog) {
+               document.addEventListener('mousedown', handleClickOutside);
+          }
+
+          // Cleanup event listener
+          return () => {
+               document.removeEventListener('mousedown', handleClickOutside);
+          };
+     }, [showDateFilterDialog, showStatusFilterDialog, showSortByFilterDialog]);
 
      //Handling the Date filter
      const handleShowDateFiltering = () => {
@@ -89,7 +280,7 @@ const Messages = () => {
                                         <div className="flex flex-row justify-between gap-x-2 w-[38%] relative">
 
                                              {/* Filter messages by starting and ending date*/}
-                                             <div>
+                                             <div ref={dateFilterRef}>
                                                   <FilterButton
                                                        icon={
                                                             <CiCalendar
@@ -97,76 +288,125 @@ const Messages = () => {
                                                                  className="text-gray-600"
                                                             />
                                                        }
-                                                       title={"Date Range"}
+                                                       title={`Date Range${(dateFilter.startDate || dateFilter.endDate) ? ' ✓' : ''}`}
                                                        handleClick={handleShowDateFiltering}
                                                   />
+                                                  {
+                                                       showDateFilterDialog &&
+                                                       <div className="absolute top-14 z-50 right-50">
+                                                            <FilterCard
+                                                                 filterName={"Date Range"}
+                                                                 dateFilter={dateFilter}
+                                                                 onApplyDateFilter={applyDateFilter}
+                                                            />
+                                                       </div>
+                                                  }
                                              </div>
 
-                                             {
-                                                  showDateFilterDialog &&
-                                                  <div className="absolute top-14 z-50 right-50">
-                                                       <FilterCard
-                                                            filterName={"Date Range"}
-                                                       />
-                                                  </div>
-                                             }
-
                                              {/* Filter messages by status */}
-                                             <FilterButton
-                                                  title={"Status"}
-                                                  icon={
-                                                       <RiCheckDoubleLine size={20}
-                                                            className="text-gray-600"
-                                                       />
+                                             <div ref={statusFilterRef}>
+                                                  <FilterButton
+                                                       title={`Status${!statusFilter.all ? ' ✓' : ''}`}
+                                                       icon={
+                                                            <RiCheckDoubleLine size={20}
+                                                                 className="text-gray-600"
+                                                            />
+                                                       }
+                                                       handleClick={handleShowStatusFilering}
+
+                                                  />
+                                                  {
+                                                       showStatusFilterDialog &&
+                                                       <div className="absolute top-14 z-50 right-40">
+                                                            <FilterCard
+                                                                 filterName={"Status"}
+                                                                 statusFilter={statusFilter}
+                                                                 onApplyStatusFilter={applyStatusFilter}
+                                                            />
+                                                       </div>
                                                   }
-                                                  handleClick={handleShowStatusFilering}
-
-                                             />
-
-                                             {
-                                                  showStatusFilterDialog &&
-                                                  <div className="absolute top-14 z-50 right-40">
-                                                       <FilterCard
-                                                            filterName={"Status"}
-                                                       />
-                                                  </div>
-                                             }
+                                             </div>
 
                                              {/* Filter messages by sorting e.g(newer, older, name, status etc.) */}
-                                             <FilterButton
-                                                  title={"Sort by"}
-                                                  icon={
-                                                       <HiSortDescending
-                                                            size={20}
-                                                            className="text-gray-600"
-                                                       />
+                                             <div ref={sortByFilterRef}>
+                                                  <FilterButton
+                                                       title={`Sort by${sortBy !== 'byNewestDate' ? ' ✓' : ''}`}
+                                                       icon={
+                                                            <HiSortDescending
+                                                                 size={20}
+                                                                 className="text-gray-600"
+                                                            />
+                                                       }
+                                                       handleClick={handleShowSortByFiltering}
+                                                  />
+                                                  {
+                                                       showSortByFilterDialog &&
+                                                       <div className="absolute top-14 z-50 right-10">
+                                                            <FilterCard
+                                                                 filterName={"Sort By"}
+                                                                 sortBy={sortBy}
+                                                                 onApplySortFilter={applySortFilter}
+                                                            />
+                                                       </div>
                                                   }
-                                                  handleClick={handleShowSortByFiltering}
-                                             />
-
-                                             {
-                                                  showSortByFilterDialog &&
-                                                  <div className="absolute top-14 z-50 right-10">
-                                                       <FilterCard
-                                                            filterName={"Sort By"}
-                                                       />
-                                                  </div>
-                                             }
+                                             </div>
                                         </div>
                                    </div>
+
+                                   {/* Active filters and clear button */}
+                                   {hasActiveFilters() && (
+                                        <div className="flex flex-row items-center justify-between p-3 bg-blue-50 rounded-lg mt-4 border border-blue-200">
+                                             <div className="flex flex-row items-center gap-2 text-sm text-blue-700">
+                                                  <span className="font-medium">Active Filters:</span>
+                                                  {searchMessages.trim() && (
+                                                       <span className="bg-blue-100 px-2 py-1 rounded-full text-xs">
+                                                            Search: "{searchMessages}"
+                                                       </span>
+                                                  )}
+                                                  {(dateFilter.startDate || dateFilter.endDate) && (
+                                                       <span className="bg-blue-100 px-2 py-1 rounded-full text-xs">
+                                                            Date Range
+                                                       </span>
+                                                  )}
+                                                  {!statusFilter.all && (
+                                                       <span className="bg-blue-100 px-2 py-1 rounded-full text-xs">
+                                                            Status Filter
+                                                       </span>
+                                                  )}
+                                                  {sortBy !== 'byNewestDate' && (
+                                                       <span className="bg-blue-100 px-2 py-1 rounded-full text-xs">
+                                                            Custom Sort
+                                                       </span>
+                                                  )}
+                                             </div>
+                                             <button
+                                                  onClick={clearAllFilters}
+                                                  className="text-blue-600 hover:text-blue-800 font-medium text-sm underline"
+                                             >
+                                                  Clear All Filters
+                                             </button>
+                                        </div>
+                                   )}
 
                                    {/* All Messages with All actions, such as replying, deleting, and checking */}
                                    <div className='bg-white rounded-xl shadow-sm overflow-hidden my-10'>
                                         <div className='overflow-x-auto'>
 
                                              {/* Messages table component with actions */}
-                                             <AllMessagesTable />
+                                             <AllMessagesTable 
+                                                  searchQuery={searchMessages}
+                                                  filteredMessages={getFilteredAndSortedMessages()}
+                                             />
 
                                              {/* Pagination at last of tables */}
                                              <div className="px-6 py-4 rounded-bl-xl rounded-br-xl w-full bg-gray-50 border border-gray-200 flex items-center justify-between">
                                                   <div className="flex flex-row gap-x-3 items-center w-full">
                                                        <span className='text-gray-500 text-sm'>
-                                                            Showing 1 to 10 of 88 Results
+                                                            {searchMessages.trim() || !statusFilter.all || dateFilter.startDate || dateFilter.endDate ? (
+                                                                 `Showing ${filteredCount} of ${totalCount} Results ${filteredCount !== totalCount ? '(filtered)' : ''}`
+                                                            ) : (
+                                                                 `Showing 1 to ${Math.min(10, totalCount)} of ${totalCount} Results`
+                                                            )}
                                                        </span>
                                                        <div className="text-sm border border-gray-200 px-3 py-1 rounded-full">
                                                             <select className="outline-none" name="messagesPerPage">

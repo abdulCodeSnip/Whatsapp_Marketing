@@ -1,10 +1,11 @@
 // Chats.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { MdOutlineWatchLater } from "react-icons/md";
 import { TiDocumentText } from "react-icons/ti";
 import { useSelector } from "react-redux";
 import { BiCheckDouble, BiVideo } from "react-icons/bi";
 import { RiSendPlaneFill } from "react-icons/ri";
+import { BsEmojiSmile } from "react-icons/bs";
 import { io } from "socket.io-client";
 import SendTemplateMessage from "./SendTemplateMessage";
 import PickAndSendFile from "./PickAndSendFile";
@@ -17,7 +18,32 @@ const Chats = () => {
     const [dynamicChats, setDynamicChats] = useState({ chat: [] });
     const [newMessage, setNewMessage] = useState("");
     const [isMessageSentFailed, setIsMessageSentFailed] = useState(false);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
+    // Ref for emoji picker outside click detection
+    const emojiPickerRef = useRef(null);
+
+    // Popular emojis for the picker
+    const popularEmojis = [
+        "😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "🙃",
+        "😉", "😊", "😇", "🥰", "😍", "🤩", "😘", "😗", "😚", "😙",
+        "😋", "😛", "😜", "🤪", "😝", "🤑", "🤗", "🤭", "🤫", "🤔",
+        "🤐", "🤨", "😐", "😑", "😶", "😏", "😒", "🙄", "😬", "🤥",
+        "😔", "😕", "🙁", "☹️", "😣", "😖", "😫", "😩", "🥺", "😢",
+        "😭", "😤", "😠", "😡", "🤬", "🤯", "😳", "🥵", "🥶", "😱",
+        "😨", "😰", "😥", "😓", "🤗", "🤔", "🤭", "🤫", "🤥", "😶",
+        "😐", "😑", "😬", "🙄", "😯", "😦", "😧", "😮", "😲", "🥱",
+        "😴", "🤤", "😪", "😵", "🤐", "🥴", "🤢", "🤮", "🤧", "😷",
+        "🤒", "🤕", "🤑", "🤠", "😈", "👿", "👹", "👺", "🤡", "💩",
+        "👻", "💀", "☠️", "👽", "👾", "🤖", "🎃", "😺", "😸", "😹",
+        "😻", "😼", "😽", "🙀", "😿", "😾", "❤️", "🧡", "💛", "💚",
+        "💙", "💜", "🖤", "🤍", "🤎", "💔", "❣️", "💕", "💞", "💓",
+        "💗", "💖", "💘", "💝", "💟", "☮️", "✝️", "☪️", "🕉️", "☸️",
+        "✡️", "🔯", "🕎", "☯️", "☦️", "🛐", "⛎", "♈", "♉", "♊",
+        "👍", "👎", "👌", "✌️", "🤞", "🤟", "🤘", "🤙", "👈", "👉",
+        "👆", "🖕", "👇", "☝️", "👋", "🤚", "🖐️", "✋", "🖖", "👏",
+        "🙌", "🤲", "🤝", "🙏", "✍️", "💅", "🤳", "💪", "🦾", "🦿"
+    ];
 
     /*
     values from redux, such as 
@@ -30,6 +56,23 @@ const Chats = () => {
     const user = useSelector((state) => state?.loginUser?.userLogin);
     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
     const currentUserToConversate = useSelector((state) => state?.selectedContact?.selectedContact);
+
+    // Handle outside click for emoji picker
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+                setShowEmojiPicker(false);
+            }
+        };
+
+        if (showEmojiPicker) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showEmojiPicker]);
 
     // Check if the there is something exists inside the chats of "current user in chat", if not then return an empty array of "chats", 
     // here in this function if the user send a message then the chats array would be dynamically "changed"
@@ -67,6 +110,26 @@ const Chats = () => {
             if (socket) socket.disconnect();
         };
     }, [user]);
+
+    // Handle emoji selection
+    const handleEmojiSelect = (emoji) => {
+        setNewMessage(prev => prev + emoji);
+        setShowEmojiPicker(false);
+    };
+
+    // Handle emoji button click
+    const handleEmojiButtonClick = (e) => {
+        e.preventDefault();
+        setShowEmojiPicker(!showEmojiPicker);
+    };
+
+    // Handle Enter key press
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleUpdatedMessages();
+        }
+    };
 
     // this function will send the message to sockets as well as to whatsapp of the "user with currently opened chat"
     const handleUpdatedMessages = async () => {
@@ -190,22 +253,80 @@ const Chats = () => {
 
             {/* Footer input */}
             <div className="border-t border-gray-200 bg-white shadow-md p-4 sticky bottom-0 w-full">
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center justify-between gap-4 relative">
                     <PickAndSendFile onFileSent={handleAddMediaMessage} />
-                    <input
-                        type="text"
-                        placeholder="Type a message..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        className="flex-1 border border-gray-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
-                    />
+                    
+                    {/* Message input container */}
+                    <div className="flex-1 relative">
+                        <input
+                            type="text"
+                            placeholder="Type a message..."
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            onKeyPress={handleKeyPress}
+                            className="w-full border border-gray-300 rounded-xl px-4 py-2 pr-12 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                        />
+                        
+                        {/* Emoji button */}
+                        <button
+                            onClick={handleEmojiButtonClick}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition-colors"
+                            type="button"
+                        >
+                            <BsEmojiSmile size={20} className="text-gray-500 hover:text-gray-700" />
+                        </button>
+                    </div>
+
+                    {/* Send button */}
                     <button
                         onClick={handleUpdatedMessages}
-                        className="ml-2 flex items-center cursor-pointer justify-center bg-green-500 rounded-full p-2 disabled:opacity-50"
+                        className="ml-2 flex items-center cursor-pointer justify-center bg-green-500 hover:bg-green-600 rounded-full p-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         disabled={newMessage.trim() === ""}
                     >
                         <RiSendPlaneFill size={20} color="white" />
                     </button>
+
+                    {/* Emoji Picker Modal */}
+                    {showEmojiPicker && (
+                        <div 
+                            ref={emojiPickerRef}
+                            className="absolute bottom-full right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-80 max-h-64 overflow-y-auto"
+                        >
+                            <div className="p-3">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h3 className="text-sm font-medium text-gray-700">Choose an emoji</h3>
+                                    <button
+                                        onClick={() => setShowEmojiPicker(false)}
+                                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                
+                                <div className="grid grid-cols-10 gap-1">
+                                    {popularEmojis.map((emoji, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={() => handleEmojiSelect(emoji)}
+                                            className="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-100 rounded transition-colors"
+                                            title={`Add ${emoji}`}
+                                        >
+                                            {emoji}
+                                        </button>
+                                    ))}
+                                </div>
+                                
+                                {/* Recently used section (placeholder for future enhancement) */}
+                                <div className="mt-3 pt-3 border-t border-gray-100">
+                                    <p className="text-xs text-gray-500 text-center">
+                                        Click an emoji to add it to your message
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </>
