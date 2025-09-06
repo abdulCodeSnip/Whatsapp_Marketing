@@ -3,8 +3,9 @@ import useFetchMessages from '../../hooks/useFetchMessages';
 import FullMessageOverview from '../fullMessageOverview';
 import DeleteMessageDialog from '../deleteMessageDialog';
 import ForwardMessageDialog from '../forwardMessageDialog';
+import Spinner from '../Spinner';
 
-const AllMessagesTable = ({ searchQuery = "", filteredMessages = [] }) => {
+const AllMessagesTable = ({ searchQuery = "", filteredMessages = [], isLoading = false }) => {
 
     const [userMessages, setUserMessages] = useState([]);
     const [selectedMessagesIDs, setSelectedMessagesIDs] = useState([]);
@@ -26,11 +27,16 @@ const AllMessagesTable = ({ searchQuery = "", filteredMessages = [] }) => {
     }
 
     // Show the delete message dialog, if the delete message is pressed
-    const handleDeleteMessage = (id) => {
-        // Delete a message only by clicking a particular contact
-        setUserMessages(prev => prev.filter(msg => msg.id !== id));
-        setDeleteMessageDialog(false);
-
+    const handleDeleteMessage = async (id) => {
+        try {
+            // You can add API call here for actual deletion
+            // Delete a message only by clicking a particular contact
+            setUserMessages(prev => prev.filter(msg => msg.id !== id));
+            setDeleteMessageDialog(false);
+        } catch (error) {
+            console.error('Failed to delete message:', error);
+            // Handle error state if needed
+        }
     }
 
     // Handle Message Forwarding Dialog 
@@ -38,7 +44,7 @@ const AllMessagesTable = ({ searchQuery = "", filteredMessages = [] }) => {
         setShowForwardMessageDialog(true);
     }
 
-    const { isLoading, isError, messages, currentUser } = useFetchMessages(20);
+    const { isError, messages, currentUser } = useFetchMessages(20);
 
     return (
         <table className='min-w-full divide-y divide-gray-200'>

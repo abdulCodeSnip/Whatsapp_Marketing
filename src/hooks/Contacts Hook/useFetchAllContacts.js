@@ -12,6 +12,7 @@ const useFetchAllContacts = () => {
     // This function will give us all the contacts from api, and return them, so we can use it whereve we want
     const fetchUsersFromAPI = async () => {
         setIsLoading(true);
+        setIsError(false);
         try {
             const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/contacts`, {
                 method: "GET",
@@ -24,6 +25,9 @@ const useFetchAllContacts = () => {
             if (apiResponse.ok) {
                 dispatch(allContacts(result));
                 setFetchContacts(result?.users)
+            } else {
+                setIsError(true);
+                console.log("API Error: " + (result.message || "Failed to fetch contacts"));
             }
         } catch (error) {
             setIsError(true);
@@ -33,12 +37,17 @@ const useFetchAllContacts = () => {
         }
     }
 
+    // Refresh function to refetch contacts
+    const refreshContacts = async () => {
+        await fetchUsersFromAPI();
+    }
+
     useEffect(() => {
         fetchUsersFromAPI();
     }, [])
 
     return {
-        isLoading, isError, fetchContacts
+        isLoading, isError, fetchContacts, refreshContacts
     }
 }
 

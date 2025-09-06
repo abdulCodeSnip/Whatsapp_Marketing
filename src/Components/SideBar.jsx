@@ -133,8 +133,9 @@ const SideBar = () => {
                <div className="p-4 border-t border-gray-800 relative">
                     <div 
                          className="flex items-center cursor-pointer hover:bg-gray-800 rounded-lg p-2 transition-all duration-200"
-                         onMouseEnter={() => setShowProfilePopup(true)}
-                         onMouseLeave={() => setShowProfilePopup(false)}
+                         // onMouseEnter={() => setShowProfilePopup(true)}
+                         // onMouseLeave={() => setShowProfilePopup(false)}
+                         onClick={() => setShowProfilePopup(!showProfilePopup)}
                     >
                          <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white">
                               <span className="text-sm font-medium">
@@ -151,8 +152,9 @@ const SideBar = () => {
                     {showProfilePopup && (
                          <div 
                               className="absolute bottom-full left-4 right-4 mb-2 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50"
-                              onMouseEnter={() => setShowProfilePopup(true)}
-                              onMouseLeave={() => setShowProfilePopup(false)}
+                              // onMouseEnter={() => setShowProfilePopup(true)}
+                              // onMouseLeave={() => setShowProfilePopup(false)}
+                              onClick={() => setShowProfilePopup(!showProfilePopup)}
                          >
                               {/* Arrow pointing down, just a sticky style*/}
                               <div className="absolute top-full left-1/2 transform -translate-x-1/2">

@@ -19,14 +19,13 @@ const Contacts = () => {
      const [editContact, setEditContact] = useState(false);
      const [replyToMessage, setReplyToMessage] = useState(false);
      const [allContacts, setAllContacts] = useState([]);
-     const [refreshContacts, setRefreshContacts] = useState(false);
 
      // Values from Redux
      const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
      const errorMessage = useSelector((state) => state?.errorMessage?.message);
 
      // Use the custom hook for fetching contacts
-     const { isLoading, isError, fetchContacts } = useFetchAllContacts();
+     const { isLoading, isError, fetchContacts, refreshContacts } = useFetchAllContacts();
 
      const navigate = useNavigate();
 
@@ -57,69 +56,25 @@ const Contacts = () => {
           if (!isLoading && !fetchContacts) {
                getAllContacts();
           }
-     }, [refreshContacts, isLoading]);
+     }, [isLoading]);
 
-     const handleContactSaved = () => {
+     const handleContactSaved = async () => {
           setShowAddContactDialog(false);
           setIsContactSaved(true);
-          setRefreshContacts(prev => !prev); // Trigger refresh
+          
+          // Refresh contacts using the hook function
+          await refreshContacts();
+          
           setTimeout(() => {
                setIsContactSaved(false);
           }, 3000);
      };
 
-     // Loading skeleton component
-     const ContactsSkeleton = () => (
-          <div className="animate-pulse">
-               <div className="flex flex-row gap-x-4 justify-between mt-5">
-                    <div className="flex flex-col px-3 space-y-3 py-2 w-full">
-                         <div className="h-6 bg-gray-200 rounded w-24"></div>
-                         <div className="bg-gray-100 border border-gray-200 cursor-pointer flex items-center justify-between px-4 py-2 rounded-lg">
-                              <div className="flex flex-row gap-x-2 items-center">
-                                   <div className="w-5 h-5 bg-gray-200 rounded"></div>
-                                   <div className="h-4 bg-gray-200 rounded w-24"></div>
-                              </div>
-                              <div className="w-8 h-6 bg-gray-200 rounded-full"></div>
-                         </div>
-                    </div>
-                    <div className="w-full flex-col">
-                         <div className="bg-white rounded-lg shadow-sm p-6">
-                              <div className="space-y-4">
-                                   {/* Search and filters skeleton */}
-                                   <div className="flex justify-between items-center">
-                                        <div className="h-10 bg-gray-200 rounded-xl w-1/2"></div>
-                                        <div className="flex space-x-3">
-                                             <div className="h-8 bg-gray-200 rounded w-20"></div>
-                                             <div className="h-8 bg-gray-200 rounded w-20"></div>
-                                             <div className="h-8 bg-gray-200 rounded w-12"></div>
-                                        </div>
-                                   </div>
-                                   
-                                   {/* Table skeleton */}
-                                   <div className="space-y-3">
-                                        {[...Array(5)].map((_, index) => (
-                                             <div key={index} className="flex items-center space-x-4 p-4">
-                                                  <div className="w-4 h-4 bg-gray-200 rounded"></div>
-                                                  <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-                                                  <div className="flex-1">
-                                                       <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
-                                                       <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-                                                  </div>
-                                                  <div className="h-6 bg-gray-200 rounded w-16"></div>
-                                                  <div className="h-4 bg-gray-200 rounded w-20"></div>
-                                                  <div className="h-6 bg-gray-200 rounded w-16"></div>
-                                                  <div className="flex space-x-2">
-                                                       <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                                                       <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                                                       <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                                                  </div>
-                                             </div>
-                                        ))}
-                                   </div>
-                              </div>
-                         </div>
-                    </div>
-               </div>
+     // Simple loading component
+     const SimpleLoading = () => (
+          <div className="flex flex-col items-center justify-center py-20">
+               <Spinner size="large" />
+               <p className="text-gray-500 mt-4 text-sm">Loading contacts...</p>
           </div>
      );
 
@@ -136,7 +91,7 @@ const Contacts = () => {
                     There was an error loading your contacts. Please try again.
                </p>
                <button
-                    onClick={() => setRefreshContacts(prev => !prev)}
+                    onClick={() => refreshContacts()}
                     className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
                >
                     Try Again
@@ -205,9 +160,9 @@ const Contacts = () => {
                                    </div>
                               </div>
 
-                              {/* Show loading skeleton, error state, or actual content */}
+                              {/* Show simple loading, error state, or actual content */}
                               {isLoading ? (
-                                   <ContactsSkeleton />
+                                   <SimpleLoading />
                               ) : isError ? (
                                    <ErrorState />
                               ) : (
@@ -233,6 +188,7 @@ const Contacts = () => {
                                                   onContactsChange={setAllContacts}
                                                   isLoading={isLoading}
                                                   isError={isError}
+                                                  onRefresh={refreshContacts}
                                              />
                                         </div>
                                    </div>
