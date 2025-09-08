@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { RiMessage2Line, RiCheckDoubleLine, RiSendPlaneLine } from "react-icons/ri";
 import { IoClose } from "react-icons/io5";
 import { FaUserFriends } from "react-icons/fa";
+import { useNavigate } from 'react-router-dom';
 import { BsFileEarmarkPlus } from "react-icons/bs";
 import { LuNewspaper } from "react-icons/lu";
 import { TbUserPlus } from "react-icons/tb";
@@ -21,8 +22,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addTemplates } from '../redux/templatePage/allTemplates';
 import RecentMessages from '../Components/Dashboard/RecentMessages';
 import { allContacts } from '../redux/contactsPage/contactsFromAPI';
-import Cookies from 'js-cookie';
 import Spinner from '../Components/Spinner';
+import { authUtils, authenticatedFetch } from '../utils/auth';
 
 const Dashboard = () => {
      const [showFAQs, setShowFAQs] = useState(false);
@@ -53,10 +54,7 @@ const Dashboard = () => {
           }
      ]);
 
-     // Get JWT token from cookies
-     const getAuthToken = () => {
-          return Cookies.get("jwtToken");
-     };
+     const navigate = useNavigate();
 
      // Safely get data count with fallbacks
      const getDataCount = (data, routeName) => {
@@ -99,22 +97,21 @@ const Dashboard = () => {
                setIsDataLoading(true);
                setError(null);
 
-               const token = getAuthToken();
-
-               if (!token) {
+               if (!authUtils.isAuthenticated()) {
                     throw new Error('No authentication token found');
                }
 
                const updatedData = await Promise.all(
                     completeData.map(async (item) => {
                          try {
-                              const response = await fetch(`${import.meta.env.VITE_API_URL}${item.apiRoute}`, {
-                                   method: "GET",
-                                   headers: {
-                                        "Authorization": `Bearer ${token}`,
-                                        "Content-Type": "application/json"
+                              const response = await authenticatedFetch(
+                                   `${import.meta.env.VITE_API_URL}${item.apiRoute}`, 
+                                   {
+                                        method: "GET"
                                    },
-                              });
+                                   navigate,
+                                   dispatch
+                              );
 
                               if (!response.ok) {
                                    throw new Error(`Failed to fetch ${item.apiRoute}: ${response.status}`);
@@ -166,22 +163,24 @@ const Dashboard = () => {
      const userData = async () => {
           try {
                setIsLoading(true);
-               const token = getAuthToken();
-               const email = Cookies.get("email");
-               const password = Cookies.get("password");
+               const credentials = authUtils.getUserCredentials();
 
-               if (!token || !email || !password) {
+               if (!credentials.token || !credentials.email || !credentials.password) {
                     throw new Error('Missing authentication credentials');
                }
 
-               const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
-                    method: "POST",
-                    headers: {
-                         "Authorization": `Bearer ${token}`,
-                         "Content-Type": "application/json",
+               const apiResponse = await authenticatedFetch(
+                    `${import.meta.env.VITE_API_URL}/auth/login`,
+                    {
+                         method: "POST",
+                         body: JSON.stringify({ 
+                              email: credentials.email, 
+                              password: credentials.password 
+                         })
                     },
-                    body: JSON.stringify({ email, password })
-               });
+                    navigate,
+                    dispatch
+               );
 
                if (!apiResponse.ok) {
                     throw new Error(`Failed to fetch user data: ${apiResponse.status}`);

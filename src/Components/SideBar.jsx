@@ -6,7 +6,7 @@ import { RiContactsBookLine, RiMessage2Line } from 'react-icons/ri'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authenticatingUser } from '../redux/authentication/loginUser';
-import Cookies from 'js-cookie'
+import { authUtils, handleLogout, authenticatedFetch } from '../utils/auth'
 
 const SideBar = () => {
      const [showProfilePopup, setShowProfilePopup] = useState(false);
@@ -19,36 +19,37 @@ const SideBar = () => {
      // Authenticate user directly based on the email and password
      const authenticateUser = async () => {
           try {
-               const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
-                    method: "POST",
-                    headers: {
-                         "Authorization": authInformation?.token,
-                         "Content-Type": "application/json",
+               const credentials = authUtils.getUserCredentials();
+               
+               if (!credentials.email || !credentials.password) {
+                    console.warn('Missing credentials for authentication');
+                    handleLogout(navigate, dispatch);
+                    return;
+               }
+
+               const apiResponse = await authenticatedFetch(
+                    `${import.meta.env.VITE_API_URL}/auth/login`, 
+                    {
+                         method: "POST",
+                         body: JSON.stringify({
+                              email: credentials.email,
+                              password: credentials.password
+                         })
                     },
-                    body: JSON.stringify({
-                         email: Cookies.get("email"),
-                         password: Cookies.get("password")
-                    })
-               });
+                    navigate,
+                    dispatch
+               );
 
                const result = await apiResponse.json();
                dispatch(authenticatingUser(result?.user));
           } catch (error) {
-               console.log("Something's wrong happend at the backend!", error);
+               console.log("Authentication failed:", error);
+               // If error is due to 401, user will already be logged out by authenticatedFetch
           }
      }
 
-     const handleLogout = () => {
-          // Clear cookies and any stored auth data
-          Cookies.remove("email");
-          Cookies.remove("password");
-          // Clear user from redux store
-          dispatch(authenticatingUser(null));
-          Cookies.set("jwtToken", "");
-          Cookies.set("email", "");
-          Cookies.set("password", "");
-          // Redirect to login page
-          navigate('/login');
+     const handleUserLogout = () => {
+          handleLogout(navigate, dispatch);
      }
 
      useEffect(() => {
@@ -173,7 +174,7 @@ const SideBar = () => {
 
                                    {/* Logout Button, logout the user and redirect that user to "login screen" */}
                                    <button
-                                        onClick={handleLogout}
+                                        onClick={handleUserLogout}
                                         className="w-full cursor-pointer flex items-center px-3 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-md transition-all"
                                    >
                                         <MdLogout size={16} className="mr-3" />

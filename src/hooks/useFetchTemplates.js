@@ -1,27 +1,19 @@
 import React, { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux';
+import { useAuthenticatedApi } from './useAuthenticatedApi';
 
 const useFetchTemplates = () => {
     const [fetchedTemplates, setFetchedTemplates] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState("");
     const [successMsgOnDelete, setSuccessMsgOnDelete] = useState("");
-    const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
+    const api = useAuthenticatedApi();
 
     // Fetch All templates from Backend
     const fetchAllTemplates = async () => {
         setIsLoading(true);
         try {
-            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/templates`, {
-                method: "GET",
-                headers: {
-                    "Authorization": authInformation?.token
-                }
-            });
-            const result = await apiResponse.json();
-            if (apiResponse.ok) {
-                setFetchedTemplates(result);
-            }
+            const result = await api.get('/templates');
+            setFetchedTemplates(result);
         } catch (error) {
             setIsError(error?.message);
             console.log("Error at fetching template in \"useFetchTemplates()\" hook ", error);

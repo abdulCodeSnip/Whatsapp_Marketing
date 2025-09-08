@@ -4,10 +4,10 @@ import { Link } from 'react-router-dom'
 import MessageCard from '../messageCard'
 import { useSelector } from 'react-redux'
 import Spinner from '../Spinner'
+import { useAuthenticatedApi } from '../../hooks/useAuthenticatedApi'
 
 const RecentMessages = () => {
-
-    const authInformation = useSelector((state) => state?.auth?.authInformation.at(0));
+    const api = useAuthenticatedApi();
     const [recentMessages, setRecentMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -17,22 +17,7 @@ const RecentMessages = () => {
             setIsLoading(true);
             setError(null);
 
-            if (!authInformation?.token) {
-                throw new Error('No authentication token available');
-            }
-
-            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/chats`, {
-                method: "GET",
-                headers: {
-                    "Authorization": authInformation?.token
-                }
-            });
-
-            if (!apiResponse.ok) {
-                throw new Error(`Failed to fetch messages: ${apiResponse.status}`);
-            }
-
-            const result = await apiResponse.json();
+            const result = await api.get('/chats');
             setRecentMessages(result || {});
         } catch (error) {
             console.error("Error fetching recent messages:", error);
@@ -43,12 +28,8 @@ const RecentMessages = () => {
     }
 
     useEffect(() => {
-        if (authInformation?.token) {
-            fetchAllMessages();
-        } else {
-            setIsLoading(false);
-        }
-    }, [authInformation?.token]);
+        fetchAllMessages();
+    }, []);
 
     // Safely get the latest conversation with fallbacks
     const getLatestConversation = () => {
