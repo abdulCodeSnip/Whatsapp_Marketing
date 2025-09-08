@@ -19,6 +19,7 @@ const Contacts = () => {
      const [editContact, setEditContact] = useState(false);
      const [replyToMessage, setReplyToMessage] = useState(false);
      const [allContacts, setAllContacts] = useState([]);
+     const [isAddingContact, setIsAddingContact] = useState(false);
 
      // Values from Redux
      const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
@@ -197,7 +198,11 @@ const Contacts = () => {
                               {/* A sample div for dimming background */}
                               {
                                    showAddContactDialog &&
-                                   <div className="fixed inset-0 bg-black/50 bg-opacity-20 z-40">
+                                   <div 
+                                        className="fixed inset-0 bg-black/50 bg-opacity-20 z-40"
+                                        onClick={isAddingContact ? undefined : () => setShowAddContactDialog(false)}
+                                        style={{ cursor: isAddingContact ? 'not-allowed' : 'pointer' }}
+                                   >
                                         {/* This div is just for dimming the background if delete messages dialog is opened, otherwise the background would be smooth */}
                                    </div>
                               }
@@ -214,11 +219,15 @@ const Contacts = () => {
                               {
                                    showAddContactDialog &&
                                    (
-                                        <div className='fixed top-0 z-50 h-auto right-88 bg-white rounded-2xl border-gray-200 border-1 w-[550px] shadow-gray-200'>
+                                        <div 
+                                             className='fixed top-0 z-50 h-auto right-88 bg-white rounded-2xl border-gray-200 border-1 w-[550px] shadow-gray-200'
+                                             onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on modal
+                                        >
                                              <AddContactsDialog
                                                   title={"Add New Contact"}
                                                   saveContact={handleContactSaved}
                                                   closeDialog={() => setShowAddContactDialog(false)}
+                                                  onLoadingChange={setIsAddingContact}
                                              />
                                         </div>
                                    )

@@ -8,7 +8,7 @@ import 'react-phone-number-input/style.css';
 import './PhoneInput.css';
 import Spinner from '../Spinner';
 
-const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
+const AddContactsDialog = ({ closeDialog, title, saveContact, onLoadingChange }) => {
 
      const dispatch = useDispatch();
 
@@ -24,6 +24,10 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
      // register new user or create new contacts
      const registerNewUser = async () => {
           setIsLoading(true);
+          // Notify parent about loading state
+          if (onLoadingChange) {
+               onLoadingChange(true);
+          }
           try {
                const apiResponse = await fetch(`${import.meta.env?.VITE_API_URL}/auth/register`, {
                     method: "POST",
@@ -44,10 +48,14 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
                if (apiResponse.ok) {
                     const message = { content: "Contact added successfully!", type: "Success" }
                     dispatch(changingErrorMessageOnSuccess(message));
+                    
                     // Call the parent callback to refresh contacts
                     if (saveContact) {
                          saveContact();
                     }
+                    
+                    // Close modal only on success
+                    closeDialog();
                } else if (apiResponse.status === 400) {
                     const message = { content: "User with email or phone number already exists", type: "Error" };
                     dispatch(changingErrorMessageOnSuccess(message));
@@ -62,6 +70,10 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
                dispatch(changingErrorMessageOnSuccess(message));
           } finally {
                setIsLoading(false);
+               // Notify parent about loading state
+               if (onLoadingChange) {
+                    onLoadingChange(false);
+               }
           }
      }
 
@@ -71,7 +83,12 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
                <div className='flex flex-row justify-between w-full p-3 mt-2'>
                     <h2 className='text-lg font-medium text-gray-800'>{title}</h2>
                     <div>
-                         <button onClick={closeDialog} className='cursor-pointer text-gray-500 '>
+                         <button 
+                              onClick={isLoading ? undefined : closeDialog} 
+                              disabled={isLoading}
+                              className={`text-gray-500 ${isLoading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:text-gray-700'} transition-colors`}
+                              title={isLoading ? "Please wait..." : "Close"}
+                         >
                               <CgClose size={18} />
                          </button>
                     </div>
@@ -162,8 +179,7 @@ const AddContactsDialog = ({ closeDialog, title, saveContact }) => {
                               disabled={!userContactData.first_name || !userContactData.last_name || !userContactData.phone || isLoading}
                               onClick={() => {
                                    dispatch(addNewContactToDB(userContactData));
-                                   registerNewUser();
-                                   closeDialog();
+                                   registerNewUser(); // This will handle closing the modal after API completes
                               }}
                               className='bg-green-500 disabled:cursor-not-allowed text-white cursor-pointer font-medium text-sm tracking-wide px-4 py-2 rounded-lg shadow-md disabled:opacity-50 hover:bg-green-600 transition-colors flex items-center gap-2'>
                               {isLoading && <Spinner size="small" />}
