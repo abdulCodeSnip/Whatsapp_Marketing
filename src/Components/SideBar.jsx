@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { FaHistory } from 'react-icons/fa'
 import { IoNewspaperOutline, IoSettingsOutline } from 'react-icons/io5'
-import { MdOutlineDashboard, MdEmail, MdLogout } from 'react-icons/md'
+import { MdOutlineDashboard, MdEmail, MdLogout, MdCampaign } from 'react-icons/md'
 import { RiContactsBookLine, RiMessage2Line } from 'react-icons/ri'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
@@ -96,6 +96,16 @@ const SideBar = () => {
                                    <IoNewspaperOutline size={20} />
                               </div>
                               Templates
+                         </Link>
+
+                         {/* Campaigns Page Navigation Link */}
+                         <Link to={"/campaigns"}
+                              className={`flex items-center px-4 py-3 transition-all text-sm font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white ${pathname === "/campaigns" || pathname.startsWith("/campaigns") ? "bg-gray-800 border-l-3 border-l-green-500" : "bg-gray-900"}`}
+                         >
+                              <div className="w-6 h-6 flex items-center justify-center mr-3">
+                                   <MdCampaign size={20} />
+                              </div>
+                              Campaigns
                          </Link>
 
                          {/* Contacts Page Navigation Link */}

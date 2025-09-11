@@ -10,6 +10,9 @@ import variables from "./templatePage/variables";
 import addVariables from "./templatePage/addVariables";
 import allTemplates from "./templatePage/allTemplates";
 
+// Campaigns
+import allCampaigns from "./campaignPage/allCampaigns";
+
 // Contacts
 import contactsReducer from "./contactsPage/addContacts";
 import importedContacts from "./contactsPage/importContacts";
@@ -74,6 +77,9 @@ export const store = configureStore({
 
           // All templates from API
           allTemplates: allTemplates,
+
+          // All campaigns from API
+          allCampaigns: allCampaigns,
 
           // Contacts from APIs
           allContacts: allContacts,

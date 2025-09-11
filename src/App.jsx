@@ -11,6 +11,7 @@ import DynamicTemplate from './Components/TemplatesPage/DynamicTemplate';
 import ImportContacts from './routes/ImportContacts';
 import SendNewMessage from './routes/SendNewMessage';
 import DynamicUser from './routes/DynamicUser';
+import Campaigns from './routes/Campaigns';
 import AuthForm from './Components/Authentication/Login';
 import { authUtils } from './utils/auth';
 import { useAuthSync } from './hooks/useAuthSync';
@@ -77,6 +78,15 @@ function App() {
         element={
           <ProtectedRoute>
             <Templates />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/campaigns"
+        element={
+          <ProtectedRoute>
+            <Campaigns />
           </ProtectedRoute>
         }
       />
