@@ -54,8 +54,23 @@ const ScheduleMessage = ({sendTemplate}) => {
     */
    
     const handleSendOrScheduleMessages = async () => {
+        // Clear any previous error messages
+        setErrorMessageOnSending("");
+        
         if (selectedTemplate) {
-            await sendTemplate()
+            if (selectedContacts?.length <= 0) {
+                setErrorMessageOnSending("Please select at least one contact to send the template");
+                return;
+            }
+            setLoading(true);
+            try {
+                await sendTemplate();
+                console.log(`Template "${selectedTemplate}" sent to ${selectedContacts.length} contact(s)`);
+            } catch (error) {
+                setErrorMessageOnSending(`Failed to send template: ${error.message}`);
+            } finally {
+                setLoading(false);
+            }
         }
         else if (selectedContacts?.length <= 0) {
             setErrorMessageOnSending("Please select at least one contact");
