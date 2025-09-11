@@ -14,6 +14,11 @@ const ConversationSidebar = () => {
     const { isLoading: isChatHistoryLoading, isError: chatHistoryError, refetch: refetchChatHistory } = useSelectedContactChats();
 
     const { isError, isLoading, currentUserChatHistory } = useFetchCurrentUserChats();
+    
+    // Function to handle contact selection
+    const handleContactSelection = (contact) => {
+        dispatch(changeSelectedContact(contact));
+    };
 
     return (
         <div className="w-80 h-full bg-white p-2 border-r shadow-xl flex flex-col border-r-gray-200">
@@ -74,13 +79,16 @@ const ConversationSidebar = () => {
                             if (!avatarText || !username) return (<Spinner size="small" key={index} />)
 
                             return (
-                                <div onClick={() => dispatch(changeSelectedContact(contact))} key={contact?.id || index} className='flex w-full hover:bg-gray-100 rounded-lg mb-2 relative'>
+                                <div onClick={() => handleContactSelection(contact)} key={contact?.id || index} className='flex w-full hover:bg-gray-100 rounded-lg mb-2 relative'>
                                     <div className={`flex flex-row ${currentUserToConversate?.id === contact?.id ? "bg-gray-100 border-l-[4px] rounded-l-none border-l-green-500" : "bg-white"} items-center justify-start w-full gap-2 p-2 hover:bg-gray-100 cursor-pointer rounded-lg`}>
                                         <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-medium text-xs">
                                             <span>{avatarText}</span>
                                         </div>
                                         <div className="flex-1">
                                             <span className="text-sm font-medium text-gray-900">{username}</span>
+                                            <div className="text-xs text-gray-500 truncate">
+                                                {contact?.phone && `📱 ${contact.phone}`}
+                                            </div>
                                             {/* Show loading indicator when fetching chat history for this contact */}
                                             {isChatHistoryLoading && currentUserToConversate?.id === contact?.id && (
                                                 <div className="flex items-center mt-1">
@@ -95,7 +103,7 @@ const ConversationSidebar = () => {
                                                     <button 
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            refetchChatHistory();
+                                                            handleContactSelection(contact);
                                                         }}
                                                         className="text-xs text-green-600 ml-2 underline"
                                                     >

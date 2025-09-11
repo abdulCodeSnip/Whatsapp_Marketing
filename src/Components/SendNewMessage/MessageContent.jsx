@@ -6,9 +6,11 @@ import useFetchTemplates from '../../hooks/useFetchTemplates';
 import { onChangeSelectedTemplate } from "../../redux/sendNewMessage/selectedTemplate"
 import ScheduleMessage from './ScheduleMessage';
 import useSendTemplateMessage from '../../hooks/templateMessage/useSendTemplateMessage';
+import useSendRawMessage from '../../hooks/sendNewMessage/useSendRawMessage';
 
 const MessageContent = () => {
     const [templates, setTemplates] = useState([]);
+    const [messageMode, setMessageMode] = useState('template'); // 'template' or 'raw'
 
     // VARIABLE ARRAY STATE - Array of variable objects
     const [variableValues, setVariableValues] = useState([]);
@@ -18,6 +20,7 @@ const MessageContent = () => {
     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
 
     const { sendTemplateMessageToMultipleUsers } = useSendTemplateMessage(authInformation);
+    const { sendRawMessageToMultipleUsers } = useSendRawMessage(authInformation);
 
     const dispatch = useDispatch();
     const { isError, isLoading, fetchedTemplates } = useFetchTemplates();
@@ -34,6 +37,13 @@ const MessageContent = () => {
             setVariableValues([]);
         }
     }, [selectedTemplate]);
+
+    // Clear template selection when switching to raw mode
+    useEffect(() => {
+        if (messageMode === 'raw') {
+            dispatch(onChangeSelectedTemplate(""));
+        }
+    }, [messageMode, dispatch]);
 
     // Get a selected template details, so that we can use its variables
     const selectedTemplateDetail = useMemo(() =>
@@ -95,88 +105,132 @@ const MessageContent = () => {
                     <div className='text-lg text-gray-800 font-medium py-2'>
                         <h2>Message Content</h2>
                     </div>
-                    <div className='flex flex-row rounded-lg border items-center justify-center border-gray-300 shadow-sm px-3 py-2'>
-                        <select
-                            onChange={handleTemplateChange}
-                            name="selectTemplate"
-                            id="selectTemplate"
-                            className='outline-none'
-                            value={selectedTemplate || ""}
-                        >
-                            <option value="">Select Template</option>
-                            {templates?.map((template) => (
-                                <option key={template?.id || template?.name} value={template?.name}>
-                                    {template?.name}
-                                </option>
-                            ))}
-                        </select>
+                    <div className='flex flex-row items-center gap-4'>
+                        {/* Message Mode Toggle */}
+                        <div className='flex flex-row rounded-lg border border-gray-300 shadow-sm'>
+                            <button
+                                onClick={() => setMessageMode('template')}
+                                className={`px-3 py-2 rounded-l-lg text-sm font-medium transition-colors ${
+                                    messageMode === 'template' 
+                                        ? 'bg-green-500 text-white' 
+                                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                }`}
+                            >
+                                Template
+                            </button>
+                            <button
+                                onClick={() => setMessageMode('raw')}
+                                className={`px-3 py-2 rounded-r-lg text-sm font-medium transition-colors ${
+                                    messageMode === 'raw' 
+                                        ? 'bg-green-500 text-white' 
+                                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                }`}
+                            >
+                                Raw Message
+                            </button>
+                        </div>
+                        
+                        {/* Template Selector - Only show in template mode */}
+                        {messageMode === 'template' && (
+                            <div className='flex flex-row rounded-lg border items-center justify-center border-gray-300 shadow-sm px-3 py-2'>
+                                <select
+                                    onChange={handleTemplateChange}
+                                    name="selectTemplate"
+                                    id="selectTemplate"
+                                    className='outline-none'
+                                    value={selectedTemplate || ""}
+                                >
+                                    <option value="">Select Template</option>
+                                    {templates?.map((template) => (
+                                        <option key={template?.id || template?.name} value={template?.name}>
+                                            {template?.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* Variable inputs section */}
-                {visibleVariables.length > 0 && (
-                    <div>
-                        <div className='text-sm text-gray-400 my-2'>
-                            <h2>Fill in the template variables</h2>
-                        </div>
-                        <div className='grid gap-4'>
-                            {
-                                visibleVariables.map((variable) => (
-                                    <div key={variable?.id} className='flex flex-col'>
-                                        <label
-                                            htmlFor={variable?.id}
-                                            className='text-sm font-medium text-gray-700 mb-1 capitalize'
-                                        >
-                                            {variable?.name}
-                                            {variable?.required && <span className='text-red-500 ml-1'>*</span>}
-                                        </label>
-                                        <input
-                                            required={variable?.required}
-                                            type={variable?.type || 'text'}
-                                            name={variable?.name}
-                                            id={variable?.id}
-                                            value={getVariableValue(variable?.id)}
-                                            onChange={(e) => handleVariableChange(
-                                                variable?.id,
-                                                variable?.name,
-                                                e.target.value
-                                            )}
-                                            placeholder={`Enter ${variable?.name}`}
-                                            className='px-3 py-2 rounded-lg border border-gray-200 outline-green-500 focus:border-green-500'
-                                        />
-                                    </div>
-                                ))}
-                        </div>
-                    </div>
+                {/* Template Mode Content */}
+                {messageMode === 'template' && (
+                    <>
+                        {/* Variable inputs section */}
+                        {visibleVariables.length > 0 && selectedTemplate && (
+                            <div>
+                                <div className='text-sm text-gray-400 my-2'>
+                                    <h2>Fill in the template variables</h2>
+                                </div>
+                                <div className='grid gap-4'>
+                                    {
+                                        visibleVariables.map((variable) => (
+                                            <div key={variable?.id} className='flex flex-col'>
+                                                <label
+                                                    htmlFor={variable?.id}
+                                                    className='text-sm font-medium text-gray-700 mb-1 capitalize'
+                                                >
+                                                    {variable?.name}
+                                                    {variable?.required && <span className='text-red-500 ml-1'>*</span>}
+                                                </label>
+                                                <input
+                                                    required={variable?.required}
+                                                    type={variable?.type || 'text'}
+                                                    name={variable?.name}
+                                                    id={variable?.id}
+                                                    value={getVariableValue(variable?.id)}
+                                                    onChange={(e) => handleVariableChange(
+                                                        variable?.id,
+                                                        variable?.name,
+                                                        e.target.value
+                                                    )}
+                                                    placeholder={`Enter ${variable?.name}`}
+                                                    className='px-3 py-2 rounded-lg border border-gray-200 outline-green-500 focus:border-green-500'
+                                                />
+                                            </div>
+                                        ))}
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
 
-                {/* Regular textarea for non-template messages */}
-                {!selectedTemplate && (
-                    <div className='rounded-lg'>
-                        <div className='relative'>
-                            <textarea
-                                value={messageContent || ''}
-                                placeholder="Type your new message here...."
-                                onChange={handleMessageContentChange}
-                                rows={6}
-                                className='border-gray-300 border resize-none p-4 w-full outline-green-500 rounded-lg'
-                                maxLength={1000}
-                            />
-                            <div className='absolute bottom-2 right-2 text-xs text-gray-400'>
-                                {(messageContent || '').length}/1000
+                {/* Raw Message Mode Content */}
+                {messageMode === 'raw' && (
+                    <>
+                        <div className='rounded-lg'>
+                            <div className='text-sm text-gray-400 my-2'>
+                                <h2>Compose your raw message</h2>
+                            </div>
+                            <div className='relative'>
+                                <textarea
+                                    value={messageContent || ''}
+                                    placeholder="Type your raw message here.... This will be sent as a direct WhatsApp message without using templates."
+                                    onChange={handleMessageContentChange}
+                                    rows={6}
+                                    className='border-gray-300 border resize-none p-4 w-full outline-green-500 rounded-lg'
+                                    maxLength={1000}
+                                />
+                                <div className='absolute bottom-2 right-2 text-xs text-gray-400'>
+                                    {(messageContent || '').length}/1000
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        <MediaAttatchments />
+                    </>
                 )}
-
-                {!selectedTemplate && <MediaAttatchments />}
             </div>
 
             {/* Custom component that is responsible for sending message either based on the selected date "scheduling messages", or it can send message directly to all the selected users  */}
             <Fragment>
-                <ScheduleMessage sendTemplate={() => {
-                    sendTemplateMessageToMultipleUsers(variableValues, selectedTemplateDetail);
-                }} />
+                <ScheduleMessage 
+                    messageMode={messageMode}
+                    sendTemplate={() => {
+                        sendTemplateMessageToMultipleUsers(variableValues, selectedTemplateDetail);
+                    }}
+                    sendRawMessage={() => {
+                        sendRawMessageToMultipleUsers(messageContent);
+                    }}
+                />
             </Fragment>
         </div>
     )

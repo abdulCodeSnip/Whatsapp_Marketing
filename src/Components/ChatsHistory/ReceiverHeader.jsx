@@ -8,12 +8,13 @@ const ReceiverHeader = () => {
 
     const [userDetail, setUserDetail] = useState([]);
 
-    const selectedContact = useSelector((state) => state?.selectedContact?.selectedContact);
     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
     const [successfullySentTemplate, setSuccessfullySentTemplate] = useState(false);
 
     // A custom Hook that would be responsible for getting the user that was just selected from the "chat-sidebar"
     const { selectedContactDetail, isError, isLoading, getUserDetail } = useGetSelectedContactDetail();
+
+    const selectedContact = useSelector((state) => state?.selectedContact?.selectedContact);
 
     // Mount the component whenever the selected contact has changed from the "sidebar"
     useEffect(() => {

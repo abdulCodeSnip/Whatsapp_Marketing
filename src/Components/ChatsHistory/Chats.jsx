@@ -58,6 +58,56 @@ const Chats = () => {
     const user = useSelector((state) => state?.loginUser?.userLogin);
     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
     const currentUserToConversate = useSelector((state) => state?.selectedContact?.selectedContact);
+    
+    // Chat history fetching state
+    const [fetchedChatHistory, setFetchedChatHistory] = useState([]);
+    const [isFetchingHistory, setIsFetchingHistory] = useState(false);
+
+    // Fetch chat history for the current contact
+    const fetchChatHistoryForContact = async (phoneNumber) => {
+        if (!phoneNumber || !authInformation?.token) return;
+        
+        setIsFetchingHistory(true);
+        try {
+            console.log(`Fetching chat history for: ${phoneNumber}`);
+            // remove the "+" from the phone number if it exists
+            const phoneNumberWithoutPlus = phoneNumber.replace("+", "");
+            
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/messages/${phoneNumberWithoutPlus}`, {
+                method: "GET",
+                headers: {
+                    "Authorization": authInformation?.token,
+                    "Content-Type": "application/json"
+                }
+            });
+            
+            const result = await response.json();
+            console.log(`Chat history for ${phoneNumber}:`, result);
+            
+            if (response.status === 200 && Array.isArray(result)) {
+                // Convert API response to chat format
+                const convertedChats = result.map(message => ({
+                    from: message.user_id === user?.id ? "me" : "them", // If message was sent by current user, it's from "me"
+                    content: message.content,
+                    status: message.status,
+                    timestamp: message.created_at,
+                    messageType: message.messageable_type, // "Template" or "Raw"
+                    id: message.id,
+                    number: message.number
+                }));
+                
+                setFetchedChatHistory(convertedChats);
+            } else {
+                setFetchedChatHistory([]);
+            }
+            
+        } catch (error) {
+            console.error("Error fetching chat history:", error);
+            setFetchedChatHistory([]);
+        } finally {
+            setIsFetchingHistory(false);
+        }
+    };
 
     // Handle outside click for emoji picker
     useEffect(() => {
@@ -76,22 +126,47 @@ const Chats = () => {
         };
     }, [showEmojiPicker]);
 
-    // Check if the there is something exists inside the chats of "current user in chat", if not then return an empty array of "chats", 
-    // here in this function if the user send a message then the chats array would be dynamically "changed"
+    // Fetch chat history when contact changes
+    useEffect(() => {
+        if (currentUserToConversate?.phone) {
+            fetchChatHistoryForContact(currentUserToConversate.phone);
+        } else {
+            setFetchedChatHistory([]);
+        }
+    }, [currentUserToConversate?.phone, currentUserToConversate?.id]);
+
+    // Combine fetched chat history with local chats
     useEffect(() => {
         setIsLoadingChats(true);
+        
+        // Combine fetched chat history with local chats
+        const combinedChats = [...fetchedChatHistory];
+        
         if (allChats?.chat) {
-            setDynamicChats(allChats);
-        } else {
-            setDynamicChats({ chat: [] });
+            // Add local chats that aren't already in fetched history
+            const localChats = allChats.chat.filter(localChat => 
+                !fetchedChatHistory.some(fetchedChat => fetchedChat.id === localChat.id)
+            );
+            combinedChats.push(...localChats);
         }
-        // Simulate loading delay for better UX
+        
+        // Sort by timestamp if available
+        combinedChats.sort((a, b) => {
+            if (a.timestamp && b.timestamp) {
+                return new Date(a.timestamp) - new Date(b.timestamp);
+            }
+            return 0;
+        });
+        
+        setDynamicChats({ chat: combinedChats });
+        
+        // Loading delay for smooth UX
         const timeout = setTimeout(() => {
             setIsLoadingChats(false);
-        }, 500);
+        }, 300);
         
         return () => clearTimeout(timeout);
-    }, [allChats]);
+    }, [allChats, fetchedChatHistory]);
 
     // The connection for sockets to acheive realtime communication, {messages from whatsapp, and then from application to whatsapp} means "bi-directional communication"
     useEffect(() => {
@@ -140,7 +215,7 @@ const Chats = () => {
         }
     };
 
-    // this function will send the message to sockets as well as to whatsapp of the "user with currently opened chat"
+    // this function will send the message using the new raw message API
     const handleUpdatedMessages = async () => {
         if (!newMessage.trim() || isSendingMessage) return;
 
@@ -162,23 +237,26 @@ const Chats = () => {
         const messageToSend = newMessage;
         setNewMessage(""); // Clear input immediately
 
+         // removing the "+" from the phone number if it exists
+         const phoneNumberWithoutPlus = currentUserToConversate?.phone?.replace("+", "") || currentUserToConversate?.id;
+
         try {
-            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/send`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/send-raw-message`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: authInformation?.token,
                 },
                 body: JSON.stringify({
-                    receiver_id: currentUserToConversate?.id,
-                    content: messageToSend,
-                    sender_id: user?.id,
+                    to: phoneNumberWithoutPlus,
+                    message: messageToSend
                 }),
             });
 
             const result = await apiResponse.json();
+            console.log("Raw message sent:", result);
             
-            if (apiResponse.status !== 201) {
+            if (apiResponse.status !== 200 && apiResponse.status !== 201) {
                 setIsMessageSentFailed(true);
                 // Update message status to failed
                 setDynamicChats((prev) => ({
@@ -190,16 +268,6 @@ const Chats = () => {
                 return;
             }
 
-            // Send to WhatsApp webhook
-            await fetch(`${import.meta.env.VITE_API_URL}/webhook/whatsapp`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    message: messageToSend,
-                    username: `${user.first_name} ${user.last_name}`,
-                }),
-            });
-
             // Update message status to sent
             setDynamicChats((prev) => ({
                 ...prev,
@@ -209,7 +277,7 @@ const Chats = () => {
             }));
 
         } catch (err) {
-            console.error("❌ Error sending message:", err);
+            console.error("❌ Error sending raw message:", err);
             setIsMessageSentFailed(true);
             
             // Update message status to failed
@@ -267,30 +335,19 @@ const Chats = () => {
         }));
 
         try {
-            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/send`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/send-raw-message`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: authInformation?.token,
                 },
                 body: JSON.stringify({
-                    receiver_id: currentUserToConversate?.id,
-                    content: messageToRetry.content,
-                    sender_id: user?.id,
+                    to: currentUserToConversate?.phone?.replace("+", "") || currentUserToConversate?.id,
+                    message: messageToRetry.content
                 }),
             });
 
-            if (apiResponse.status === 201) {
-                // Send to WhatsApp webhook
-                await fetch(`${import.meta.env.VITE_API_URL}/webhook/whatsapp`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        message: messageToRetry.content,
-                        username: `${user.first_name} ${user.last_name}`,
-                    }),
-                });
-
+            if (apiResponse.status === 200 || apiResponse.status === 201) {
                 // Update message status to sent
                 setDynamicChats((prev) => ({
                     ...prev,
@@ -313,13 +370,63 @@ const Chats = () => {
         }
     };
 
-    // Show loading state when chats are loading
-    if (isLoadingChats) {
+    // Show loading state when chats are loading or fetching history
+    if (isLoadingChats || isFetchingHistory) {
         return (
-            <div className="flex flex-col items-center justify-center h-full">
-                <Spinner size="large" />
-                <p className="text-gray-500 mt-4 text-sm">Loading conversation...</p>
-            </div>
+            <>
+                {/* Chat messages container with loading */}
+                <div className="h-screen overflow-auto p-5 flex items-center justify-center">
+                    <div className="flex flex-col items-center justify-center">
+                        <Spinner size="large" />
+                        <p className="text-gray-500 mt-4 text-sm">
+                            {isFetchingHistory ? "Loading chat history..." : "Loading conversation..."}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Footer input - keep it visible even during loading */}
+                <div className="border-t border-gray-200 bg-white shadow-md p-4 sticky bottom-0 w-full">
+                    <div className="flex items-center justify-between gap-4 relative">
+                        <PickAndSendFile onFileSent={handleAddMediaMessage} />
+                        
+                        {/* Message input container */}
+                        <div className="flex-1 relative">
+                            <input
+                                type="text"
+                                placeholder="Type a message..."
+                                value={newMessage}
+                                onChange={(e) => setNewMessage(e.target.value)}
+                                onKeyPress={handleKeyPress}
+                                className="w-full border border-gray-300 rounded-xl px-4 py-2 pr-12 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                                disabled={isFetchingHistory}
+                            />
+                            
+                            {/* Emoji button */}
+                            <button
+                                onClick={handleEmojiButtonClick}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition-colors"
+                                type="button"
+                                disabled={isFetchingHistory}
+                            >
+                                <BsEmojiSmile size={20} className="text-gray-500 hover:text-gray-700" />
+                            </button>
+                        </div>
+
+                        {/* Send button */}
+                        <button
+                            onClick={handleUpdatedMessages}
+                            className="ml-2 flex items-center cursor-pointer justify-center bg-green-500 hover:bg-green-600 rounded-full p-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            disabled={newMessage.trim() === "" || isSendingMessage || isFetchingHistory}
+                        >
+                            {isSendingMessage ? (
+                                <Spinner size="small" />
+                            ) : (
+                                <RiSendPlaneFill size={20} color="white" />
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </>
         );
     }
     
@@ -347,13 +454,28 @@ const Chats = () => {
                         const isFromMe = mychat?.from?.toLowerCase() === "me";
                         const mediaType = mychat?.media_type?.toLowerCase();
                         const messageStatus = mychat?.status;
+                        const messageType = mychat?.messageType;
+                        const timestamp = mychat?.timestamp;
 
                         return (
-                            <div key={index} className={`flex w-full ${isFromMe ? "justify-end" : "justify-start"} mb-2`}>
+                            <div key={mychat?.id || index} className={`flex w-full ${isFromMe ? "justify-end" : "justify-start"} mb-2`}>
                                 <div
                                     className={`max-w-xs px-4 py-2 rounded-lg shadow ${isFromMe ? "bg-green-100 text-right" : "bg-gray-200 text-left"
                                         }`}
                                 >
+                                    {/* Message Type Badge */}
+                                    {messageType && (
+                                        <div className="mb-1">
+                                            <span className={`text-xs px-2 py-1 rounded-full ${
+                                                messageType === 'Template' 
+                                                    ? 'bg-blue-100 text-blue-800' 
+                                                    : 'bg-green-100 text-green-800'
+                                            }`}>
+                                                {messageType === 'Template' ? '📋 Template' : '💬 Message'}
+                                            </span>
+                                        </div>
+                                    )}
+                                    
                                     <div className="flex flex-row items-center gap-2">
                                         {mediaType && (
                                             <div className="p-1 border bg-white/20 rounded">
@@ -362,7 +484,19 @@ const Chats = () => {
                                         )}
                                         <p className="text-sm break-words">{mychat?.content?.text?.body || mychat?.content}</p>
                                     </div>
-                                    <div className="text-xs flex justify-end items-center gap-1 mt-1 text-gray-600">
+                                    
+                                    <div className="text-xs flex justify-between items-center gap-1 mt-1 text-gray-600">
+                                        {/* Timestamp */}
+                                        {timestamp && (
+                                            <span className="text-xs text-gray-500">
+                                                {new Date(timestamp).toLocaleTimeString([], { 
+                                                    hour: '2-digit', 
+                                                    minute: '2-digit' 
+                                                })}
+                                            </span>
+                                        )}
+                                        
+                                        {/* Status */}
                                         <span>
                                             {messageStatus === "sent" ? (
                                                 <BiCheckDouble className="text-green-500" />

@@ -21,8 +21,8 @@ const ChatHistory = () => {
                               <ConversationSidebar />
                               {selectedContact?.length !== 0 &&
                                    (<div className='w-full flex flex-col overflow-y-auto space-y-3'>
-                                        <ReceiverHeader />
-                                        <Chats />
+                                        <ReceiverHeader selectedContact={selectedContact} />
+                                        <Chats selectedContact={selectedContact} />
                                    </div>)
                               }
                          </div>

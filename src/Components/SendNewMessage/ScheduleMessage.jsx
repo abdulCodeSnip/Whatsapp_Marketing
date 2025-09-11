@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import useSendNewMessage from '../../hooks/sendNewMessage/useSendNewMessage';
 
-const ScheduleMessage = ({sendTemplate}) => {
+const ScheduleMessage = ({messageMode, sendTemplate, sendRawMessage}) => {
     const [scheduled, setScheduled] = useState(false);
     const [sendIndividually, setSendIndividually] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -57,9 +57,16 @@ const ScheduleMessage = ({sendTemplate}) => {
         // Clear any previous error messages
         setErrorMessageOnSending("");
         
-        if (selectedTemplate) {
-            if (selectedContacts?.length <= 0) {
-                setErrorMessageOnSending("Please select at least one contact to send the template");
+        // Check if contacts are selected
+        if (selectedContacts?.length <= 0) {
+            setErrorMessageOnSending("Please select at least one contact");
+            return;
+        }
+        
+        // Handle template mode
+        if (messageMode === 'template') {
+            if (!selectedTemplate) {
+                setErrorMessageOnSending("Please select a template to send");
                 return;
             }
             setLoading(true);
@@ -72,9 +79,24 @@ const ScheduleMessage = ({sendTemplate}) => {
                 setLoading(false);
             }
         }
-        else if (selectedContacts?.length <= 0) {
-            setErrorMessageOnSending("Please select at least one contact");
-        } else if (selectedContacts?.length === 1 && !scheduled) {
+        // Handle raw message mode
+        else if (messageMode === 'raw') {
+            if (!messageContent || messageContent.trim() === '') {
+                setErrorMessageOnSending("Please enter a message to send");
+                return;
+            }
+            setLoading(true);
+            try {
+                await sendRawMessage();
+                console.log(`Raw message sent to ${selectedContacts.length} contact(s)`);
+            } catch (error) {
+                setErrorMessageOnSending(`Failed to send raw message: ${error.message}`);
+            } finally {
+                setLoading(false);
+            }
+        }
+        // Handle legacy message sending (for backward compatibility)
+        else if (selectedContacts?.length === 1 && !scheduled) {
             await sendMessage();
         } else if (selectedContacts?.length > 1 && !scheduled) {
             // Use individual or bulk sending based on toggle
@@ -98,7 +120,7 @@ const ScheduleMessage = ({sendTemplate}) => {
             </div>
 
             {/* Toggle for sending individually to each recipient */}
-            {selectedContacts?.length > 1 && !selectedTemplate && (
+            {selectedContacts?.length > 1 && messageMode === 'raw' && (
                 <div className='flex flex-row items-center justify-between w-full'>
                     <div className='flex flex-row items-center justify-center gap-x-2'>
                         <h2 className='text-gray-800 text-sm'>
@@ -137,7 +159,7 @@ const ScheduleMessage = ({sendTemplate}) => {
             )}
 
             {/* Toggle for message as Scheduled message */}
-            {!selectedTemplate && (
+            {messageMode === 'raw' && (
                 <div className='flex flex-row items-center justify-between w-full'>
                     <div className='flex flex-row items-center justify-center gap-x-2'>
                         <div className='text-gray-800'>
@@ -200,11 +222,13 @@ const ScheduleMessage = ({sendTemplate}) => {
                 </button>
                 <button
                     onClick={handleSendOrScheduleMessages}
-                    disabled={(loading || messageContent === "") && !selectedTemplate}
+                    disabled={loading || (messageMode === 'template' && !selectedTemplate) || (messageMode === 'raw' && (!messageContent || messageContent.trim() === ''))}
                     className={`flex flex-row items-center justify-center px-4 py-2 rounded-lg cursor-pointer border border-gray-200 outline-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed bg-green-500 hover:opacity-95 text-white shadow-sm`}
                 >
                     {
-                        isMessageScheduling && scheduled ? "Scheduling Message..." : isMessageSending ? "Message Sending..." : scheduled ? "Schedule Message" : selectedTemplate ? "Send Template": sendIndividually && selectedContacts?.length > 1 ? "Send Individual Messages" : "Send Message"}
+                        loading ? (
+                            messageMode === 'template' ? "Sending Template..." : "Sending Message..."
+                        ) : isMessageScheduling && scheduled ? "Scheduling Message..." : isMessageSending ? "Message Sending..." : scheduled ? "Schedule Message" : messageMode === 'template' ? "Send Template" : messageMode === 'raw' ? "Send Raw Message" : sendIndividually && selectedContacts?.length > 1 ? "Send Individual Messages" : "Send Message"}
                 </button>
             </div>
         </div>
