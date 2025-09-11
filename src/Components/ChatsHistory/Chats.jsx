@@ -14,7 +14,7 @@ import Spinner from "../Spinner";
 
 let socket;
 
-const Chats = () => {
+const Chats = ({ selectedContact }) => {
     const [dynamicChats, setDynamicChats] = useState({ chat: [] });
     const [newMessage, setNewMessage] = useState("");
     const [isMessageSentFailed, setIsMessageSentFailed] = useState(false);
@@ -57,7 +57,8 @@ const Chats = () => {
     const allChats = useSelector((state) => state?.dynamicChats?.allChats);
     const user = useSelector((state) => state?.loginUser?.userLogin);
     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
-    const currentUserToConversate = useSelector((state) => state?.selectedContact?.selectedContact);
+    // Use the passed selectedContact prop instead of Redux state
+    const currentUserToConversate = selectedContact;
     
     // Chat history fetching state
     const [fetchedChatHistory, setFetchedChatHistory] = useState([]);
@@ -128,12 +129,12 @@ const Chats = () => {
 
     // Fetch chat history when contact changes
     useEffect(() => {
-        if (currentUserToConversate?.phone) {
-            fetchChatHistoryForContact(currentUserToConversate.phone);
+        if (selectedContact?.phone) {
+            fetchChatHistoryForContact(selectedContact.phone);
         } else {
             setFetchedChatHistory([]);
         }
-    }, [currentUserToConversate?.phone, currentUserToConversate?.id]);
+    }, [selectedContact?.phone, selectedContact?.id]);
 
     // Combine fetched chat history with local chats
     useEffect(() => {
@@ -238,7 +239,7 @@ const Chats = () => {
         setNewMessage(""); // Clear input immediately
 
          // removing the "+" from the phone number if it exists
-         const phoneNumberWithoutPlus = currentUserToConversate?.phone?.replace("+", "") || currentUserToConversate?.id;
+         const phoneNumberWithoutPlus = selectedContact?.phone?.replace("+", "") || selectedContact?.id;
 
         try {
             const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/send-raw-message`, {
@@ -342,7 +343,7 @@ const Chats = () => {
                     Authorization: authInformation?.token,
                 },
                 body: JSON.stringify({
-                    to: currentUserToConversate?.phone?.replace("+", "") || currentUserToConversate?.id,
+                    to: selectedContact?.phone?.replace("+", "") || selectedContact?.id,
                     message: messageToRetry.content
                 }),
             });
