@@ -14,6 +14,7 @@ import Spinner from "../Components/Spinner";
 
 
 const Contacts = () => {
+     const [sidebarOpen, setSidebarOpen] = useState(false);
      const [showAddContactDialog, setShowAddContactDialog] = useState(false);
      const [isContactSaved, setIsContactSaved] = useState(false);
      const [editContact, setEditContact] = useState(false);
@@ -103,11 +104,11 @@ const Contacts = () => {
      return (
           <div className="flex overflow-hidden h-screen">
                {/* SideBar At Left Side */}
-               <SideBar />
+               <SideBar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)}  />
 
                {/* Main Content With Header and actual content */}
                <div className="flex flex-1 flex-col overflow-hidden">
-                    <Header />
+                    <Header onMenuClick={() => setSidebarOpen(true)} />
 
                     {/* Main content just after the header */}
 

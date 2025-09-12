@@ -28,6 +28,7 @@ import { authUtils, authenticatedFetch } from '../utils/auth';
 const Dashboard = () => {
      const [showFAQs, setShowFAQs] = useState(false);
      const [showNotifications, setShowNotifications] = useState(false);
+     const [sidebarOpen, setSidebarOpen] = useState(false);
      const [changeFAQsSearchInput, setChangeFAQsSearchInput] = useState("");
      const [user, setUser] = useState(null);
      const [isLoading, setIsLoading] = useState(true);
@@ -216,9 +217,9 @@ const Dashboard = () => {
      if (isLoading || isDataLoading) {
           return (
                <div className="flex overflow-hidden h-screen">
-                    <SideBar />
-                    <div className='flex-1 flex flex-col overflow-hidden'>
-                         <Header />
+                    <SideBar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+                    <div className='flex-1 flex flex-col overflow-hidden lg:ml-0'>
+                         <Header onMenuClick={() => setSidebarOpen(true)} />
                          <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
                               <div className="max-w-7xl mx-auto">
                                    <div className="flex items-center justify-center h-64">
@@ -241,9 +242,9 @@ const Dashboard = () => {
      if (error) {
           return (
                <div className="flex overflow-hidden h-screen">
-                    <SideBar />
-                    <div className='flex-1 flex flex-col overflow-hidden'>
-                         <Header />
+                    <SideBar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+                    <div className='flex-1 flex flex-col overflow-hidden lg:ml-0'>
+                         <Header onMenuClick={() => setSidebarOpen(true)} />
                          <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
                               <div className="max-w-7xl mx-auto">
                                    <div className="flex items-center justify-center h-64">
@@ -398,11 +399,11 @@ const Dashboard = () => {
                <div className="flex overflow-hidden h-screen">
 
                     {/* Sidebar at left side */}
-                    <SideBar />
+                    <SideBar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
                     {/* Main content area with header and all main content */}
-                    <div className='flex-1 flex flex-col overflow-hidden'>
-                         <Header />
+                    <div className='flex-1 flex flex-col overflow-hidden lg:ml-0'>
+                         <Header onMenuClick={() => setSidebarOpen(true)} />
 
                          {/* Main Content after the header of the component */}
                          <main className="flex-1 overflow-y-auto bg-gray-100 p-6">

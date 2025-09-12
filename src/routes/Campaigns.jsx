@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaPlus, FaSearch, FaFilter, FaTrash, FaUsers, FaCalendarAlt } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaFilter, FaTrash, FaUsers, FaCalendarAlt, FaBars } from 'react-icons/fa';
 import { MdSchedule, MdCheckCircle, MdCancel, MdPending } from 'react-icons/md';
 import { useSelector } from 'react-redux';
 import SideBar from '../Components/SideBar';
@@ -15,6 +15,7 @@ const Campaigns = () => {
     const [selectedCampaign, setSelectedCampaign] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showRecipientsModal, setShowRecipientsModal] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     // Redux state
     const { campaigns, loading } = useSelector((state) => state.allCampaigns);
@@ -94,15 +95,23 @@ const Campaigns = () => {
 
     return (
         <div className="flex h-screen bg-gray-50">
-            <SideBar />
+            <SideBar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
                     <div className="flex justify-between items-center">
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Campaigns</h1>
-                            <p className="text-gray-600 mt-1">Manage your WhatsApp marketing campaigns</p>
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => setSidebarOpen(true)}
+                                className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                            >
+                                <FaBars size={20} />
+                            </button>
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-900">Campaigns</h1>
+                                <p className="text-gray-600 mt-1">Manage your WhatsApp marketing campaigns</p>
+                            </div>
                         </div>
                         <button
                             onClick={() => setShowCreateModal(true)}

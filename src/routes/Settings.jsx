@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import SideBar from '../Components/SideBar';
 import Header from '../Components/ContactsManagementPage/Header';
 import SettingSideBar from '../Components/SettingsPage/SettingSideBar';
@@ -8,7 +8,7 @@ import WhatsappConnectionSetting from '../Components/SettingsPage/WhatsappConnec
 
 
 const Settings = () => {
-
+     const [sidebarOpen, setSidebarOpen] = useState(false);
      const user = useSelector((state) => state?.loginUser?.userLogin);
 
      const selectedButton = useSelector((state) => state?.selectedButton?.activeButton);
@@ -16,9 +16,9 @@ const Settings = () => {
      return (
           <div className="flex overflow-hidden h-screen">
                {/* Sidebar at left side */}
-               <SideBar />
+               <SideBar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
                <div className="flex flex-1 flex-col overflow-hidden">
-                    <Header />
+                    <Header onMenuClick={() => setSidebarOpen(true)} />
 
                     {/* Main content with all the content */}
                     <main className="flex-1 flex flex-row gap-5 bg-gray-50 overflow-hidden">

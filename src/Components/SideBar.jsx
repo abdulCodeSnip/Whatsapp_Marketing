@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { FaHistory } from 'react-icons/fa'
+import { FaHistory, FaTimes } from 'react-icons/fa'
 import { IoNewspaperOutline, IoSettingsOutline } from 'react-icons/io5'
 import { MdOutlineDashboard, MdEmail, MdLogout, MdCampaign } from 'react-icons/md'
 import { RiContactsBookLine, RiMessage2Line } from 'react-icons/ri'
@@ -8,7 +8,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authenticatingUser } from '../redux/authentication/loginUser';
 import { authUtils, handleLogout, authenticatedFetch } from '../utils/auth'
 
-const SideBar = () => {
+const SideBar = ({ isOpen, onClose }) => {
      const [showProfilePopup, setShowProfilePopup] = useState(false);
 
      const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
@@ -57,19 +57,47 @@ const SideBar = () => {
      }, [])
 
      const { pathname } = useLocation();
+
+     // Handle click on navigation links to close mobile sidebar
+     const handleLinkClick = () => {
+          if (onClose) {
+               onClose();
+          }
+     };
      
      return (
-          <div className="w-64 bg-gray-900 text-white flex flex-col">
-               <div className="p-4 flex items-center border-b border-gray-800">
-                    <span className="text-2xl text-white">
-                         logo
-                    </span>
-               </div>
+          <>
+               {/* Mobile overlay backdrop */}
+               {isOpen && (
+                    <div 
+                         className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+                         onClick={onClose}
+                    />
+               )}
+
+               {/* Sidebar */}
+               <div className={`
+                    fixed lg:static inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col transform transition-transform duration-300 ease-in-out lg:transform-none
+                    ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+               `}>
+                    <div className="p-4 flex items-center justify-between border-b border-gray-800">
+                         <span className="text-2xl text-white">
+                              logo
+                         </span>
+                         {/* Close button for mobile */}
+                         <button
+                              onClick={onClose}
+                              className="lg:hidden p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                         >
+                              <FaTimes size={20} />
+                         </button>
+                    </div>
                <div className="flex-1 overflow-y-auto py-4">
                     <nav className="px-2 space-y-1">
 
                          {/* Dashboard Page Navigation Link */}
                          <Link to={"/"}
+                              onClick={handleLinkClick}
                               className={`flex items-center px-4 py-3 text-gray-300 transition-all text-sm font-medium rounded-md ${pathname === "/" ? "bg-gray-800 border-l-3 border-l-green-500" : "bg-gray-900"} hover:text-white hover:bg-gray-800`}
                          >
                               <div className="w-6 h-6 flex items-center justify-center mr-3">
@@ -80,6 +108,7 @@ const SideBar = () => {
 
                          {/* Messages Page Navigation Link */}
                          <Link to={"/messages"}
+                              onClick={handleLinkClick}
                               className={`flex items-center px-4 transition-all py-3 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-800 ${pathname === "/messages" ? "bg-gray-800 border-l-3 border-l-green-500" : "bg-gray-900"} hover:text-white`}
                          >
                               <div className="w-6 h-6 flex items-center justify-center mr-3">
@@ -90,6 +119,7 @@ const SideBar = () => {
 
                          {/* Templates Page Navigation Link */}
                          <Link to={"/templates"}
+                              onClick={handleLinkClick}
                               className={`flex items-center px-4 py-3 transition-all text-sm font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white ${pathname === "/templates" || pathname === "/templates/create-new-template" ? "bg-gray-800 border-l-3 border-l-green-500" : "bg-gray-900"}`}
                          >
                               <div className="w-6 h-6 flex items-center justify-center mr-3">
@@ -99,7 +129,8 @@ const SideBar = () => {
                          </Link>
 
                          {/* Campaigns Page Navigation Link */}
-                         <Link to={"/campaigns"}
+                         <Link to="/campaigns"
+                              onClick={handleLinkClick}
                               className={`flex items-center px-4 py-3 transition-all text-sm font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white ${pathname === "/campaigns" || pathname.startsWith("/campaigns") ? "bg-gray-800 border-l-3 border-l-green-500" : "bg-gray-900"}`}
                          >
                               <div className="w-6 h-6 flex items-center justify-center mr-3">
@@ -110,6 +141,7 @@ const SideBar = () => {
 
                          {/* Contacts Page Navigation Link */}
                          <Link to={"/contacts"}
+                              onClick={handleLinkClick}
                               className={`flex items-center px-4 py-3 text-sm transition-all font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white ${pathname === "/contacts" ? "bg-gray-800 border-l-3 border-l-green-500" : "bg-gray-900"}`}
                          >
                               <div className="w-6 h-6 flex items-center justify-center mr-3">
@@ -120,6 +152,7 @@ const SideBar = () => {
 
                          {/* Chat History Page Navigation Link */}
                          <Link to={"/chat-history"}
+                              onClick={handleLinkClick}
                               className={`flex items-center px-4 py-3 text-sm transition-all font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white ${pathname === "/chat-history" ? "bg-gray-800 border-l-3 border-l-green-500" : "bg-gray-900"}`}
                          >
                               <div className="w-6 h-6 flex items-center justify-center mr-3">
@@ -130,6 +163,7 @@ const SideBar = () => {
 
                          {/* Settings Page Navigation Link */}
                          <Link to={"/settings"}
+                              onClick={handleLinkClick}
                               className={`flex items-center px-4 py-3 text-sm transition-all font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white ${pathname === "/settings" ? "bg-gray-800 border-l-3 border-l-green-500" : "bg-gray-900"}`}
                          >
                               <div className="w-6 h-6 flex items-center justify-center mr-3">
@@ -194,7 +228,8 @@ const SideBar = () => {
                          </div>
                     )}
                </div>
-          </div>
+               </div>
+          </>
      )
 }
 
