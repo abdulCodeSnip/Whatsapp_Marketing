@@ -23,8 +23,23 @@ const useFetchAllContacts = () => {
 
             const result = await apiResponse.json();
             if (apiResponse.ok) {
+                console.log('Contacts API Response:', result);
                 dispatch(allContacts(result));
-                setFetchContacts(result?.users)
+                
+                // Handle different possible API response structures
+                if (Array.isArray(result)) {
+                    setFetchContacts(result);
+                    console.log('Set contacts from direct array:', result);
+                } else if (result && Array.isArray(result.users)) {
+                    setFetchContacts(result.users);
+                    console.log('Set contacts from result.users:', result.users);
+                } else if (result && Array.isArray(result.data)) {
+                    setFetchContacts(result.data);
+                    console.log('Set contacts from result.data:', result.data);
+                } else {
+                    setFetchContacts([]);
+                    console.log('No contacts found, setting empty array. Result:', result);
+                }
             } else {
                 setIsError(true);
                 console.log("API Error: " + (result.message || "Failed to fetch contacts"));

@@ -1,45 +1,59 @@
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaCalendarAlt, FaPaperPlane, FaClock } from 'react-icons/fa';
+import { FaTimes, FaCalendarAlt, FaPaperPlane, FaClock, FaUsers, FaSearch } from 'react-icons/fa';
+import { useSelector } from 'react-redux';
 import { useCampaignOperations } from '../../hooks/campaignHooks/useCampaignOperations';
+import useFetchTemplates from '../../hooks/useFetchTemplates';
+import useFetchAllContacts from '../../hooks/Contacts Hook/useFetchAllContacts';
 
-const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
+const CreateCampaignModal = ({ isOpen, onClose }) => {
     const [formData, setFormData] = useState({
-        name: '',
-        message: '',
-        type: 'instant', // instant or scheduled
-        scheduledAt: ''
+        campaignName: '',
+        campaignType: 'template', // template or raw
+        messageTemplateName: '',
+        text: '',
+        scheduleTime: '',
+        numbers: []
     });
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedContacts, setSelectedContacts] = useState([]);
 
-    const { createCampaign, updateExistingCampaign } = useCampaignOperations();
-
-    const isEditing = !!campaign;
+    const { createTemplateCampaign, createRawMessageCampaign } = useCampaignOperations();
+    const { fetchedTemplates } = useFetchTemplates();
+    const { fetchContacts } = useFetchAllContacts();
 
     // Reset form when modal opens/closes
     useEffect(() => {
         if (isOpen) {
-            if (campaign) {
-                // Editing existing campaign
                 setFormData({
-                    name: campaign.name || '',
-                    message: campaign.message || '',
-                    type: campaign.type || 'instant',
-                    scheduledAt: campaign.scheduledAt ? 
-                        new Date(campaign.scheduledAt).toISOString().slice(0, 16) : ''
-                });
-            } else {
-                // Creating new campaign
-                setFormData({
-                    name: '',
-                    message: '',
-                    type: 'instant',
-                    scheduledAt: ''
-                });
-            }
+                campaignName: '',
+                campaignType: 'template',
+                messageTemplateName: '',
+                text: '',
+                scheduleTime: '',
+                numbers: []
+            });
+            setSelectedContacts([]);
+            setSearchTerm('');
             setErrors({});
         }
-    }, [isOpen, campaign]);
+    }, [isOpen]);
+
+    // Update numbers when contacts are selected
+    useEffect(() => {
+        const phoneNumbers = selectedContacts
+            .map(contactId => {
+                const contact = Array.isArray(fetchContacts) ? fetchContacts.find(c => c.id === contactId) : null;
+                return contact?.phone;
+            })
+            .filter(phone => phone);
+        
+        setFormData(prev => ({
+            ...prev,
+            numbers: phoneNumbers
+        }));
+    }, [selectedContacts, fetchContacts]);
 
     // Handle input changes
     const handleInputChange = (e) => {
@@ -58,28 +72,64 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
         }
     };
 
+    // Handle contact selection
+    const handleContactSelect = (contactId) => {
+        setSelectedContacts(prev => 
+            prev.includes(contactId) 
+                ? prev.filter(id => id !== contactId)
+                : [...prev, contactId]
+        );
+    };
+
+    // Handle select all contacts
+    const handleSelectAll = () => {
+        const allContactIds = filteredContacts.map(contact => contact.id);
+        setSelectedContacts(allContactIds);
+    };
+
+    // Handle clear selection
+    const handleClearSelection = () => {
+        setSelectedContacts([]);
+    };
+
+    // Filter contacts based on search term
+    const filteredContacts = (Array.isArray(fetchContacts) ? fetchContacts : []).filter(contact => {
+        const fullName = `${contact.first_name || ''} ${contact.last_name || ''}`.trim();
+        return fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+               contact.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+               contact.phone?.includes(searchTerm);
+    });
+
     // Validate form
     const validateForm = () => {
         const newErrors = {};
 
-        if (!formData.name.trim()) {
-            newErrors.name = 'Campaign name is required';
+        if (!formData.campaignName.trim()) {
+            newErrors.campaignName = 'Campaign name is required';
         }
 
-        if (!formData.message.trim()) {
-            newErrors.message = 'Campaign message is required';
+        if (formData.campaignType === 'template' && !formData.messageTemplateName) {
+            newErrors.messageTemplateName = 'Template selection is required';
         }
 
-        if (formData.type === 'scheduled' && !formData.scheduledAt) {
-            newErrors.scheduledAt = 'Scheduled date and time is required';
+        if (formData.campaignType === 'raw' && !formData.text.trim()) {
+            newErrors.text = 'Message text is required';
         }
 
-        if (formData.type === 'scheduled' && formData.scheduledAt) {
-            const scheduledDate = new Date(formData.scheduledAt);
+        if (!formData.scheduleTime) {
+            newErrors.scheduleTime = 'Schedule time is required';
+        }
+
+        if (formData.scheduleTime) {
+            const scheduledDate = new Date(formData.scheduleTime);
             const now = new Date();
             if (scheduledDate <= now) {
-                newErrors.scheduledAt = 'Scheduled date must be in the future';
+                newErrors.scheduleTime = 'Scheduled date must be in the future';
             }
+        }
+
+        if (formData.numbers.length === 0) {
+            newErrors.numbers = 'At least one contact must be selected';
         }
 
         setErrors(newErrors);
@@ -98,27 +148,24 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
 
         try {
             const campaignData = {
-                name: formData.name.trim(),
-                message: formData.message.trim(),
-                type: formData.type
+                numbers: formData.numbers,
+                scheduleTime: formData.scheduleTime,
+                campaignName: formData.campaignName
             };
 
-            // Add scheduled date if type is scheduled
-            if (formData.type === 'scheduled' && formData.scheduledAt) {
-                campaignData.scheduledAt = formData.scheduledAt;
-            }
-
-            if (isEditing) {
-                await updateExistingCampaign(campaign.id, campaignData);
+            if (formData.campaignType === 'template') {
+                campaignData.messageTemplateName = formData.messageTemplateName;
+                await createTemplateCampaign(campaignData);
             } else {
-                await createCampaign(campaignData);
+                campaignData.text = formData.text;
+                await createRawMessageCampaign(campaignData);
             }
 
             onClose();
         } catch (error) {
-            console.error('Failed to save campaign:', error);
+            console.error('Failed to create campaign:', error);
             setErrors({
-                submit: error.message || 'Failed to save campaign. Please try again.'
+                submit: error.message || 'Failed to create campaign. Please try again.'
             });
         } finally {
             setIsSubmitting(false);
@@ -136,11 +183,11 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-gray-200">
                     <h2 className="text-xl font-semibold text-gray-900">
-                        {isEditing ? 'Edit Campaign' : 'Create New Campaign'}
+                        Create New Campaign
                     </h2>
                     <button
                         onClick={onClose}
@@ -152,49 +199,28 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Left Column - Campaign Details */}
+                        <div className="space-y-6">
                     {/* Campaign Name */}
                     <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                                <label htmlFor="campaignName" className="block text-sm font-medium text-gray-700 mb-2">
                             Campaign Name *
                         </label>
                         <input
                             type="text"
-                            id="name"
-                            name="name"
-                            value={formData.name}
+                                    id="campaignName"
+                                    name="campaignName"
+                                    value={formData.campaignName}
                             onChange={handleInputChange}
                             placeholder="Enter campaign name..."
                             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                                errors.name ? 'border-red-500' : 'border-gray-300'
+                                        errors.campaignName ? 'border-red-500' : 'border-gray-300'
                             }`}
                         />
-                        {errors.name && (
-                            <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                                {errors.campaignName && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.campaignName}</p>
                         )}
-                    </div>
-
-                    {/* Campaign Message */}
-                    <div>
-                        <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                            Campaign Message *
-                        </label>
-                        <textarea
-                            id="message"
-                            name="message"
-                            value={formData.message}
-                            onChange={handleInputChange}
-                            placeholder="Enter your campaign message..."
-                            rows={4}
-                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none ${
-                                errors.message ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                        />
-                        {errors.message && (
-                            <p className="mt-1 text-sm text-red-600">{errors.message}</p>
-                        )}
-                        <p className="mt-1 text-sm text-gray-500">
-                            {formData.message.length} characters
-                        </p>
                     </div>
 
                     {/* Campaign Type */}
@@ -206,18 +232,18 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
                             <div className="flex items-center">
                                 <input
                                     type="radio"
-                                    id="instant"
-                                    name="type"
-                                    value="instant"
-                                    checked={formData.type === 'instant'}
+                                            id="template"
+                                            name="campaignType"
+                                            value="template"
+                                            checked={formData.campaignType === 'template'}
                                     onChange={handleInputChange}
                                     className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
                                 />
-                                <label htmlFor="instant" className="ml-3 flex items-center">
+                                        <label htmlFor="template" className="ml-3 flex items-center">
                                     <FaPaperPlane className="text-green-600 mr-2" size={16} />
                                     <div>
-                                        <div className="text-sm font-medium text-gray-900">Send Instantly</div>
-                                        <div className="text-sm text-gray-500">Campaign will be sent immediately</div>
+                                                <div className="text-sm font-medium text-gray-900">Template Message</div>
+                                                <div className="text-sm text-gray-500">Use a pre-approved WhatsApp template</div>
                                     </div>
                                 </label>
                             </div>
@@ -225,47 +251,198 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
                             <div className="flex items-center">
                                 <input
                                     type="radio"
-                                    id="scheduled"
-                                    name="type"
-                                    value="scheduled"
-                                    checked={formData.type === 'scheduled'}
+                                            id="raw"
+                                            name="campaignType"
+                                            value="raw"
+                                            checked={formData.campaignType === 'raw'}
                                     onChange={handleInputChange}
                                     className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
                                 />
-                                <label htmlFor="scheduled" className="ml-3 flex items-center">
+                                        <label htmlFor="raw" className="ml-3 flex items-center">
                                     <FaClock className="text-blue-600 mr-2" size={16} />
                                     <div>
-                                        <div className="text-sm font-medium text-gray-900">Schedule for Later</div>
-                                        <div className="text-sm text-gray-500">Schedule campaign for a specific date and time</div>
+                                                <div className="text-sm font-medium text-gray-900">Raw Message</div>
+                                                <div className="text-sm text-gray-500">Send custom text message</div>
                                     </div>
                                 </label>
                             </div>
                         </div>
                     </div>
 
-                    {/* Scheduled Date/Time */}
-                    {formData.type === 'scheduled' && (
+                            {/* Template Selection */}
+                            {formData.campaignType === 'template' && (
+                                <div>
+                                    <label htmlFor="messageTemplateName" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Select Template *
+                                    </label>
+                                    <select
+                                        id="messageTemplateName"
+                                        name="messageTemplateName"
+                                        value={formData.messageTemplateName}
+                                        onChange={handleInputChange}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                                            errors.messageTemplateName ? 'border-red-500' : 'border-gray-300'
+                                        }`}
+                                    >
+                                        <option value="">Select a template...</option>
+                                        {fetchedTemplates && Array.isArray(fetchedTemplates) ? fetchedTemplates.map((template) => (
+                                            <option key={template.name} value={template.name}>
+                                                {template.name}
+                                            </option>
+                                        )) : null}
+                                    </select>
+                                    {errors.messageTemplateName && (
+                                        <p className="mt-1 text-sm text-red-600">{errors.messageTemplateName}</p>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Raw Message Text */}
+                            {formData.campaignType === 'raw' && (
+                                <div>
+                                    <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Message Text *
+                                    </label>
+                                    <textarea
+                                        id="text"
+                                        name="text"
+                                        value={formData.text}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter your message text..."
+                                        rows={4}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none ${
+                                            errors.text ? 'border-red-500' : 'border-gray-300'
+                                        }`}
+                                    />
+                                    {errors.text && (
+                                        <p className="mt-1 text-sm text-red-600">{errors.text}</p>
+                                    )}
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        {formData.text.length} characters
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Schedule Time */}
                         <div>
-                            <label htmlFor="scheduledAt" className="block text-sm font-medium text-gray-700 mb-2">
+                                <label htmlFor="scheduleTime" className="block text-sm font-medium text-gray-700 mb-2">
                                 <FaCalendarAlt className="inline mr-2" size={14} />
-                                Scheduled Date & Time *
+                                    Schedule Date & Time *
                             </label>
                             <input
                                 type="datetime-local"
-                                id="scheduledAt"
-                                name="scheduledAt"
-                                value={formData.scheduledAt}
+                                    id="scheduleTime"
+                                    name="scheduleTime"
+                                    value={formData.scheduleTime}
                                 onChange={handleInputChange}
                                 min={getMinDateTime()}
                                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                                    errors.scheduledAt ? 'border-red-500' : 'border-gray-300'
+                                        errors.scheduleTime ? 'border-red-500' : 'border-gray-300'
                                 }`}
                             />
-                            {errors.scheduledAt && (
-                                <p className="mt-1 text-sm text-red-600">{errors.scheduledAt}</p>
+                                {errors.scheduleTime && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.scheduleTime}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Right Column - Contact Selection */}
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-3">
+                                    <FaUsers className="inline mr-2" size={14} />
+                                    Select Recipients * ({selectedContacts.length} selected)
+                                </label>
+
+                                {/* Search */}
+                                <div className="relative mb-3">
+                                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
+                                    <input
+                                        type="text"
+                                        placeholder="Search contacts..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                    />
+                                </div>
+
+                                {/* Selection Actions */}
+                                {filteredContacts.length > 0 && (
+                                    <div className="flex gap-2 mb-3">
+                                        <button
+                                            type="button"
+                                            onClick={handleSelectAll}
+                                            className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                                        >
+                                            Select All ({filteredContacts.length})
+                                        </button>
+                                        {selectedContacts.length > 0 && (
+                                            <>
+                                                <span className="text-gray-300">|</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleClearSelection}
+                                                    className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                                                >
+                                                    Clear ({selectedContacts.length})
+                                                </button>
+                                            </>
                             )}
                         </div>
                     )}
+
+                                {/* Contacts List */}
+                                <div className="border border-gray-300 rounded-lg max-h-80 overflow-y-auto">
+                                    {filteredContacts.length === 0 ? (
+                                        <div className="text-center py-8 text-gray-500">
+                                            <FaUsers size={32} className="mx-auto mb-2 opacity-50" />
+                                            <p>
+                                                {searchTerm 
+                                                    ? 'No contacts found matching your search'
+                                                    : 'No contacts available'
+                                                }
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-1 p-2">
+                                            {filteredContacts.map((contact) => (
+                                                <div
+                                                    key={contact.id}
+                                                    onClick={() => handleContactSelect(contact.id)}
+                                                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                                                        selectedContacts.includes(contact.id)
+                                                            ? 'bg-green-50 border border-green-300'
+                                                            : 'bg-white hover:bg-gray-50 border border-transparent'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedContacts.includes(contact.id)}
+                                                            onChange={() => handleContactSelect(contact.id)}
+                                                            className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded mr-3"
+                                                        />
+                                                        <div className="flex-1">
+                                                            <div className="font-medium text-gray-900 text-sm">
+                                                                {`${contact.first_name || ''} ${contact.last_name || ''}`.trim() || 'Unknown'}
+                                                            </div>
+                                                            <div className="text-xs text-gray-600">
+                                                                {contact.phone || contact.email || 'No contact info'}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {errors.numbers && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.numbers}</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
 
                     {/* Submit Error */}
                     {errors.submit && (
@@ -288,11 +465,7 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
                             disabled={isSubmitting}
                             className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                            {isSubmitting ? (
-                                isEditing ? 'Updating...' : 'Creating...'
-                            ) : (
-                                isEditing ? 'Update Campaign' : 'Create Campaign'
-                            )}
+                            {isSubmitting ? 'Creating Campaign...' : 'Create Campaign'}
                         </button>
                     </div>
                 </form>
@@ -302,5 +475,3 @@ const CreateCampaignModal = ({ isOpen, onClose, campaign = null }) => {
 };
 
 export default CreateCampaignModal;
-
-

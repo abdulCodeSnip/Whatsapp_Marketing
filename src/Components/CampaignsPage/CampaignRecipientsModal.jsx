@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaTimes, FaUsers, FaPlus, FaTrash, FaSearch } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { useCampaignOperations } from '../../hooks/campaignHooks/useCampaignOperations';
+import useFetchAllContacts from '../../hooks/Contacts Hook/useFetchAllContacts';
 import Spinner from '../Spinner';
 
 const CampaignRecipientsModal = ({ isOpen, onClose, campaign }) => {
@@ -11,7 +12,7 @@ const CampaignRecipientsModal = ({ isOpen, onClose, campaign }) => {
 
     // Redux state
     const { campaignRecipients } = useSelector((state) => state.allCampaigns);
-    const { users: allContacts } = useSelector((state) => state.allContacts);
+    const { fetchContacts } = useFetchAllContacts();
 
     // Campaign operations
     const { 
@@ -29,12 +30,13 @@ const CampaignRecipientsModal = ({ isOpen, onClose, campaign }) => {
     }, [isOpen, campaign?.id]);
 
     // Filter available contacts (not already recipients)
-    const availableContacts = allContacts?.filter(contact => 
-        !campaignRecipients.some(recipient => recipient.userId === contact.id) &&
-        (contact.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         contact.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         contact.phone?.includes(searchTerm))
-    ) || [];
+    const availableContacts = (Array.isArray(fetchContacts) ? fetchContacts : []).filter(contact => {
+        const fullName = `${contact.first_name || ''} ${contact.last_name || ''}`.trim();
+        return !campaignRecipients.some(recipient => recipient.userId === contact.id) &&
+               (fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                contact.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                contact.phone?.includes(searchTerm));
+    });
 
     // Handle adding recipients
     const handleAddRecipients = async () => {
@@ -234,7 +236,7 @@ const CampaignRecipientsModal = ({ isOpen, onClose, campaign }) => {
                                                 />
                                                 <div className="flex-1">
                                                     <div className="font-medium text-gray-900">
-                                                        {contact.name || 'Unknown'}
+                                                        {`${contact.first_name || ''} ${contact.last_name || ''}`.trim() || 'Unknown'}
                                                     </div>
                                                     <div className="text-sm text-gray-600">
                                                         {contact.email || contact.phone || 'No contact info'}
@@ -268,5 +270,6 @@ const CampaignRecipientsModal = ({ isOpen, onClose, campaign }) => {
 };
 
 export default CampaignRecipientsModal;
+
 
 

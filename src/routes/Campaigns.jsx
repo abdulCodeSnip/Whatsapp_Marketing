@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaUsers, FaCalendarAlt, FaPlay } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaFilter, FaTrash, FaUsers, FaCalendarAlt } from 'react-icons/fa';
 import { MdSchedule, MdCheckCircle, MdCancel, MdPending } from 'react-icons/md';
 import { useSelector } from 'react-redux';
 import SideBar from '../Components/SideBar';
@@ -12,7 +12,6 @@ const Campaigns = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [showEditModal, setShowEditModal] = useState(false);
     const [selectedCampaign, setSelectedCampaign] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showRecipientsModal, setShowRecipientsModal] = useState(false);
@@ -86,11 +85,6 @@ const Campaigns = () => {
         }
     };
 
-    // Handle edit campaign
-    const handleEditCampaign = (campaign) => {
-        setSelectedCampaign(campaign);
-        setShowEditModal(true);
-    };
 
     // Handle manage recipients
     const handleManageRecipients = (campaign) => {
@@ -203,20 +197,13 @@ const Campaigns = () => {
                                                 </div>
                                                 
                                                 {/* Action Buttons */}
-                                                <div className="flex gap-1 ml-4">
+                                                {/* <div className="flex gap-1 ml-4">
                                                     <button
                                                         onClick={() => handleManageRecipients(campaign)}
                                                         className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                                                         title="Manage Recipients"
                                                     >
                                                         <FaUsers size={14} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleEditCampaign(campaign)}
-                                                        className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                        title="Edit Campaign"
-                                                    >
-                                                        <FaEdit size={14} />
                                                     </button>
                                                     <button
                                                         onClick={() => {
@@ -228,7 +215,7 @@ const Campaigns = () => {
                                                     >
                                                         <FaTrash size={14} />
                                                     </button>
-                                                </div>
+                                                </div> */}
                                             </div>
 
                                             {/* Campaign Message */}
@@ -266,15 +253,13 @@ const Campaigns = () => {
                 </div>
             </div>
 
-            {/* Create/Edit Campaign Modal */}
+            {/* Create Campaign Modal */}
             <CreateCampaignModal
-                isOpen={showCreateModal || showEditModal}
+                isOpen={showCreateModal}
                 onClose={() => {
                     setShowCreateModal(false);
-                    setShowEditModal(false);
                     setSelectedCampaign(null);
                 }}
-                campaign={showEditModal ? selectedCampaign : null}
             />
 
             {/* Campaign Recipients Modal */}

@@ -6,7 +6,6 @@ import {
     setCampaignsLoading,
     setCampaignsError,
     addCampaign,
-    updateCampaign,
     deleteCampaign,
     setCampaignRecipients
 } from '../../redux/campaignPage/allCampaigns';
@@ -17,17 +16,16 @@ export const useCampaignOperations = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Fetch all campaigns
-    const fetchCampaigns = async (status = null) => {
+    // Fetch all campaigns using GET request
+    const fetchCampaigns = async () => {
         try {
             setLoading(true);
             dispatch(setCampaignsLoading(true));
             setError(null);
 
-            const payload = status ? { status } : {};
-            const response = await api.post('/get-campaigns', payload);
+            const response = await api.get('/get-campaigns');
             
-            dispatch(setCampaigns(response.campaigns || []));
+            dispatch(setCampaigns(response.campaigns || response || []));
             return response;
         } catch (err) {
             const errorMessage = err.message || 'Failed to fetch campaigns';
@@ -40,21 +38,24 @@ export const useCampaignOperations = () => {
         }
     };
 
-    // Create new campaign
-    const createCampaign = async (campaignData) => {
+    // Create template-based campaign
+    const createTemplateCampaign = async (campaignData) => {
         try {
             setLoading(true);
             setError(null);
 
-            const response = await api.post('/add-campaign', campaignData);
+            const response = await api.post('/messages/set-campaign', campaignData);
             
             if (response.campaign) {
                 dispatch(addCampaign(response.campaign));
             }
             
+            // Refresh campaigns list
+            await fetchCampaigns();
+            
             return response;
         } catch (err) {
-            const errorMessage = err.message || 'Failed to create campaign';
+            const errorMessage = err.message || 'Failed to create template campaign';
             setError(errorMessage);
             throw err;
         } finally {
@@ -62,21 +63,24 @@ export const useCampaignOperations = () => {
         }
     };
 
-    // Update existing campaign
-    const updateExistingCampaign = async (campaignId, campaignData) => {
+    // Create raw message campaign
+    const createRawMessageCampaign = async (campaignData) => {
         try {
             setLoading(true);
             setError(null);
 
-            const response = await api.put(`/update-campaign/${campaignId}`, campaignData);
+            const response = await api.post('/messages/set-campaign-raw', campaignData);
             
             if (response.campaign) {
-                dispatch(updateCampaign(response.campaign));
+                dispatch(addCampaign(response.campaign));
             }
+            
+            // Refresh campaigns list
+            await fetchCampaigns();
             
             return response;
         } catch (err) {
-            const errorMessage = err.message || 'Failed to update campaign';
+            const errorMessage = err.message || 'Failed to create raw message campaign';
             setError(errorMessage);
             throw err;
         } finally {
@@ -84,7 +88,7 @@ export const useCampaignOperations = () => {
         }
     };
 
-    // Delete campaign
+    // Delete campaign (keeping existing functionality if needed)
     const deleteCampaignById = async (campaignId) => {
         try {
             setLoading(true);
@@ -103,7 +107,7 @@ export const useCampaignOperations = () => {
         }
     };
 
-    // Get campaign recipients
+    // Get campaign recipients (keeping existing functionality if needed)
     const getCampaignRecipients = async (campaignId) => {
         try {
             setLoading(true);
@@ -122,7 +126,7 @@ export const useCampaignOperations = () => {
         }
     };
 
-    // Add campaign recipients
+    // Add campaign recipients (keeping existing functionality if needed)
     const addCampaignRecipients = async (campaignId, userIds) => {
         try {
             setLoading(true);
@@ -143,7 +147,7 @@ export const useCampaignOperations = () => {
         }
     };
 
-    // Remove campaign recipient
+    // Remove campaign recipient (keeping existing functionality if needed)
     const removeCampaignRecipient = async (recipientId) => {
         try {
             setLoading(true);
@@ -162,10 +166,12 @@ export const useCampaignOperations = () => {
     };
 
     return {
-        // Operations
+        // Main operations for new campaign system
         fetchCampaigns,
-        createCampaign,
-        updateExistingCampaign,
+        createTemplateCampaign,
+        createRawMessageCampaign,
+        
+        // Legacy operations (if still needed)
         deleteCampaignById,
         getCampaignRecipients,
         addCampaignRecipients,
@@ -177,5 +183,3 @@ export const useCampaignOperations = () => {
         setError
     };
 };
-
-
