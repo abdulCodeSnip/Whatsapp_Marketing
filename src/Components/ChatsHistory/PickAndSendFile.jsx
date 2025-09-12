@@ -8,6 +8,7 @@ const PickAndSendFile = ({ onFileSent, selectedContact }) => {
   const [file, setFile] = useState(null);
   const [previewURL, setPreviewURL] = useState(null);
   const [isFileSending, setIsFileSending] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
   const [message, setMessage] = useState("");
 
   const fileRef = useRef(null);
@@ -44,20 +45,24 @@ const PickAndSendFile = ({ onFileSent, selectedContact }) => {
     else if (fileType.startsWith("video/")) mediaType = "video";
 
     try {
-      // First, upload the file to get a URL (you might need to implement this)
-      // For now, I'll use a placeholder URL - you'll need to implement file upload
+      console.log(`Starting upload for ${mediaType}:`, selectedFile.name);
+      setUploadProgress("Uploading file...");
+      
+      // First, upload the file to get a URL
       const mediaUrl = await uploadFileToServer(selectedFile);
       
       if (!mediaUrl) {
         throw new Error("Failed to upload file");
       }
 
+      setUploadProgress("Sending message...");
+      
       // Send media message using the new API
       const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/send-raw-message-media`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${authInformation?.token}`,
+          Authorization: authInformation?.token, // Using bearer token directly without "Bearer" prefix
         },
         body: JSON.stringify({
           to: phoneNumberWithoutPlus,
@@ -79,43 +84,58 @@ const PickAndSendFile = ({ onFileSent, selectedContact }) => {
         setFile(null);
         setPreviewURL(null);
         setMessage("");
+        setUploadProgress("");
       } else {
         throw new Error(result.message || "Failed to send media");
       }
     } catch (error) {
       console.error("Error sending media file:", error?.message);
-      alert(`Failed to send file: ${error.message}`);
+      
+      // Provide more specific error messages
+      let errorMessage = "Failed to send file";
+      if (error.message.includes("upload")) {
+        errorMessage = "Failed to upload file. Please check your internet connection and try again.";
+      } else if (error.message.includes("send")) {
+        errorMessage = "File uploaded but failed to send message. Please try again.";
+      } else {
+        errorMessage = `Failed to send file: ${error.message}`;
+      }
+      
+      alert(errorMessage);
     } finally {
       setIsFileSending(false);
+      setUploadProgress("");
     }
   };
 
-  // Placeholder function for file upload - you'll need to implement this
+  // Upload file to server using the /upload-media API
   const uploadFileToServer = async (file) => {
     try {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/upload`, {
+      console.log("Uploading file:", file.name, "Size:", formatFileSize(file.size));
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/upload-media`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${authInformation?.token}`,
+          Authorization: authInformation?.token, // Using bearer token directly without "Bearer" prefix
         },
         body: formData,
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        return result.url; // Assuming the API returns { url: "https://..." }
+      const result = await response.json();
+      console.log("Upload response:", result);
+
+      if (response.ok && result.fileUrl) {
+        console.log("File uploaded successfully:", result.fileUrl);
+        return result.fileUrl;
       } else {
-        // Fallback: return a placeholder URL for testing
-        console.warn("File upload failed, using placeholder URL");
-        return "https://via.placeholder.com/300x200?text=Media+File";
+        throw new Error(result.message || `Upload failed with status: ${response.status}`);
       }
     } catch (error) {
       console.error("Error uploading file:", error);
-      // Fallback: return a placeholder URL for testing
-      return "https://via.placeholder.com/300x200?text=Media+File";
+      throw error; // Re-throw the error so it can be handled by the calling function
     }
   };
 
@@ -156,6 +176,7 @@ const PickAndSendFile = ({ onFileSent, selectedContact }) => {
                 onClick={() => {
                   setFile(null);
                   setPreviewURL(null);
+                  setUploadProgress("");
                 }} 
                 className="p-2 rounded-full hover:bg-gray-100 transition-all"
                 disabled={isFileSending}
@@ -220,6 +241,7 @@ const PickAndSendFile = ({ onFileSent, selectedContact }) => {
                   setFile(null);
                   setPreviewURL(null);
                   setMessage("");
+                  setUploadProgress("");
                 }} 
                 className="px-4 py-2 text-sm cursor-pointer border border-gray-300 text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-all"
                 disabled={isFileSending}
@@ -231,7 +253,7 @@ const PickAndSendFile = ({ onFileSent, selectedContact }) => {
                 className="px-4 py-2 text-sm cursor-pointer bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isFileSending}
               >
-                {isFileSending ? 'Sending...' : 'Send'}
+                {isFileSending ? (uploadProgress || 'Sending...') : 'Send'}
               </button>
             </div>
           </div>
