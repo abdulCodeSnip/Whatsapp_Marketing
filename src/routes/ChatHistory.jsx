@@ -18,10 +18,10 @@ const ChatHistory = () => {
                <div className='flex-1 flex flex-col overflow-hidden'>
                     <Header onMenuClick={() => setSidebarOpen(true)} />
                     <main className="flex-1 overflow-y-auto bg-gray-100">
-                         <div className="max-w-7xl mx-auto h-[100%] flex flex-row">
+                         <div className="  h-[100%] flex flex-row max-lg:flex-col max-lg:gap-y-2">
                               <ConversationSidebar />
                               {selectedContact?.length !== 0 &&
-                                   (<div className='w-full flex flex-col overflow-y-auto space-y-3'>
+                                   (<div className='w-full flex flex-col  overflow-y-auto space-y-3'>
                                         <ReceiverHeader selectedContact={selectedContact} />
                                         <Chats selectedContact={selectedContact} />
                                    </div>)

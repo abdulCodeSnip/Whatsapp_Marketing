@@ -14,14 +14,14 @@ const Settings = () => {
      const selectedButton = useSelector((state) => state?.selectedButton?.activeButton);
 
      return (
-          <div className="flex overflow-hidden h-screen">
+          <div className="flex  min-h-screen">
                {/* Sidebar at left side */}
                <SideBar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
                <div className="flex flex-1 flex-col overflow-hidden">
                     <Header onMenuClick={() => setSidebarOpen(true)} />
 
                     {/* Main content with all the content */}
-                    <main className="flex-1 flex flex-row gap-5 bg-gray-50 overflow-hidden">
+                    <main className="flex-1 flex flex-row gap-5 bg-gray-50  max-lg:flex-col max-lg:gap-y-2">
                          <div className="sticky overflow-hidden">
                               <SettingSideBar />
                          </div>

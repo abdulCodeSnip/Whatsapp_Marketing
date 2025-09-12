@@ -54,7 +54,7 @@ const AccountSetting = () => {
     }
 
     return (
-        <div className=' w-full overflow-y-auto h-[100%] px-10'>
+        <div className=' w-full overflow-y-auto h-[100%] '>
             <div className='bg-white rounded-xl divide-y divide-gray-200'>
                 <div className='p-6'>
                     {/* Header */}
@@ -67,7 +67,7 @@ const AccountSetting = () => {
 
                 </div>
                 {/* User Information such as Phone Number Email and address */}
-                <div className='p-6 flex flex-row gap-x-5'>
+                <div className='p-6 flex flex-row gap-x-5 max-lg:flex-col max-lg:gap-y-2'>
                     <div className='flex flex-row items-center justify-center w-[20%] h-[100%]'>
                         <h2 className='w-[100px] h-[100px] items-center justify-center flex text-xl font-medium rounded-full bg-gray-300'>
                             {user?.first_name?.charAt(0)?.toUpperCase() + " " + user?.last_name?.charAt(0).toUpperCase() || ""}
@@ -123,7 +123,7 @@ const AccountSetting = () => {
                     <div>
                         <h2 className='text-gray-900 font-medium text-lg'>Account Preferences</h2>
                     </div>
-                    <div className='space-y-1 p-2 flex flex-row items-center justify-between'>
+                    <div className='space-y-1 p-2 flex flex-row lg:items-center justify-between max-lg:flex-col max-lg:gap-y-2'>
                         <div>
                             <h2 className='text-gray-800 text-base font-medium'>Time Zone</h2>
                             <span className='text-gray-500 text-sm'>Set your local time zone for accurate scheduling</span>
@@ -138,7 +138,7 @@ const AccountSetting = () => {
                             </select>
                         </div>
                     </div>
-                    <div className='space-y-1 p-2 flex flex-row items-center justify-between'>
+                    <div className='space-y-1 p-2 flex flex-row lg:items-center justify-between max-lg:flex-col max-lg:gap-y-2'>
                         <div>
                             <h2 className='text-gray-800 text-base font-medium'>Date Format</h2>
                             <span className='text-gray-500 text-sm'>Choose how dates are displayed throughout the app</span>
@@ -151,7 +151,7 @@ const AccountSetting = () => {
                             </select>
                         </div>
                     </div>
-                    <div className='space-y-1 p-2 flex flex-row items-center justify-between'>
+                    <div className='space-y-1 p-2 flex flex-row lg:items-center justify-between max-lg:flex-col max-lg:gap-y-2'>
                         <div>
                             <h2 className='text-gray-800 text-base font-medium'>Two-Factor Authentication</h2>
                             <span className='text-gray-500 text-sm'>Add an extra layer of security to your account</span>
@@ -160,7 +160,7 @@ const AccountSetting = () => {
                             <CustomToggle checked={checked} setChecked={() => setChecked(!checked)} />
                         </div>
                     </div>
-                    <div className="flex flex-row items-center justify-end gap-x-3">
+                    <div className="flex flex-row lg:items-center justify-end gap-x-3 max-lg:flex-col max-lg:gap-y-2">
                         <button onClick={() => navigate("/")} className="flex flex-row items-center cursor-pointer  text-gray-600 font-medium text-sm justify-center bg-gray-100 px-4 py-2 border border-gray-200 shadow-sm rounded-lg">
                             Cancel
                         </button>

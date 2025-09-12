@@ -21,7 +21,7 @@ const ConversationSidebar = () => {
     };
 
     return (
-        <div className="w-80 h-full bg-white p-2 border-r shadow-xl flex flex-col border-r-gray-200">
+        <div className="w-full md:w-80 h-full bg-white p-2 border-r shadow-xl flex flex-col border-r-gray-200">
             {/* Fixed Header Section */}
             <div className="flex-shrink-0">
                 <div className='text-gray-900 font-medium text-lg flex flex-col space-y-3'>
