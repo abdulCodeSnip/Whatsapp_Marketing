@@ -569,7 +569,7 @@ const Dashboard = () => {
 
                                                   <CustomButton
                                                        title={"Create New Campaign"}
-                                                       href={"/create-new-campaign"}
+                                                       href={"/campaigns"}
                                                        handleClick={() => console.log("")}
                                                   />
                                              </div>
