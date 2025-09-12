@@ -11,7 +11,7 @@ const ConversationSidebar = () => {
     const dispatch = useDispatch();
 
     // This is the custom hook that will return nothing but it will fetch all the chat-history of the selected contact
-    const { isLoading: isChatHistoryLoading, isError: chatHistoryError, refetch: refetchChatHistory } = useSelectedContactChats();
+    // const { isLoading: isChatHistoryLoading, isError: chatHistoryError, refetch: refetchChatHistory } = useSelectedContactChats();
 
     const { isError, isLoading, currentUserChatHistory } = useFetchCurrentUserChats();
     
@@ -87,17 +87,17 @@ const ConversationSidebar = () => {
                                         <div className="flex-1">
                                             <span className="text-sm font-medium text-gray-900">{username}</span>
                                             <div className="text-xs text-gray-500 truncate">
-                                                {contact?.phone && `📱 ${contact.phone}`}
+                                                {contact?.phone && ` ${contact.phone}`}
                                             </div>
                                             {/* Show loading indicator when fetching chat history for this contact */}
-                                            {isChatHistoryLoading && currentUserToConversate?.id === contact?.id && (
+                                            {/* { currentUserToConversate?.id === contact?.id && (
                                                 <div className="flex items-center mt-1">
                                                     <Spinner size="small" />
                                                     <span className="text-xs text-gray-500 ml-1">Loading messages...</span>
                                                 </div>
-                                            )}
+                                            )} */}
                                             {/* Show error if chat history failed to load */}
-                                            {chatHistoryError && currentUserToConversate?.id === contact?.id && (
+                                            {/* { currentUserToConversate?.id === contact?.id && (
                                                 <div className="flex items-center mt-1">
                                                     <span className="text-xs text-red-500">Failed to load messages</span>
                                                     <button 
@@ -110,7 +110,7 @@ const ConversationSidebar = () => {
                                                         Retry
                                                     </button>
                                                 </div>
-                                            )}
+                                            )} */}
                                         </div>
                                     </div>
                                 </div>

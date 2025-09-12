@@ -465,17 +465,17 @@ const Chats = ({ selectedContact }) => {
                                         }`}
                                 >
                                     {/* Message Type Badge */}
-                                    {messageType && (
+                                    {/* {messageType && (
                                         <div className="mb-1">
                                             <span className={`text-xs px-2 py-1 rounded-full ${
                                                 messageType === 'Template' 
                                                     ? 'bg-blue-100 text-blue-800' 
                                                     : 'bg-green-100 text-green-800'
                                             }`}>
-                                                {messageType === 'Template' ? '📋 Template' : '💬 Message'}
+                                                {messageType === 'Template' ? 'Template' : '     Message'}
                                             </span>
                                         </div>
-                                    )}
+                                    )} */}
                                     
                                     <div className="flex flex-row items-center gap-2">
                                         {mediaType && (
@@ -521,7 +521,8 @@ const Chats = ({ selectedContact }) => {
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <MdOutlineWatchLater />
+                                                <>
+                                                </>
                                             )}
                                         </span>
                                     </div>
