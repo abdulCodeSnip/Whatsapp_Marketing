@@ -94,7 +94,9 @@ const Chats = ({ selectedContact }) => {
                     timestamp: message.created_at,
                     messageType: message.messageable_type, // "Template" or "Raw"
                     id: message.id,
-                    number: message.number
+                    number: message.number,
+                    media_url: message.media_url,
+                    media_type: message.media_type
                 }));
                 
                 setFetchedChatHistory(convertedChats);
@@ -479,11 +481,11 @@ const Chats = ({ selectedContact }) => {
                                     )} */}
                                     
                                     <div className="flex flex-col gap-2">
-                                        {mediaType && mychat?.mediaUrl && (
+                                        {(mediaType || mychat?.media_type) && (mychat?.mediaUrl || mychat?.media_url) && (
                                             <div className="mb-2">
-                                                {mediaType === 'image' ? (
+                                                {(mediaType === 'image' || mychat?.media_type === 'image') ? (
                                                     <img 
-                                                        src={mychat.mediaUrl} 
+                                                        src={mychat.mediaUrl || mychat.media_url} 
                                                         alt="Shared image"
                                                         className="max-w-full max-h-48 rounded-lg object-cover"
                                                         onError={(e) => {
@@ -491,9 +493,9 @@ const Chats = ({ selectedContact }) => {
                                                             e.target.nextSibling.style.display = 'block';
                                                         }}
                                                     />
-                                                ) : mediaType === 'video' ? (
+                                                ) : (mediaType === 'video' || mychat?.media_type === 'video') ? (
                                                     <video 
-                                                        src={mychat.mediaUrl} 
+                                                        src={mychat.mediaUrl || mychat.media_url} 
                                                         controls
                                                         className="max-w-full max-h-48 rounded-lg"
                                                         onError={(e) => {
@@ -503,20 +505,22 @@ const Chats = ({ selectedContact }) => {
                                                     />
                                                 ) : (
                                                     <div className="p-3 border bg-white/20 rounded-lg flex items-center gap-2">
-                                                        {mediaTypeIcon(mediaType)}
+                                                        {mediaTypeIcon(mediaType || mychat?.media_type)}
                                                         <span className="text-sm">{mychat?.content}</span>
                                                     </div>
                                                 )}
                                                 {/* Fallback for broken media */}
                                                 <div className="p-3 border bg-white/20 rounded-lg items-center gap-2 hidden">
-                                                    {mediaTypeIcon(mediaType)}
+                                                    {mediaTypeIcon(mediaType || mychat?.media_type)}
                                                     <span className="text-sm">{mychat?.content}</span>
                                                 </div>
                                             </div>
                                         )}
                                         
                                         {/* Text content */}
-                                        <p className="text-sm break-words">{mychat?.content?.text?.body || (mediaType ? '' : mychat?.content)}</p>
+                                        <p className="text-sm break-words">
+                                            {mychat?.content?.text?.body || mychat?.content}
+                                        </p>
                                     </div>
                                     
                                     <div className="text-xs flex justify-between items-center gap-1 mt-1 text-gray-600">

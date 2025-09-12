@@ -7,6 +7,7 @@ import { useCampaignOperations } from '../hooks/campaignHooks/useCampaignOperati
 import Spinner from '../Components/Spinner';
 import CreateCampaignModal from '../Components/CampaignsPage/CreateCampaignModal';
 import CampaignRecipientsModal from '../Components/CampaignsPage/CampaignRecipientsModal';
+import moment from 'moment/moment';
 
 const Campaigns = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -238,7 +239,7 @@ const Campaigns = () => {
                                             <div className="space-y-2 text-sm">
                                                 <div className="flex items-center text-gray-600">
                                                     <FaCalendarAlt className="mr-2" size={12} />
-                                                    <span>Created: {formatDate(campaign.createdAt)}</span>
+                                                    <span>Scheduled: {moment(campaign.scheduled_at).format('DD/MM/YYYY HH:mm')}</span>
                                                 </div>
                                                 
                                                 {campaign.scheduledAt && (
@@ -248,10 +249,10 @@ const Campaigns = () => {
                                                     </div>
                                                 )}
                                                 
-                                                <div className="flex items-center text-gray-600">
+                                                {/* <div className="flex items-center text-gray-600">
                                                     <FaUsers className="mr-2" size={12} />
                                                     <span>Recipients: {campaign.recipientCount || 0}</span>
-                                                </div>
+                                                </div> */}
                                             </div>
                                         </div>
                                     </div>

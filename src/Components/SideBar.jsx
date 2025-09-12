@@ -107,7 +107,7 @@ const SideBar = ({ isOpen, onClose }) => {
                          </Link>
 
                          {/* Messages Page Navigation Link */}
-                         <Link to={"/messages"}
+                         {/* <Link to={"/messages"}
                               onClick={handleLinkClick}
                               className={`flex items-center px-4 transition-all py-3 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-800 ${pathname === "/messages" ? "bg-gray-800 border-l-3 border-l-green-500" : "bg-gray-900"} hover:text-white`}
                          >
@@ -115,7 +115,7 @@ const SideBar = ({ isOpen, onClose }) => {
                                    <RiMessage2Line size={20} />
                               </div>
                               Messages
-                         </Link>
+                         </Link> */}
 
                          {/* Templates Page Navigation Link */}
                          <Link to={"/templates"}
