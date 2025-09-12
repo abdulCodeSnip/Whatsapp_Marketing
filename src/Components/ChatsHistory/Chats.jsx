@@ -308,11 +308,12 @@ const Chats = ({ selectedContact }) => {
     };
 
     // this function will set the media type and the file name of "just picked file" to send to server
-    const handleAddMediaMessage = (mediaType, fileName) => {
+    const handleAddMediaMessage = (mediaType, fileName, mediaUrl) => {
         const newMediaMessage = {
             from: "me",
             media_type: mediaType,
             content: fileName,
+            mediaUrl: mediaUrl,
             status: "sent",
         };
 
@@ -388,7 +389,7 @@ const Chats = ({ selectedContact }) => {
                 {/* Footer input - keep it visible even during loading */}
                 <div className="border-t border-gray-200 bg-white shadow-md p-4 sticky bottom-0 w-full">
                     <div className="flex items-center justify-between gap-4 relative">
-                        <PickAndSendFile onFileSent={handleAddMediaMessage} />
+                        <PickAndSendFile onFileSent={handleAddMediaMessage} selectedContact={selectedContact} />
                         
                         {/* Message input container */}
                         <div className="flex-1 relative">
@@ -477,13 +478,45 @@ const Chats = ({ selectedContact }) => {
                                         </div>
                                     )} */}
                                     
-                                    <div className="flex flex-row items-center gap-2">
-                                        {mediaType && (
-                                            <div className="p-1 border bg-white/20 rounded">
-                                                {mediaTypeIcon(mediaType)}
+                                    <div className="flex flex-col gap-2">
+                                        {mediaType && mychat?.mediaUrl && (
+                                            <div className="mb-2">
+                                                {mediaType === 'image' ? (
+                                                    <img 
+                                                        src={mychat.mediaUrl} 
+                                                        alt="Shared image"
+                                                        className="max-w-full max-h-48 rounded-lg object-cover"
+                                                        onError={(e) => {
+                                                            e.target.style.display = 'none';
+                                                            e.target.nextSibling.style.display = 'block';
+                                                        }}
+                                                    />
+                                                ) : mediaType === 'video' ? (
+                                                    <video 
+                                                        src={mychat.mediaUrl} 
+                                                        controls
+                                                        className="max-w-full max-h-48 rounded-lg"
+                                                        onError={(e) => {
+                                                            e.target.style.display = 'none';
+                                                            e.target.nextSibling.style.display = 'block';
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <div className="p-3 border bg-white/20 rounded-lg flex items-center gap-2">
+                                                        {mediaTypeIcon(mediaType)}
+                                                        <span className="text-sm">{mychat?.content}</span>
+                                                    </div>
+                                                )}
+                                                {/* Fallback for broken media */}
+                                                <div className="p-3 border bg-white/20 rounded-lg items-center gap-2 hidden">
+                                                    {mediaTypeIcon(mediaType)}
+                                                    <span className="text-sm">{mychat?.content}</span>
+                                                </div>
                                             </div>
                                         )}
-                                        <p className="text-sm break-words">{mychat?.content?.text?.body || mychat?.content}</p>
+                                        
+                                        {/* Text content */}
+                                        <p className="text-sm break-words">{mychat?.content?.text?.body || (mediaType ? '' : mychat?.content)}</p>
                                     </div>
                                     
                                     <div className="text-xs flex justify-between items-center gap-1 mt-1 text-gray-600">
@@ -537,7 +570,7 @@ const Chats = ({ selectedContact }) => {
             {/* Footer input */}
             <div className="border-t border-gray-200 bg-white shadow-md p-4 sticky bottom-0 w-full">
                 <div className="flex items-center justify-between gap-4 relative">
-                    <PickAndSendFile onFileSent={handleAddMediaMessage} />
+                    <PickAndSendFile onFileSent={handleAddMediaMessage} selectedContact={selectedContact} />
                     
                     {/* Message input container */}
                     <div className="flex-1 relative">

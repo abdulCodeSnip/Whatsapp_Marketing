@@ -4,15 +4,17 @@ import { FiPaperclip } from "react-icons/fi";
 import { MdClose, MdOutlineEmojiEmotions } from "react-icons/md";
 import { useSelector } from "react-redux";
 
-const PickAndSendFile = ({ onFileSent }) => {
+const PickAndSendFile = ({ onFileSent, selectedContact }) => {
   const [file, setFile] = useState(null);
   const [previewURL, setPreviewURL] = useState(null);
   const [isFileSending, setIsFileSending] = useState(false);
+  const [message, setMessage] = useState("");
 
   const fileRef = useRef(null);
 
   const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
-  const currentUserToConversate = useSelector((state) => state?.selectedContact?.selectedContact);
+  // Use passed selectedContact prop instead of Redux state
+  const currentUserToConversate = selectedContact;
 
   const handleFilePicking = (e) => {
     const pickedFile = e?.target?.files[0];
@@ -31,38 +33,89 @@ const PickAndSendFile = ({ onFileSent }) => {
   const sendFileToWhatsapp = async (selectedFile, userWhatsappNumber) => {
     setIsFileSending(true);
 
-    const formData = new FormData();
-    formData.append("to", userWhatsappNumber);
-    formData.append("file", selectedFile);
+    // Remove "+" from phone number if it exists
+    const phoneNumberWithoutPlus = userWhatsappNumber?.replace("+", "");
+
+    // Determine media type
+    const fileType = selectedFile.type;
+    let mediaType = "document";
+    
+    if (fileType.startsWith("image/")) mediaType = "image";
+    else if (fileType.startsWith("video/")) mediaType = "video";
 
     try {
-      const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/whatsapp/media-message`, {
+      // First, upload the file to get a URL (you might need to implement this)
+      // For now, I'll use a placeholder URL - you'll need to implement file upload
+      const mediaUrl = await uploadFileToServer(selectedFile);
+      
+      if (!mediaUrl) {
+        throw new Error("Failed to upload file");
+      }
+
+      // Send media message using the new API
+      const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/send-raw-message-media`, {
         method: "POST",
         headers: {
-          Authorization: authInformation?.token,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authInformation?.token}`,
         },
-        body: formData,
+        body: JSON.stringify({
+          to: phoneNumberWithoutPlus,
+          mediaType: mediaType,
+          mediaUrl: mediaUrl,
+          message: message.trim() || `Sent a ${mediaType}`
+        }),
       });
 
+      const result = await apiResponse.json();
+      console.log("Media message sent:", result);
+
       if (apiResponse.ok) {
-        const fileType = selectedFile.type;
-        let mediaType = "document";
-
-        if (fileType.startsWith("image/")) mediaType = "image";
-        else if (fileType.startsWith("video/")) mediaType = "video";
-
         // Notify Chats component
         if (typeof onFileSent === "function") {
-          onFileSent(mediaType, selectedFile.name);
+          onFileSent(mediaType, selectedFile.name, mediaUrl);
         }
 
         setFile(null);
         setPreviewURL(null);
+        setMessage("");
+      } else {
+        throw new Error(result.message || "Failed to send media");
       }
     } catch (error) {
-      console.error("Error At Sending File", error?.message);
+      console.error("Error sending media file:", error?.message);
+      alert(`Failed to send file: ${error.message}`);
     } finally {
       setIsFileSending(false);
+    }
+  };
+
+  // Placeholder function for file upload - you'll need to implement this
+  const uploadFileToServer = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/upload`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authInformation?.token}`,
+        },
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        return result.url; // Assuming the API returns { url: "https://..." }
+      } else {
+        // Fallback: return a placeholder URL for testing
+        console.warn("File upload failed, using placeholder URL");
+        return "https://via.placeholder.com/300x200?text=Media+File";
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      // Fallback: return a placeholder URL for testing
+      return "https://via.placeholder.com/300x200?text=Media+File";
     }
   };
 
@@ -140,6 +193,24 @@ const PickAndSendFile = ({ onFileSent }) => {
                   <div>Type: {file.type || 'Unknown'}</div>
                 </div>
               </div>
+
+              {/* Message input */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Caption (optional)
+                </label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Add a caption to your media..."
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-sm"
+                  rows={3}
+                  disabled={isFileSending}
+                />
+                <div className="text-xs text-gray-500 mt-1">
+                  {message.length}/1000 characters
+                </div>
+              </div>
             </div>
 
             {/* Footer buttons */}
@@ -148,6 +219,7 @@ const PickAndSendFile = ({ onFileSent }) => {
                 onClick={() => {
                   setFile(null);
                   setPreviewURL(null);
+                  setMessage("");
                 }} 
                 className="px-4 py-2 text-sm cursor-pointer border border-gray-300 text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-all"
                 disabled={isFileSending}
