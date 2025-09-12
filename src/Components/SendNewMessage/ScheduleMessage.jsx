@@ -1,24 +1,18 @@
 import React, { useEffect, useState } from 'react'
-import CustomToggle from './CustomToggle'
-import { CgStopwatch } from 'react-icons/cg';
-import { BsQuestionCircle } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import useSendNewMessage from '../../hooks/sendNewMessage/useSendNewMessage';
 
-const ScheduleMessage = ({messageMode, sendTemplate, sendRawMessage}) => {
+const ScheduleMessage = ({messageMode, sendTemplate}) => {
     const [scheduled, setScheduled] = useState(false);
-    const [sendIndividually, setSendIndividually] = useState(false);
     const [loading, setLoading] = useState(false);
     const [errorMessageOnSending, setErrorMessageOnSending] = useState("");
-    const [showTooltip, setShowTooltip] = useState(false);
 
     const [time, setTime] = useState("");
     const [date, setDate] = useState("");
 
-    // Values from redux, such as "selected contacts for message being sent", "content of the message"
+    // Values from redux, such as "selected contacts for message being sent"
     const selectedContacts = useSelector((state) => state?.allContacts?.selectedContacts);
-    const messageContent = useSelector((state) => state?.messageContent?.content);
     const selectedTemplate = useSelector((state) => state?.selectedTemplate?.selected);
 
     // An object for navigating the screen to 
@@ -79,22 +73,6 @@ const ScheduleMessage = ({messageMode, sendTemplate, sendRawMessage}) => {
                 setLoading(false);
             }
         }
-        // Handle raw message mode
-        else if (messageMode === 'raw') {
-            if (!messageContent || messageContent.trim() === '') {
-                setErrorMessageOnSending("Please enter a message to send");
-                return;
-            }
-            setLoading(true);
-            try {
-                await sendRawMessage();
-                console.log(`Raw message sent to ${selectedContacts.length} contact(s)`);
-            } catch (error) {
-                setErrorMessageOnSending(`Failed to send raw message: ${error.message}`);
-            } finally {
-                setLoading(false);
-            }
-        }
         // Handle legacy message sending (for backward compatibility)
         else if (selectedContacts?.length === 1 && !scheduled) {
             await sendMessage();
@@ -119,61 +97,6 @@ const ScheduleMessage = ({messageMode, sendTemplate, sendRawMessage}) => {
                 <h2 className='text-gray-800 font-medium text-lg'>Message Options</h2>
             </div>
 
-            {/* Toggle for sending individually to each recipient */}
-            {selectedContacts?.length > 1 && messageMode === 'raw' && (
-                <div className='flex flex-row items-center justify-between w-full'>
-                    <div className='flex flex-row items-center justify-center gap-x-2'>
-                        <h2 className='text-gray-800 text-sm'>
-                            Send individually to each recipient
-                        </h2>
-                        <div 
-                            className='relative cursor-pointer text-gray-400 hover:text-gray-600 transition-colors'
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
-                            onClick={() => setShowTooltip(!showTooltip)}
-                        >
-                            <BsQuestionCircle size={16} />
-                            
-                            {/* Tooltip */}
-                            {showTooltip && (
-                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg z-50">
-                                    <div className="relative">
-                                        <p className="mb-2 font-medium">Individual vs Bulk Sending:</p>
-                                        <p className="mb-1"><strong>Individual:</strong> Each recipient gets a separate message. More personal but slower.</p>
-                                        <p><strong>Bulk:</strong> All recipients in one message. Faster but less personal.</p>
-                                        
-                                        {/* Arrow pointing down */}
-                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <div>
-                        <CustomToggle 
-                            checked={sendIndividually} 
-                            setChecked={() => setSendIndividually(!sendIndividually)} 
-                        />
-                    </div>
-                </div>
-            )}
-
-            {/* Toggle for message as Scheduled message */}
-            {messageMode === 'raw' && (
-                <div className='flex flex-row items-center justify-between w-full'>
-                    <div className='flex flex-row items-center justify-center gap-x-2'>
-                        <div className='text-gray-800'>
-                            <CgStopwatch size={19} />
-                        </div>
-                        <h2 className='text-gray-800 text-sm'>
-                            Schedule Message
-                        </h2>
-                    </div>
-                    <div>
-                        <CustomToggle checked={scheduled} setChecked={() => setScheduled(!scheduled)} />
-                    </div>
-                </div>
-            )}
 
             {/* if schedule message then show, then allow user to select date and time for sending that scheduled message */}
             {scheduled && (
@@ -222,13 +145,13 @@ const ScheduleMessage = ({messageMode, sendTemplate, sendRawMessage}) => {
                 </button>
                 <button
                     onClick={handleSendOrScheduleMessages}
-                    disabled={loading || (messageMode === 'template' && !selectedTemplate) || (messageMode === 'raw' && (!messageContent || messageContent.trim() === ''))}
+                    disabled={loading || (messageMode === 'template' && !selectedTemplate)}
                     className={`flex flex-row items-center justify-center px-4 py-2 rounded-lg cursor-pointer border border-gray-200 outline-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed bg-green-500 hover:opacity-95 text-white shadow-sm`}
                 >
                     {
                         loading ? (
-                            messageMode === 'template' ? "Sending Template..." : "Sending Message..."
-                        ) : isMessageScheduling && scheduled ? "Scheduling Message..." : isMessageSending ? "Message Sending..." : scheduled ? "Schedule Message" : messageMode === 'template' ? "Send Template" : messageMode === 'raw' ? "Send Raw Message" : sendIndividually && selectedContacts?.length > 1 ? "Send Individual Messages" : "Send Message"}
+                            "Sending Template..."
+                        ) : isMessageScheduling && scheduled ? "Scheduling Message..." : isMessageSending ? "Message Sending..." : scheduled ? "Schedule Message" : "Send Template"}
                 </button>
             </div>
         </div>

@@ -48,6 +48,9 @@ const useSendTemplateMessage = (authInfo) => {
             // Loop through each selected contact and send template individually
             for (let i = 0; i < selectedContacts.length; i++) {
                 const contact = selectedContacts[i];
+
+                // remove the + from the phone number if it exists
+                const phoneNumberWithoutPlus = contact?.phone?.replace("+", "");
                 
                 try {
                     console.log(`Sending template to contact ${i + 1}/${selectedContacts.length}: ${contact.first_name} ${contact.last_name}`);
@@ -59,7 +62,7 @@ const useSendTemplateMessage = (authInfo) => {
                             "Content-Type": "application/json"
                         },
                         body: JSON.stringify({
-                            to: contact?.phone || contact?.id, // Use phone number as shown in screenshot
+                            to: phoneNumberWithoutPlus || contact?.id, // Use phone number as shown in screenshot
                             templateName: selectedTemplateDetail?.name
                         })
                     });
