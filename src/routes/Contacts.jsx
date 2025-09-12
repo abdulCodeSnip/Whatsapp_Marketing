@@ -129,7 +129,7 @@ const Contacts = () => {
                               </div>
 
                               {/* Title and some buttons for fast accessablilty */}
-                              <div className="flex flex-row items-center justify-between mt-5">
+                              <div className="flex flex-row md:items-center justify-between mt-5 max-lg:flex-col max-lg:gap-y-2">
 
                                    {/* Title */}
                                    <div className="flex flex-col items-start justify-center space-y-2">
@@ -168,7 +168,7 @@ const Contacts = () => {
                               ) : isError ? (
                                    <ErrorState />
                               ) : (
-                                   <div className="flex flex-row gap-x-4 justify-between mt-5">
+                                   <div className="flex flex-row gap-x-4 justify-between mt-5 max-lg:flex-col max-lg:gap-y-2">
                                         <div className="flex flex-col px-3 space-y-3 py-2 w-full">
                                              <h2 className="font-medium text-lg">Contacts</h2>
                                              <div className="bg-green-100 border-l-3 border-l-green-500 border-r-3 border-r-green-500 cursor-pointer flex items-center justify-between px-4 py-2 rounded-lg">

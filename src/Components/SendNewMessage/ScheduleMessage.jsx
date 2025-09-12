@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import useSendNewMessage from '../../hooks/sendNewMessage/useSendNewMessage';
 
-const ScheduleMessage = ({messageMode, sendTemplate}) => {
+const ScheduleMessage = ({messageMode, sendTemplate, isTemplateLoading}) => {
     const [scheduled, setScheduled] = useState(false);
     const [loading, setLoading] = useState(false);
     const [errorMessageOnSending, setErrorMessageOnSending] = useState("");
@@ -63,14 +63,11 @@ const ScheduleMessage = ({messageMode, sendTemplate}) => {
                 setErrorMessageOnSending("Please select a template to send");
                 return;
             }
-            setLoading(true);
             try {
                 await sendTemplate();
                 console.log(`Template "${selectedTemplate}" sent to ${selectedContacts.length} contact(s)`);
             } catch (error) {
                 setErrorMessageOnSending(`Failed to send template: ${error.message}`);
-            } finally {
-                setLoading(false);
             }
         }
         // Handle legacy message sending (for backward compatibility)
@@ -138,20 +135,24 @@ const ScheduleMessage = ({messageMode, sendTemplate}) => {
             <div className='flex flex-row items-center justify-end gap-5'>
                 <button
                     onClick={() => navigate("/")}
-                    className='flex flex-row items-center justify-center px-4 py-2 rounded-lg cursor-pointer border border-gray-200 outline-green-500 bg-gray-50 text-gray-700 hover:opacity-95 shadow-sm'
-                    disabled={loading}
+                    className='flex flex-row items-center justify-center px-4 py-2 rounded-lg cursor-pointer border border-gray-200 outline-green-500 bg-gray-50 text-gray-700 hover:opacity-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed'
+                    disabled={loading || isTemplateLoading}
                 >
                     Cancel
                 </button>
                 <button
                     onClick={handleSendOrScheduleMessages}
-                    disabled={loading || (messageMode === 'template' && !selectedTemplate)}
+                    disabled={loading || isTemplateLoading || (messageMode === 'template' && !selectedTemplate)}
                     className={`flex flex-row items-center justify-center px-4 py-2 rounded-lg cursor-pointer border border-gray-200 outline-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed bg-green-500 hover:opacity-95 text-white shadow-sm`}
                 >
-                    {
-                        loading ? (
-                            "Sending Template..."
-                        ) : isMessageScheduling && scheduled ? "Scheduling Message..." : isMessageSending ? "Message Sending..." : scheduled ? "Schedule Message" : "Send Template"}
+                    {isTemplateLoading ? (
+                        <div className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <span>Sending Template...</span>
+                        </div>
+                    ) : loading ? (
+                        "Sending Template..."
+                    ) : isMessageScheduling && scheduled ? "Scheduling Message..." : isMessageSending ? "Message Sending..." : scheduled ? "Schedule Message" : "Send Template"}
                 </button>
             </div>
         </div>

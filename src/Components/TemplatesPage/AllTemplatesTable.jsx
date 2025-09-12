@@ -153,10 +153,10 @@ const AllTemplatesTable = () => {
                 </div>
             )}
 
-            <div className='bg-white flex flex-row items-center justify-between p-[14px] shadow-xs rounded-xl'>
+            <div className='bg-white flex flex-col md:flex-row items-center justify-between p-[14px] shadow-xs rounded-xl gap-2'>
 
                 {/* Search in Templates, also with "Category Sorting", "Status Sorting" */}
-                <div className='flex flex-row items-center justify-between gap-x-5'>
+                <div className='flex flex-col md:flex-row items-center justify-between gap-x-5 gap-y-2 max-lg:w-full'>
                     <div className='flex flex-col items-start justify-center gap-1'>
                         <p className='text-gray-700 font-medium text-sm mx-2'>Search Template</p>
                         <input
@@ -172,14 +172,14 @@ const AllTemplatesTable = () => {
                     </div>
 
                     {/* Category Sorting Button with Multiple Options */}
-                    <div className='flex flex-col items-start justify-center gap-1'>
+                    <div className='flex flex-col items-start justify-center gap-1 max-lg:w-full'>
                         <p className='text-gray-700 font-medium text-sm'>Category</p>
                         <select 
                             name='sortByCategory' 
                             id='sortByCategory' 
                             value={sortByCategory}
                             onChange={(e) => handleSearchTemplates("sortByCategory", e.target.value)} 
-                            className='px-4 py-2 rounded-lg border-1 text-gray-700 cursor-pointer border-gray-300 focus:border-black'
+                            className='px-4 py-2 rounded-lg border-1 text-gray-700 cursor-pointer border-gray-300 focus:border-black max-md:w-full'
                         >
                             <option value={""}>All Category</option>
                             <option value={"MARKETING"}>Marketing</option>
@@ -190,14 +190,14 @@ const AllTemplatesTable = () => {
                     </div>
 
                     {/* Template status Sorting */}
-                    <div className='flex flex-col items-start justify-center gap-1'>
+                    <div className='flex flex-col items-start justify-center gap-1 max-lg:w-full'>
                         <p className='text-gray-700 font-medium text-sm'>Status</p>
                         <select
                             name="sortByStatus" 
                             id='sortByStatus'
                             value={sortByStatus}
                             onChange={(e) => handleSearchTemplates("sortByStatus", e.target.value)}
-                            className='pl-3 pr-12 shadow-sm appearance-auto py-2 rounded-lg cursor-pointer border-1 text-gray-700 border-gray-300 focus:border-black'
+                            className='pl-3 pr-12 shadow-sm appearance-auto py-2 rounded-lg cursor-pointer border-1 text-gray-700 border-gray-300 focus:border-black max-md:w-full'
                         >
                             <option value={""}>All Statuses</option>
                             <option value={"Approved"}>Approved</option>
@@ -210,7 +210,7 @@ const AllTemplatesTable = () => {
                 {/* Reset Filters Button */}
                 <div 
                     onClick={() => handleSearchTemplates("resetAllFilters")} 
-                    className='border-gray-300 border-1 px-4 py-2 rounded-lg hover:bg-gray-50 bg-white cursor-pointer'
+                    className='border-gray-300 border-1 px-4 py-2 rounded-lg hover:bg-gray-50 bg-white cursor-pointer max-lg:w-full'
                 >
                     <div className='flex flex-row items-center gap-x-2 justify-center text-gray-700 cursor-pointer'>
                         <FaRotate />

@@ -5,6 +5,7 @@ const useSendTemplateMessage = (authInfo) => {
     const [isTemplateMessageSent, setIsTemplateMessageSent] = useState(false);
     const [isTemplateMessageSentErr, setIsTemplateMessageSentErr] = useState(false);
     const [templateMessageSentResponse, setTemplateMessageSentResponse] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
     const selectedContacts = useSelector((state) => state.allContacts?.selectedContacts);
 
     // Send a template message to a specific user.
@@ -40,6 +41,7 @@ const useSendTemplateMessage = (authInfo) => {
     // Send template message to multiple users - Loop through each user individually
     const sendTemplateMessageToMultipleUsers = async (variables, selectedTemplateDetail) => {
         try {
+            setIsLoading(true);
             setIsTemplateMessageSent(false);
             setIsTemplateMessageSentErr(false);
             
@@ -113,11 +115,13 @@ const useSendTemplateMessage = (authInfo) => {
             setIsTemplateMessageSentErr(true);
             setTemplateMessageSentResponse({ error: error.message });
             throw error;
+        } finally {
+            setIsLoading(false);
         }
     };
 
     return {
-        isTemplateMessageSent, isTemplateMessageSentErr, templateMessageSentResponse, sendTemplateMessage, sendTemplateMessageToMultipleUsers,
+        isTemplateMessageSent, isTemplateMessageSentErr, templateMessageSentResponse, sendTemplateMessage, sendTemplateMessageToMultipleUsers, isLoading
     }
 }
 

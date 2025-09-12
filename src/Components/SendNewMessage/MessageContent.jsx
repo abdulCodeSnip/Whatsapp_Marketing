@@ -16,7 +16,7 @@ const MessageContent = () => {
     const selectedTemplate = useSelector((state) => state?.selectedTemplate?.selected);
     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
 
-    const { sendTemplateMessageToMultipleUsers } = useSendTemplateMessage(authInformation);
+    const { sendTemplateMessageToMultipleUsers, isLoading: isTemplateLoading } = useSendTemplateMessage(authInformation);
 
     const dispatch = useDispatch();
     const { isError, isLoading, fetchedTemplates } = useFetchTemplates();
@@ -159,6 +159,7 @@ const MessageContent = () => {
                     sendTemplate={() => {
                         sendTemplateMessageToMultipleUsers(variableValues, selectedTemplateDetail);
                     }}
+                    isTemplateLoading={isTemplateLoading}
                 />
             </Fragment>
         </div>

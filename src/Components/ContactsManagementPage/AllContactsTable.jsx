@@ -276,7 +276,7 @@ const AllContactsTable = ({
      return (
           <div className='flex w-full flex-col space-y-5'>
                {/* Bulk Buttons for sorting and searching through contacts */}
-               <div className='flex flex-row w-full justify-between bg-white p-3 shadow rounded-xl gap-x-4'>
+               <div className='flex flex-row w-full justify-between bg-white p-3 shadow rounded-xl gap-x-4 max-lg:flex-col max-lg:gap-y-2'>
 
                     {/* Search Contacts here */}
                     <div className="flex flex-row flex-[56%] relative">

@@ -424,7 +424,7 @@ const Dashboard = () => {
                                    </div>
 
                                    {/* Custom Cards for Admin Convinience*/}
-                                   <div className="grid lg:grid-cols-4 my-10 gap-x-6">
+                                   <div className="grid lg:grid-cols-4 my-10 gap-6 ">
 
                                         {/* Message Custom Card */}
                                         <DashboardCard
@@ -498,7 +498,7 @@ const Dashboard = () => {
                                         </div>
 
                                         {/* Custom Buttons with some styling */}
-                                        <div className="items-center justify-center grid grid-cols-3 gap-x-5">
+                                        <div className="items-center justify-center grid grid-cols-1 md:grid-cols-2 gap-3 lg:grid-cols-3 gap-x-5">
 
                                              {/* Send New Message Button with Link */}
                                              <CustomLinkButton
@@ -533,12 +533,12 @@ const Dashboard = () => {
                                    </div>
 
                                    {/* Recent Messages Overview, with different messages */}
-                                   <div className="flex flex-row justify-between items-start my-5 gap-x-5 ">
+                                   <div className="flex flex-col md:flex-row justify-between items-start my-5 gap-5 ">
                                         {/* Card for Messages Overview */}
                                         <RecentMessages />
 
                                         {/* Card for Campagin */}
-                                        <div className="p-5 bg-white w-[300px] rounded-xl h-auto ">
+                                        <div className="p-5 bg-white w-full md:w-[300px] rounded-xl h-auto ">
                                              <div className="flex flex-col">
                                                   <div className="flex flex-col gap-y-3">
                                                        <h2 className="text-lg font-semibold">Campaign Status</h2>
