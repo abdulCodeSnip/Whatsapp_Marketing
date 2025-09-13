@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { RiCheckDoubleLine, RiSendPlaneLine } from "react-icons/ri";
 import { CiSearch, CiCalendar } from "react-icons/ci";
 import { Link, useLocation } from 'react-router-dom';
@@ -11,6 +11,7 @@ import Header from '../Components/ContactsManagementPage/Header';
 import FooterPagination from '../Components/footerPagination';
 import AllMessagesTable from '../Components/Messages/AllMessagesTable';
 import useFetchMessages from '../hooks/useFetchMessages';
+import Spinner from '../Components/Spinner';
 
 
 const Messages = () => {
@@ -19,6 +20,8 @@ const Messages = () => {
      const [showDateFilterDialog, setShowDateFilterDialog] = useState(false);
      const [showSortByFilterDialog, setShowSortByFilterDialog] = useState(false);
      const [showStatusFilterDialog, setShowStatusFilterDialog] = useState(false);
+     const [isFilterLoading, setIsFilterLoading] = useState(false);
+     const [isSearching, setIsSearching] = useState(false);
 
      // Filter states
      const [dateFilter, setDateFilter] = useState({
@@ -39,36 +42,71 @@ const Messages = () => {
      const sortByFilterRef = useRef(null);
 
      // Get messages for search count
-     const { messages, currentUser } = useFetchMessages(20);
+     const { messages, currentUser, isLoading, isError, retryFetch } = useFetchMessages(20);
 
-     // Apply date filter
-     const applyDateFilter = (startDate, endDate) => {
-          setDateFilter({ startDate, endDate });
-          setShowDateFilterDialog(false);
-     };
+     // Debounced search function
+     const debouncedSearch = useCallback((searchTerm) => {
+          setIsSearching(true);
+          const timeoutId = setTimeout(() => {
+               setIsSearching(false);
+          }, 500);
+          return () => clearTimeout(timeoutId);
+     }, []);
 
-     // Apply status filter
-     const applyStatusFilter = (statusType, checked) => {
-          if (statusType === 'all') {
-               setStatusFilter({
-                    all: checked,
-                    delivered: false,
-                    pending: false,
-                    read: false
-               });
+     // Handle search input change
+     const handleSearchChange = (e) => {
+          const value = e.target.value;
+          setSearchMessages(value);
+          if (value.trim()) {
+               debouncedSearch(value);
           } else {
-               setStatusFilter(prev => ({
-                    ...prev,
-                    all: false,
-                    [statusType]: checked
-               }));
+               setIsSearching(false);
           }
      };
 
+     // Apply date filter
+     const applyDateFilter = async (startDate, endDate) => {
+          setIsFilterLoading(true);
+          // Simulate small delay for filter processing
+          setTimeout(() => {
+               setDateFilter({ startDate, endDate });
+               setShowDateFilterDialog(false);
+               setIsFilterLoading(false);
+          }, 300);
+     };
+
+     // Apply status filter
+     const applyStatusFilter = async (statusType, checked) => {
+          setIsFilterLoading(true);
+          // Simulate small delay for filter processing
+          setTimeout(() => {
+               if (statusType === 'all') {
+                    setStatusFilter({
+                         all: checked,
+                         delivered: false,
+                         pending: false,
+                         read: false
+                    });
+               } else {
+                    setStatusFilter(prev => ({
+                         ...prev,
+                         all: false,
+                         [statusType]: checked
+                    }));
+               }
+               setIsFilterLoading(false);
+          }, 300);
+     };
+
      // Apply sort filter
-     const applySortFilter = (sortType) => {
-          setSortBy(sortType);
-          setShowSortByFilterDialog(false);
+     const applySortFilter = async (sortType) => {
+          setIsFilterLoading(true);
+          // Simulate small delay for filter processing
+          setTimeout(() => {
+               setSortBy(sortType);
+               setShowSortByFilterDialog(false);
+               setIsFilterLoading(false);
+          }, 300);
      };
 
      // Clear all filters
@@ -269,13 +307,18 @@ const Messages = () => {
                                    {/* Bulk Buttons to for search and filtering */}
                                    <div className="flex flex-row items-center justify-between p-4 bg-white rounded-xl mt-10 w-full shadow-sm">
                                         {/* Search box to search in message */}
-                                        <div className='w-[60%]'>
+                                        <div className='w-[60%] relative'>
                                              <CustomInput
                                                   placeholder={"Search in messages ...."}
                                                   value={searchMessages}
-                                                  handleOnChange={(e) => setSearchMessages(e.target.value)}
+                                                  handleOnChange={handleSearchChange}
                                                   name={"searchMessages"}
                                              />
+                                             {isSearching && (
+                                                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                                       <Spinner size="small" />
+                                                  </div>
+                                             )}
                                         </div>
                                         <div className="flex flex-row justify-between gap-x-2 w-[38%] relative">
 
@@ -392,35 +435,75 @@ const Messages = () => {
                                    <div className='bg-white rounded-xl shadow-sm overflow-hidden my-10'>
                                         <div className='overflow-x-auto'>
 
-                                             {/* Messages table component with actions */}
-                                             <AllMessagesTable 
-                                                  searchQuery={searchMessages}
-                                                  filteredMessages={getFilteredAndSortedMessages()}
-                                             />
-
-                                             {/* Pagination at last of tables */}
-                                             <div className="px-6 py-4 rounded-bl-xl rounded-br-xl w-full bg-gray-50 border border-gray-200 flex items-center justify-between">
-                                                  <div className="flex flex-row gap-x-3 items-center w-full">
-                                                       <span className='text-gray-500 text-sm'>
-                                                            {searchMessages.trim() || !statusFilter.all || dateFilter.startDate || dateFilter.endDate ? (
-                                                                 `Showing ${filteredCount} of ${totalCount} Results ${filteredCount !== totalCount ? '(filtered)' : ''}`
-                                                            ) : (
-                                                                 `Showing 1 to ${Math.min(10, totalCount)} of ${totalCount} Results`
-                                                            )}
-                                                       </span>
-                                                       <div className="text-sm border border-gray-200 px-3 py-1 rounded-full">
-                                                            <select className="outline-none" name="messagesPerPage">
-                                                                 <option value="10">10 per page</option>
-                                                                 <option value="10">25 per page</option>
-                                                                 <option value="10">50 per page</option>
-                                                                 <option value="10">75 per page</option>
-                                                            </select>
-                                                       </div>
+                                             {/* Loading State */}
+                                             {isLoading ? (
+                                                  <div className="flex flex-col items-center justify-center py-20">
+                                                       <Spinner size="large" />
+                                                       <p className="text-gray-500 mt-4 text-sm">Loading messages...</p>
                                                   </div>
+                                             ) : isError ? (
+                                                  /* Error State */
+                                                  <div className="flex flex-col items-center justify-center py-20">
+                                                       <div className="text-red-400 mb-4">
+                                                            <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                                            </svg>
+                                                       </div>
+                                                       <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load messages</h3>
+                                                       <p className="text-gray-500 text-sm mb-4">
+                                                            {isError || "Something went wrong while loading your messages."}
+                                                       </p>
+                                                       <button 
+                                                            onClick={retryFetch} 
+                                                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                                                       >
+                                                            Try Again
+                                                       </button>
+                                                  </div>
+                                             ) : (
+                                                  /* Messages table component with actions */
+                                                  <div className="relative">
+                                                       {isFilterLoading && (
+                                                            <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                                                                 <div className="flex flex-col items-center">
+                                                                      <Spinner size="medium" />
+                                                                      <p className="text-gray-500 mt-2 text-sm">Applying filters...</p>
+                                                                 </div>
+                                                            </div>
+                                                       )}
+                                                       <AllMessagesTable 
+                                                            searchQuery={searchMessages}
+                                                            filteredMessages={getFilteredAndSortedMessages()}
+                                                            isLoading={isLoading}
+                                                       />
+                                                  </div>
+                                             )}
 
-                                                  {/* Pagination at footer with some options */}
-                                                  <FooterPagination />
-                                             </div>
+                                             {/* Pagination at last of tables - only show when not loading */}
+                                             {!isLoading && !isError && (
+                                                  <div className="px-6 py-4 rounded-bl-xl rounded-br-xl w-full bg-gray-50 border border-gray-200 flex items-center justify-between">
+                                                       <div className="flex flex-row gap-x-3 items-center w-full">
+                                                            <span className='text-gray-500 text-sm'>
+                                                                 {searchMessages.trim() || !statusFilter.all || dateFilter.startDate || dateFilter.endDate ? (
+                                                                      `Showing ${filteredCount} of ${totalCount} Results ${filteredCount !== totalCount ? '(filtered)' : ''}`
+                                                                 ) : (
+                                                                      `Showing 1 to ${Math.min(10, totalCount)} of ${totalCount} Results`
+                                                                 )}
+                                                            </span>
+                                                            <div className="text-sm border border-gray-200 px-3 py-1 rounded-full">
+                                                                 <select className="outline-none" name="messagesPerPage">
+                                                                      <option value="10">10 per page</option>
+                                                                      <option value="10">25 per page</option>
+                                                                      <option value="10">50 per page</option>
+                                                                      <option value="10">75 per page</option>
+                                                                 </select>
+                                                            </div>
+                                                       </div>
+
+                                                       {/* Pagination at footer with some options */}
+                                                       <FooterPagination />
+                                                  </div>
+                                             )}
                                         </div>
                                    </div>
                               </div>

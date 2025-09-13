@@ -16,26 +16,37 @@ const ChatFooter = () => {
 
     const [message, setMessage] = useState("");
 
-    const sendMessageToCurrentUser = async (receiverId) => {
+    const sendMessageToCurrentUser = async (phoneNumber) => {
         try {
-            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/send`, {
+            const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/send-raw-message`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": authInformation?.token
                 },
-                body: JSON.stringify({ receiver_id: receiverId, content: message })
+                body: JSON.stringify({ 
+                    to: (phoneNumber || currentUserToConversate?.phone)?.replace("+", "") || currentUserToConversate?.id, 
+                    message: message 
+                })
             });
 
             const result = await apiResponse.json();
-            if (apiResponse.ok) {
-                dispatch(dynamicChats(result?.data))
+            console.log("Raw message sent:", result);
+            
+            if (apiResponse.status === 200 || apiResponse.status === 201) {
+                // Add message to local state for immediate UI update
+                const newMessage = {
+                    from: "me",
+                    content: message,
+                    status: "sent"
+                };
+                dispatch(dynamicChats({ chat: [newMessage] }));
                 setMessage("");
             } else {
-                console.log("Bad request.");
+                console.log("Failed to send message:", result);
             }
         } catch (error) {
-            console.log("Error:", error);
+            console.log("Error sending raw message:", error);
         }
     };
 
@@ -57,8 +68,7 @@ const ChatFooter = () => {
                     }} placeholder='Type a message....' className='px-3 py-2 rounded-xl border border-gray-200 outline-green-500 w-full' />
                 </div>
                 <button disabled={message.trim() === ""} onClick={() => {
-                    sendMessageToCurrentUser(currentUserToConversate?.id);
-                    setMessage("");
+                    sendMessageToCurrentUser(currentUserToConversate?.phone || currentUserToConversate?.id);
                     dispatch(inputChangesForSendingMessage(message))
                 }
                 } className='p-2 disabled:opacity-80 rounded-full bg-green-500 cursor-pointer'>

@@ -3,8 +3,9 @@ import { BsEye } from "react-icons/bs";
 import { GiSemiClosedEye } from "react-icons/gi";
 import { IoEye, IoEyeOff } from "react-icons/io5";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
-import Cookies from "js-cookie";
 import { redirect, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { authUtils } from "../../utils/auth";
 
 const AuthForm = () => {
 
@@ -13,6 +14,7 @@ const AuthForm = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [successOrErr, setSuccessOrErr] = useState("");
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     const [userFormData, setUserFormData] = useState({
         first_name: "",
@@ -48,9 +50,12 @@ const AuthForm = () => {
             console.log(result?.message);
             if (apiResponse.ok) {
                 console.log(result);
-                Cookies.set("jwtToken", result?.token);
-                Cookies.set("password", userFormData.password);
-                Cookies.set("email", result?.user?.email || userFormData.email);
+                authUtils.setAuthData(
+                    result?.token, 
+                    result?.user?.email || userFormData.email, 
+                    userFormData.password,
+                    dispatch
+                );
                 
                 setSuccessOrErr("Registration successful! Redirecting...");
                 // Navigate after successful registration
@@ -88,9 +93,12 @@ const AuthForm = () => {
             }
             
             if (apiResponse.ok && result?.token) {
-                Cookies.set("jwtToken", result?.token);
-                Cookies.set("password", userFormData.password);
-                Cookies.set("email", result?.user?.email);
+                authUtils.setAuthData(
+                    result?.token, 
+                    result?.user?.email, 
+                    userFormData.password,
+                    dispatch
+                );
 
                 setSuccessOrErr("Login Successfully! Redirecting...");
                 

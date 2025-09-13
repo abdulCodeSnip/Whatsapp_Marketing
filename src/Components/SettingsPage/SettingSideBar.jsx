@@ -80,7 +80,7 @@ const SettingSideBar = () => {
     }, [activeButton])
 
     return (
-        <div className='w-[300px] bg-white h-[100%] border border-gray-300 space-y-6 flex flex-col justify-between'>
+        <div className='w-full md:w-[300px] bg-white h-[100%] border border-gray-300 space-y-6 flex flex-col justify-between'>
             <div>
                 <div className='p-5 flex flex-col items-start justify-center flex-wrap space-y-3'>
                     <h2 className='text-gray-900 font-medium text-xl'>

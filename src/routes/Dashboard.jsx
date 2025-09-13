@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { RiMessage2Line, RiCheckDoubleLine, RiSendPlaneLine } from "react-icons/ri";
 import { IoClose } from "react-icons/io5";
 import { FaUserFriends } from "react-icons/fa";
+import { useNavigate } from 'react-router-dom';
 import { BsFileEarmarkPlus } from "react-icons/bs";
 import { LuNewspaper } from "react-icons/lu";
 import { TbUserPlus } from "react-icons/tb";
@@ -21,12 +22,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addTemplates } from '../redux/templatePage/allTemplates';
 import RecentMessages from '../Components/Dashboard/RecentMessages';
 import { allContacts } from '../redux/contactsPage/contactsFromAPI';
-import Cookies from 'js-cookie';
 import Spinner from '../Components/Spinner';
+import { authUtils, authenticatedFetch } from '../utils/auth';
 
 const Dashboard = () => {
      const [showFAQs, setShowFAQs] = useState(false);
      const [showNotifications, setShowNotifications] = useState(false);
+     const [sidebarOpen, setSidebarOpen] = useState(false);
      const [changeFAQsSearchInput, setChangeFAQsSearchInput] = useState("");
      const [user, setUser] = useState(null);
      const [isLoading, setIsLoading] = useState(true);
@@ -53,10 +55,7 @@ const Dashboard = () => {
           }
      ]);
 
-     // Get JWT token from cookies
-     const getAuthToken = () => {
-          return Cookies.get("jwtToken");
-     };
+     const navigate = useNavigate();
 
      // Safely get data count with fallbacks
      const getDataCount = (data, routeName) => {
@@ -99,22 +98,21 @@ const Dashboard = () => {
                setIsDataLoading(true);
                setError(null);
 
-               const token = getAuthToken();
-
-               if (!token) {
+               if (!authUtils.isAuthenticated()) {
                     throw new Error('No authentication token found');
                }
 
                const updatedData = await Promise.all(
                     completeData.map(async (item) => {
                          try {
-                              const response = await fetch(`${import.meta.env.VITE_API_URL}${item.apiRoute}`, {
-                                   method: "GET",
-                                   headers: {
-                                        "Authorization": `Bearer ${token}`,
-                                        "Content-Type": "application/json"
+                              const response = await authenticatedFetch(
+                                   `${import.meta.env.VITE_API_URL}${item.apiRoute}`, 
+                                   {
+                                        method: "GET"
                                    },
-                              });
+                                   navigate,
+                                   dispatch
+                              );
 
                               if (!response.ok) {
                                    throw new Error(`Failed to fetch ${item.apiRoute}: ${response.status}`);
@@ -166,22 +164,24 @@ const Dashboard = () => {
      const userData = async () => {
           try {
                setIsLoading(true);
-               const token = getAuthToken();
-               const email = Cookies.get("email");
-               const password = Cookies.get("password");
+               const credentials = authUtils.getUserCredentials();
 
-               if (!token || !email || !password) {
+               if (!credentials.token || !credentials.email || !credentials.password) {
                     throw new Error('Missing authentication credentials');
                }
 
-               const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
-                    method: "POST",
-                    headers: {
-                         "Authorization": `Bearer ${token}`,
-                         "Content-Type": "application/json",
+               const apiResponse = await authenticatedFetch(
+                    `${import.meta.env.VITE_API_URL}/auth/login`,
+                    {
+                         method: "POST",
+                         body: JSON.stringify({ 
+                              email: credentials.email, 
+                              password: credentials.password 
+                         })
                     },
-                    body: JSON.stringify({ email, password })
-               });
+                    navigate,
+                    dispatch
+               );
 
                if (!apiResponse.ok) {
                     throw new Error(`Failed to fetch user data: ${apiResponse.status}`);
@@ -217,9 +217,9 @@ const Dashboard = () => {
      if (isLoading || isDataLoading) {
           return (
                <div className="flex overflow-hidden h-screen">
-                    <SideBar />
-                    <div className='flex-1 flex flex-col overflow-hidden'>
-                         <Header />
+                    <SideBar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+                    <div className='flex-1 flex flex-col overflow-hidden lg:ml-0'>
+                         <Header onMenuClick={() => setSidebarOpen(true)} />
                          <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
                               <div className="max-w-7xl mx-auto">
                                    <div className="flex items-center justify-center h-64">
@@ -242,9 +242,9 @@ const Dashboard = () => {
      if (error) {
           return (
                <div className="flex overflow-hidden h-screen">
-                    <SideBar />
-                    <div className='flex-1 flex flex-col overflow-hidden'>
-                         <Header />
+                    <SideBar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+                    <div className='flex-1 flex flex-col overflow-hidden lg:ml-0'>
+                         <Header onMenuClick={() => setSidebarOpen(true)} />
                          <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
                               <div className="max-w-7xl mx-auto">
                                    <div className="flex items-center justify-center h-64">
@@ -399,11 +399,11 @@ const Dashboard = () => {
                <div className="flex overflow-hidden h-screen">
 
                     {/* Sidebar at left side */}
-                    <SideBar />
+                    <SideBar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
                     {/* Main content area with header and all main content */}
-                    <div className='flex-1 flex flex-col overflow-hidden'>
-                         <Header />
+                    <div className='flex-1 flex flex-col overflow-hidden lg:ml-0'>
+                         <Header onMenuClick={() => setSidebarOpen(true)} />
 
                          {/* Main Content after the header of the component */}
                          <main className="flex-1 overflow-y-auto bg-gray-100 p-6">
@@ -424,7 +424,7 @@ const Dashboard = () => {
                                    </div>
 
                                    {/* Custom Cards for Admin Convinience*/}
-                                   <div className="grid lg:grid-cols-4 my-10 gap-x-6">
+                                   <div className="grid lg:grid-cols-4 my-10 gap-6 ">
 
                                         {/* Message Custom Card */}
                                         <DashboardCard
@@ -498,7 +498,7 @@ const Dashboard = () => {
                                         </div>
 
                                         {/* Custom Buttons with some styling */}
-                                        <div className="items-center justify-center grid grid-cols-3 gap-x-5">
+                                        <div className="items-center justify-center grid grid-cols-1 md:grid-cols-2 gap-3 lg:grid-cols-3 gap-x-5">
 
                                              {/* Send New Message Button with Link */}
                                              <CustomLinkButton
@@ -533,12 +533,12 @@ const Dashboard = () => {
                                    </div>
 
                                    {/* Recent Messages Overview, with different messages */}
-                                   <div className="flex flex-row justify-between items-start my-5 gap-x-5 ">
+                                   <div className="flex flex-col md:flex-row justify-between items-start my-5 gap-5 ">
                                         {/* Card for Messages Overview */}
                                         <RecentMessages />
 
                                         {/* Card for Campagin */}
-                                        <div className="p-5 bg-white w-[300px] rounded-xl h-auto ">
+                                        <div className="p-5 bg-white w-full md:w-[300px] rounded-xl h-auto ">
                                              <div className="flex flex-col">
                                                   <div className="flex flex-col gap-y-3">
                                                        <h2 className="text-lg font-semibold">Campaign Status</h2>
@@ -569,7 +569,7 @@ const Dashboard = () => {
 
                                                   <CustomButton
                                                        title={"Create New Campaign"}
-                                                       href={"/create-new-campaign"}
+                                                       href={"/campaigns"}
                                                        handleClick={() => console.log("")}
                                                   />
                                              </div>

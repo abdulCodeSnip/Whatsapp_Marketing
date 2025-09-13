@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback, Fragment } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import MediaAttatchments from './MediaAttatchments';
-import { contentOfMessage } from '../../redux/sendNewMessage/sendMessage';
 import useFetchTemplates from '../../hooks/useFetchTemplates';
 import { onChangeSelectedTemplate } from "../../redux/sendNewMessage/selectedTemplate"
 import ScheduleMessage from './ScheduleMessage';
@@ -9,15 +8,15 @@ import useSendTemplateMessage from '../../hooks/templateMessage/useSendTemplateM
 
 const MessageContent = () => {
     const [templates, setTemplates] = useState([]);
+    const [messageMode] = useState('template'); // Only template mode supported
 
     // VARIABLE ARRAY STATE - Array of variable objects
     const [variableValues, setVariableValues] = useState([]);
 
-    const messageContent = useSelector((state) => state?.messageContent?.content);
     const selectedTemplate = useSelector((state) => state?.selectedTemplate?.selected);
     const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
 
-    const { sendTemplateMessageToMultipleUsers } = useSendTemplateMessage(authInformation);
+    const { sendTemplateMessageToMultipleUsers, isLoading: isTemplateLoading } = useSendTemplateMessage(authInformation);
 
     const dispatch = useDispatch();
     const { isError, isLoading, fetchedTemplates } = useFetchTemplates();
@@ -25,6 +24,8 @@ const MessageContent = () => {
     useEffect(() => {
         if (fetchedTemplates?.templates) {
             setTemplates(fetchedTemplates.templates);
+        } else if (Array.isArray(fetchedTemplates)) {
+            setTemplates(fetchedTemplates);
         }
     }, [fetchedTemplates]);
 
@@ -34,6 +35,7 @@ const MessageContent = () => {
             setVariableValues([]);
         }
     }, [selectedTemplate]);
+
 
     // Get a selected template details, so that we can use its variables
     const selectedTemplateDetail = useMemo(() =>
@@ -83,10 +85,6 @@ const MessageContent = () => {
         dispatch(onChangeSelectedTemplate(e.target.value));
     }, [dispatch]);
 
-    // Change the value of the "message"
-    const handleMessageContentChange = useCallback((e) => {
-        dispatch(contentOfMessage(e.target.value));
-    }, [dispatch]);
 
     return (
         <div>
@@ -95,26 +93,29 @@ const MessageContent = () => {
                     <div className='text-lg text-gray-800 font-medium py-2'>
                         <h2>Message Content</h2>
                     </div>
-                    <div className='flex flex-row rounded-lg border items-center justify-center border-gray-300 shadow-sm px-3 py-2'>
-                        <select
-                            onChange={handleTemplateChange}
-                            name="selectTemplate"
-                            id="selectTemplate"
-                            className='outline-none'
-                            value={selectedTemplate || ""}
-                        >
-                            <option value="">Select Template</option>
-                            {templates?.map((template) => (
-                                <option key={template?.id || template?.name} value={template?.name}>
-                                    {template?.name}
-                                </option>
-                            ))}
-                        </select>
+                    <div className='flex flex-row items-center gap-4'>
+                        {/* Template Selector */}
+                        <div className='flex flex-row rounded-lg border items-center justify-center border-gray-300 shadow-sm px-3 py-2'>
+                            <select
+                                onChange={handleTemplateChange}
+                                name="selectTemplate"
+                                id="selectTemplate"
+                                className='outline-none'
+                                value={selectedTemplate || ""}
+                            >
+                                <option value="">Select Template</option>
+                                {templates?.map((template) => (
+                                    <option key={template?.id || template?.name} value={template?.name}>
+                                        {template?.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 </div>
 
                 {/* Variable inputs section */}
-                {visibleVariables.length > 0 && (
+                {visibleVariables.length > 0 && selectedTemplate && (
                     <div>
                         <div className='text-sm text-gray-400 my-2'>
                             <h2>Fill in the template variables</h2>
@@ -149,34 +150,17 @@ const MessageContent = () => {
                         </div>
                     </div>
                 )}
-
-                {/* Regular textarea for non-template messages */}
-                {!selectedTemplate && (
-                    <div className='rounded-lg'>
-                        <div className='relative'>
-                            <textarea
-                                value={messageContent || ''}
-                                placeholder="Type your new message here...."
-                                onChange={handleMessageContentChange}
-                                rows={6}
-                                className='border-gray-300 border resize-none p-4 w-full outline-green-500 rounded-lg'
-                                maxLength={1000}
-                            />
-                            <div className='absolute bottom-2 right-2 text-xs text-gray-400'>
-                                {(messageContent || '').length}/1000
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {!selectedTemplate && <MediaAttatchments />}
             </div>
 
             {/* Custom component that is responsible for sending message either based on the selected date "scheduling messages", or it can send message directly to all the selected users  */}
             <Fragment>
-                <ScheduleMessage sendTemplate={() => {
-                    sendTemplateMessageToMultipleUsers(variableValues, selectedTemplateDetail);
-                }} />
+                <ScheduleMessage 
+                    messageMode={messageMode}
+                    sendTemplate={() => {
+                        sendTemplateMessageToMultipleUsers(variableValues, selectedTemplateDetail);
+                    }}
+                    isTemplateLoading={isTemplateLoading}
+                />
             </Fragment>
         </div>
     )

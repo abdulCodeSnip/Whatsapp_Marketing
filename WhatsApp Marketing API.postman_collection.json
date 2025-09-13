@@ -1,0 +1,282 @@
+{
+	"info": {
+		"_postman_id": "d5e56b48-9abf-4827-a23b-fa701837cf13",
+		"name": "WhatsApp Marketing API",
+		"description": "Collection for testing WhatsApp Marketing API endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "8092629"
+	},
+	"item": [
+	 
+	 
+		{
+			"name": "Campaign",
+			"item": [
+				{
+					"name": "Create Campaign",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"My Scheduled Campaign\",\n  \"message\": \"Hello! This will be sent later.\",\n  \"type\": \"scheduled\", //scheduled , instant\n  \"scheduledAt\": \"2025-09-07 09:00:00\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/add-campaign",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"add-campaign"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Campaign",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"My Scheduled Campaign\",\n  \"message\": \"Hello! This will be sent later.\",\n  \"type\": \"scheduled\",\n  \"scheduledAt\": \"2024-09-22 12:04:00 \"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/update-campaign/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"update-campaign",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Campaigns",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"status\" : \"pending\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/get-campaigns",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"get-campaigns"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Campaigns Recipients",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"status\" : \"pending\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/get-campaign-recipients/2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"get-campaign-recipients",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Campaign Recipient",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userIds\" : [ 1 , 12 , 3 , 5, 7]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/add-campaign-recipient/2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"add-campaign-recipient",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Campaign",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"status\" : \"pending\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/delete-campaign/2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"delete-campaign",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Campaign Recipient",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"status\" : \"pending\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/remove-recipient/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"remove-recipient",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "your_jwt_token_here",
+			"type": "string"
+		}
+	]
+}

@@ -39,7 +39,7 @@ const Hamburger = ({ firstLink, secondLink, thirdLink }) => {
                </div>
 
                {/* Useful message for admin */}
-               <div className='my-5 flex flex-row space-y-2 justify-between items-center'>
+               <div className='my-5 flex flex-col md:flex-row space-y-2 justify-between items-center'>
                     <div>
                          <div>
                               <h2 className='font-semibold text-2xl'>
@@ -51,7 +51,7 @@ const Hamburger = ({ firstLink, secondLink, thirdLink }) => {
                          </div>
                     </div>
 
-                    <div>
+                    <div className='ml-auto'>
                          <Link to={"/templates/create-new-template"} className='flex flex-row items-center justify-center gap-x-2 p-2 bg-[#25D366] text-white font-medium text-sm shadow-sm rounded-lg px-4 py-2'>
                               <BiPlus size={20} />
                               <span>Create New Template</span>

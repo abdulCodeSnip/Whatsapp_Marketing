@@ -1,24 +1,18 @@
 import React, { useEffect, useState } from 'react'
-import CustomToggle from './CustomToggle'
-import { CgStopwatch } from 'react-icons/cg';
-import { BsQuestionCircle } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import useSendNewMessage from '../../hooks/sendNewMessage/useSendNewMessage';
 
-const ScheduleMessage = ({sendTemplate}) => {
+const ScheduleMessage = ({messageMode, sendTemplate, isTemplateLoading}) => {
     const [scheduled, setScheduled] = useState(false);
-    const [sendIndividually, setSendIndividually] = useState(false);
     const [loading, setLoading] = useState(false);
     const [errorMessageOnSending, setErrorMessageOnSending] = useState("");
-    const [showTooltip, setShowTooltip] = useState(false);
 
     const [time, setTime] = useState("");
     const [date, setDate] = useState("");
 
-    // Values from redux, such as "selected contacts for message being sent", "content of the message"
+    // Values from redux, such as "selected contacts for message being sent"
     const selectedContacts = useSelector((state) => state?.allContacts?.selectedContacts);
-    const messageContent = useSelector((state) => state?.messageContent?.content);
     const selectedTemplate = useSelector((state) => state?.selectedTemplate?.selected);
 
     // An object for navigating the screen to 
@@ -54,12 +48,30 @@ const ScheduleMessage = ({sendTemplate}) => {
     */
    
     const handleSendOrScheduleMessages = async () => {
-        if (selectedTemplate) {
-            await sendTemplate()
-        }
-        else if (selectedContacts?.length <= 0) {
+        // Clear any previous error messages
+        setErrorMessageOnSending("");
+        
+        // Check if contacts are selected
+        if (selectedContacts?.length <= 0) {
             setErrorMessageOnSending("Please select at least one contact");
-        } else if (selectedContacts?.length === 1 && !scheduled) {
+            return;
+        }
+        
+        // Handle template mode
+        if (messageMode === 'template') {
+            if (!selectedTemplate) {
+                setErrorMessageOnSending("Please select a template to send");
+                return;
+            }
+            try {
+                await sendTemplate();
+                console.log(`Template "${selectedTemplate}" sent to ${selectedContacts.length} contact(s)`);
+            } catch (error) {
+                setErrorMessageOnSending(`Failed to send template: ${error.message}`);
+            }
+        }
+        // Handle legacy message sending (for backward compatibility)
+        else if (selectedContacts?.length === 1 && !scheduled) {
             await sendMessage();
         } else if (selectedContacts?.length > 1 && !scheduled) {
             // Use individual or bulk sending based on toggle
@@ -82,61 +94,6 @@ const ScheduleMessage = ({sendTemplate}) => {
                 <h2 className='text-gray-800 font-medium text-lg'>Message Options</h2>
             </div>
 
-            {/* Toggle for sending individually to each recipient */}
-            {selectedContacts?.length > 1 && !selectedTemplate && (
-                <div className='flex flex-row items-center justify-between w-full'>
-                    <div className='flex flex-row items-center justify-center gap-x-2'>
-                        <h2 className='text-gray-800 text-sm'>
-                            Send individually to each recipient
-                        </h2>
-                        <div 
-                            className='relative cursor-pointer text-gray-400 hover:text-gray-600 transition-colors'
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
-                            onClick={() => setShowTooltip(!showTooltip)}
-                        >
-                            <BsQuestionCircle size={16} />
-                            
-                            {/* Tooltip */}
-                            {showTooltip && (
-                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg z-50">
-                                    <div className="relative">
-                                        <p className="mb-2 font-medium">Individual vs Bulk Sending:</p>
-                                        <p className="mb-1"><strong>Individual:</strong> Each recipient gets a separate message. More personal but slower.</p>
-                                        <p><strong>Bulk:</strong> All recipients in one message. Faster but less personal.</p>
-                                        
-                                        {/* Arrow pointing down */}
-                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <div>
-                        <CustomToggle 
-                            checked={sendIndividually} 
-                            setChecked={() => setSendIndividually(!sendIndividually)} 
-                        />
-                    </div>
-                </div>
-            )}
-
-            {/* Toggle for message as Scheduled message */}
-            {!selectedTemplate && (
-                <div className='flex flex-row items-center justify-between w-full'>
-                    <div className='flex flex-row items-center justify-center gap-x-2'>
-                        <div className='text-gray-800'>
-                            <CgStopwatch size={19} />
-                        </div>
-                        <h2 className='text-gray-800 text-sm'>
-                            Schedule Message
-                        </h2>
-                    </div>
-                    <div>
-                        <CustomToggle checked={scheduled} setChecked={() => setScheduled(!scheduled)} />
-                    </div>
-                </div>
-            )}
 
             {/* if schedule message then show, then allow user to select date and time for sending that scheduled message */}
             {scheduled && (
@@ -178,18 +135,24 @@ const ScheduleMessage = ({sendTemplate}) => {
             <div className='flex flex-row items-center justify-end gap-5'>
                 <button
                     onClick={() => navigate("/")}
-                    className='flex flex-row items-center justify-center px-4 py-2 rounded-lg cursor-pointer border border-gray-200 outline-green-500 bg-gray-50 text-gray-700 hover:opacity-95 shadow-sm'
-                    disabled={loading}
+                    className='flex flex-row items-center justify-center px-4 py-2 rounded-lg cursor-pointer border border-gray-200 outline-green-500 bg-gray-50 text-gray-700 hover:opacity-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed'
+                    disabled={loading || isTemplateLoading}
                 >
                     Cancel
                 </button>
                 <button
                     onClick={handleSendOrScheduleMessages}
-                    disabled={(loading || messageContent === "") && !selectedTemplate}
+                    disabled={loading || isTemplateLoading || (messageMode === 'template' && !selectedTemplate)}
                     className={`flex flex-row items-center justify-center px-4 py-2 rounded-lg cursor-pointer border border-gray-200 outline-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed bg-green-500 hover:opacity-95 text-white shadow-sm`}
                 >
-                    {
-                        isMessageScheduling && scheduled ? "Scheduling Message..." : isMessageSending ? "Message Sending..." : scheduled ? "Schedule Message" : selectedTemplate ? "Send Template": sendIndividually && selectedContacts?.length > 1 ? "Send Individual Messages" : "Send Message"}
+                    {isTemplateLoading ? (
+                        <div className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <span>Sending Template...</span>
+                        </div>
+                    ) : loading ? (
+                        "Sending Template..."
+                    ) : isMessageScheduling && scheduled ? "Scheduling Message..." : isMessageSending ? "Message Sending..." : scheduled ? "Schedule Message" : "Send Template"}
                 </button>
             </div>
         </div>

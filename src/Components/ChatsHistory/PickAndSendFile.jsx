@@ -4,15 +4,18 @@ import { FiPaperclip } from "react-icons/fi";
 import { MdClose, MdOutlineEmojiEmotions } from "react-icons/md";
 import { useSelector } from "react-redux";
 
-const PickAndSendFile = ({ onFileSent }) => {
+const PickAndSendFile = ({ onFileSent, selectedContact }) => {
   const [file, setFile] = useState(null);
   const [previewURL, setPreviewURL] = useState(null);
   const [isFileSending, setIsFileSending] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
+  const [message, setMessage] = useState("");
 
   const fileRef = useRef(null);
 
   const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
-  const currentUserToConversate = useSelector((state) => state?.selectedContact?.selectedContact);
+  // Use passed selectedContact prop instead of Redux state
+  const currentUserToConversate = selectedContact;
 
   const handleFilePicking = (e) => {
     const pickedFile = e?.target?.files[0];
@@ -31,38 +34,108 @@ const PickAndSendFile = ({ onFileSent }) => {
   const sendFileToWhatsapp = async (selectedFile, userWhatsappNumber) => {
     setIsFileSending(true);
 
-    const formData = new FormData();
-    formData.append("to", userWhatsappNumber);
-    formData.append("file", selectedFile);
+    // Remove "+" from phone number if it exists
+    const phoneNumberWithoutPlus = userWhatsappNumber?.replace("+", "");
+
+    // Determine media type
+    const fileType = selectedFile.type;
+    let mediaType = "document";
+    
+    if (fileType.startsWith("image/")) mediaType = "image";
+    else if (fileType.startsWith("video/")) mediaType = "video";
 
     try {
-      const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/whatsapp/media-message`, {
+      console.log(`Starting upload for ${mediaType}:`, selectedFile.name);
+      setUploadProgress("Uploading file...");
+      
+      // First, upload the file to get a URL
+      const mediaUrl = await uploadFileToServer(selectedFile);
+      
+      if (!mediaUrl) {
+        throw new Error("Failed to upload file");
+      }
+
+      setUploadProgress("Sending message...");
+      
+      // Send media message using the new API
+      const apiResponse = await fetch(`${import.meta.env.VITE_API_URL}/messages/send-raw-message-media`, {
         method: "POST",
         headers: {
-          Authorization: authInformation?.token,
+          "Content-Type": "application/json",
+          Authorization: authInformation?.token, // Using bearer token directly without "Bearer" prefix
         },
-        body: formData,
+        body: JSON.stringify({
+          to: phoneNumberWithoutPlus,
+          mediaType: mediaType,
+          mediaUrl: mediaUrl,
+          message: message.trim() || `Sent a ${mediaType}`
+        }),
       });
 
+      const result = await apiResponse.json();
+      console.log("Media message sent:", result);
+
       if (apiResponse.ok) {
-        const fileType = selectedFile.type;
-        let mediaType = "document";
-
-        if (fileType.startsWith("image/")) mediaType = "image";
-        else if (fileType.startsWith("video/")) mediaType = "video";
-
         // Notify Chats component
         if (typeof onFileSent === "function") {
-          onFileSent(mediaType, selectedFile.name);
+          onFileSent(mediaType, selectedFile.name, mediaUrl);
         }
 
         setFile(null);
         setPreviewURL(null);
+        setMessage("");
+        setUploadProgress("");
+      } else {
+        throw new Error(result.message || "Failed to send media");
       }
     } catch (error) {
-      console.error("Error At Sending File", error?.message);
+      console.error("Error sending media file:", error?.message);
+      
+      // Provide more specific error messages
+      let errorMessage = "Failed to send file";
+      if (error.message.includes("upload")) {
+        errorMessage = "Failed to upload file. Please check your internet connection and try again.";
+      } else if (error.message.includes("send")) {
+        errorMessage = "File uploaded but failed to send message. Please try again.";
+      } else {
+        errorMessage = `Failed to send file: ${error.message}`;
+      }
+      
+      alert(errorMessage);
     } finally {
       setIsFileSending(false);
+      setUploadProgress("");
+    }
+  };
+
+  // Upload file to server using the /upload-media API
+  const uploadFileToServer = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      console.log("Uploading file:", file.name, "Size:", formatFileSize(file.size));
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/upload-media`, {
+        method: "POST",
+        headers: {
+          Authorization: authInformation?.token, // Using bearer token directly without "Bearer" prefix
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+      console.log("Upload response:", result);
+
+      if (response.ok && result.fileUrl) {
+        console.log("File uploaded successfully:", result.fileUrl);
+        return result.fileUrl;
+      } else {
+        throw new Error(result.message || `Upload failed with status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      throw error; // Re-throw the error so it can be handled by the calling function
     }
   };
 
@@ -103,6 +176,7 @@ const PickAndSendFile = ({ onFileSent }) => {
                 onClick={() => {
                   setFile(null);
                   setPreviewURL(null);
+                  setUploadProgress("");
                 }} 
                 className="p-2 rounded-full hover:bg-gray-100 transition-all"
                 disabled={isFileSending}
@@ -140,6 +214,24 @@ const PickAndSendFile = ({ onFileSent }) => {
                   <div>Type: {file.type || 'Unknown'}</div>
                 </div>
               </div>
+
+              {/* Message input */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Caption (optional)
+                </label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Add a caption to your media..."
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-sm"
+                  rows={3}
+                  disabled={isFileSending}
+                />
+                <div className="text-xs text-gray-500 mt-1">
+                  {message.length}/1000 characters
+                </div>
+              </div>
             </div>
 
             {/* Footer buttons */}
@@ -148,6 +240,8 @@ const PickAndSendFile = ({ onFileSent }) => {
                 onClick={() => {
                   setFile(null);
                   setPreviewURL(null);
+                  setMessage("");
+                  setUploadProgress("");
                 }} 
                 className="px-4 py-2 text-sm cursor-pointer border border-gray-300 text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-all"
                 disabled={isFileSending}
@@ -159,7 +253,7 @@ const PickAndSendFile = ({ onFileSent }) => {
                 className="px-4 py-2 text-sm cursor-pointer bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isFileSending}
               >
-                {isFileSending ? 'Sending...' : 'Send'}
+                {isFileSending ? (uploadProgress || 'Sending...') : 'Send'}
               </button>
             </div>
           </div>

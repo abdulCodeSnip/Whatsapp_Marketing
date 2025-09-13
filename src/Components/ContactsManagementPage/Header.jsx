@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { BsQuestionCircle } from 'react-icons/bs';
-import { FaArrowLeftLong, FaQ } from 'react-icons/fa6';
+import { FaArrowLeftLong, FaQ, FaBars } from 'react-icons/fa6';
 import { LuBellRing } from 'react-icons/lu';
 import { Link } from 'react-router-dom';
 import CustomInput from '../customInput';
@@ -11,7 +11,7 @@ import FAQsCard from '../FAQsCard';
 import { FaArrowRight } from 'react-icons/fa';
 import NotificationCustomCard from '../notificationCustomCard';
 
-const Header = () => {
+const Header = ({ onMenuClick }) => {
 
      const [showNotifications, setShowNotifications] = useState(false);
      const [showFAQs, setShowFAQs] = useState(false);
@@ -86,12 +86,21 @@ const Header = () => {
                }
                <header className="bg-white shadow-sm z-10">
                     <div className="flex flex-row items-center justify-between px-6 h-16">
+                         {/* Mobile hamburger button */}
+                         <div className="flex items-center gap-4">
+                              <button
+                                   onClick={onMenuClick}
+                                   className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                              >
+                                   <FaBars size={20} />
+                              </button>
 
-                         <CustomInput
-                              placeholder={"Search...."}
-                              name={"searchContacts"}
-                              value={searchContacts}
-                              handleOnChange={(e) => setSearchContacts(e.target.value)} />
+                              <CustomInput
+                                   placeholder={"Search...."}
+                                   name={"searchContacts"}
+                                   value={searchContacts}
+                                   handleOnChange={(e) => setSearchContacts(e.target.value)} />
+                         </div>
 
                          {/* Notification Icon, FAQs Ion works as buttons (Bell Icon, Quesion Icon) */}
                          <div className="flex flex-row items-center justify-between gap-10">

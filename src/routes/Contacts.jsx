@@ -14,19 +14,20 @@ import Spinner from "../Components/Spinner";
 
 
 const Contacts = () => {
+     const [sidebarOpen, setSidebarOpen] = useState(false);
      const [showAddContactDialog, setShowAddContactDialog] = useState(false);
      const [isContactSaved, setIsContactSaved] = useState(false);
      const [editContact, setEditContact] = useState(false);
      const [replyToMessage, setReplyToMessage] = useState(false);
      const [allContacts, setAllContacts] = useState([]);
-     const [refreshContacts, setRefreshContacts] = useState(false);
+     const [isAddingContact, setIsAddingContact] = useState(false);
 
      // Values from Redux
      const authInformation = useSelector((state) => state?.auth?.authInformation?.at(0));
      const errorMessage = useSelector((state) => state?.errorMessage?.message);
 
      // Use the custom hook for fetching contacts
-     const { isLoading, isError, fetchContacts } = useFetchAllContacts();
+     const { isLoading, isError, fetchContacts, refreshContacts } = useFetchAllContacts();
 
      const navigate = useNavigate();
 
@@ -57,69 +58,25 @@ const Contacts = () => {
           if (!isLoading && !fetchContacts) {
                getAllContacts();
           }
-     }, [refreshContacts, isLoading]);
+     }, [isLoading]);
 
-     const handleContactSaved = () => {
+     const handleContactSaved = async () => {
           setShowAddContactDialog(false);
           setIsContactSaved(true);
-          setRefreshContacts(prev => !prev); // Trigger refresh
+          
+          // Refresh contacts using the hook function
+          await refreshContacts();
+          
           setTimeout(() => {
                setIsContactSaved(false);
           }, 3000);
      };
 
-     // Loading skeleton component
-     const ContactsSkeleton = () => (
-          <div className="animate-pulse">
-               <div className="flex flex-row gap-x-4 justify-between mt-5">
-                    <div className="flex flex-col px-3 space-y-3 py-2 w-full">
-                         <div className="h-6 bg-gray-200 rounded w-24"></div>
-                         <div className="bg-gray-100 border border-gray-200 cursor-pointer flex items-center justify-between px-4 py-2 rounded-lg">
-                              <div className="flex flex-row gap-x-2 items-center">
-                                   <div className="w-5 h-5 bg-gray-200 rounded"></div>
-                                   <div className="h-4 bg-gray-200 rounded w-24"></div>
-                              </div>
-                              <div className="w-8 h-6 bg-gray-200 rounded-full"></div>
-                         </div>
-                    </div>
-                    <div className="w-full flex-col">
-                         <div className="bg-white rounded-lg shadow-sm p-6">
-                              <div className="space-y-4">
-                                   {/* Search and filters skeleton */}
-                                   <div className="flex justify-between items-center">
-                                        <div className="h-10 bg-gray-200 rounded-xl w-1/2"></div>
-                                        <div className="flex space-x-3">
-                                             <div className="h-8 bg-gray-200 rounded w-20"></div>
-                                             <div className="h-8 bg-gray-200 rounded w-20"></div>
-                                             <div className="h-8 bg-gray-200 rounded w-12"></div>
-                                        </div>
-                                   </div>
-                                   
-                                   {/* Table skeleton */}
-                                   <div className="space-y-3">
-                                        {[...Array(5)].map((_, index) => (
-                                             <div key={index} className="flex items-center space-x-4 p-4">
-                                                  <div className="w-4 h-4 bg-gray-200 rounded"></div>
-                                                  <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-                                                  <div className="flex-1">
-                                                       <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
-                                                       <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-                                                  </div>
-                                                  <div className="h-6 bg-gray-200 rounded w-16"></div>
-                                                  <div className="h-4 bg-gray-200 rounded w-20"></div>
-                                                  <div className="h-6 bg-gray-200 rounded w-16"></div>
-                                                  <div className="flex space-x-2">
-                                                       <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                                                       <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                                                       <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                                                  </div>
-                                             </div>
-                                        ))}
-                                   </div>
-                              </div>
-                         </div>
-                    </div>
-               </div>
+     // Simple loading component
+     const SimpleLoading = () => (
+          <div className="flex flex-col items-center justify-center py-20">
+               <Spinner size="large" />
+               <p className="text-gray-500 mt-4 text-sm">Loading contacts...</p>
           </div>
      );
 
@@ -136,7 +93,7 @@ const Contacts = () => {
                     There was an error loading your contacts. Please try again.
                </p>
                <button
-                    onClick={() => setRefreshContacts(prev => !prev)}
+                    onClick={() => refreshContacts()}
                     className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
                >
                     Try Again
@@ -147,11 +104,11 @@ const Contacts = () => {
      return (
           <div className="flex overflow-hidden h-screen">
                {/* SideBar At Left Side */}
-               <SideBar />
+               <SideBar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)}  />
 
                {/* Main Content With Header and actual content */}
                <div className="flex flex-1 flex-col overflow-hidden">
-                    <Header />
+                    <Header onMenuClick={() => setSidebarOpen(true)} />
 
                     {/* Main content just after the header */}
 
@@ -172,7 +129,7 @@ const Contacts = () => {
                               </div>
 
                               {/* Title and some buttons for fast accessablilty */}
-                              <div className="flex flex-row items-center justify-between mt-5">
+                              <div className="flex flex-row md:items-center justify-between mt-5 max-lg:flex-col max-lg:gap-y-2">
 
                                    {/* Title */}
                                    <div className="flex flex-col items-start justify-center space-y-2">
@@ -205,13 +162,13 @@ const Contacts = () => {
                                    </div>
                               </div>
 
-                              {/* Show loading skeleton, error state, or actual content */}
+                              {/* Show simple loading, error state, or actual content */}
                               {isLoading ? (
-                                   <ContactsSkeleton />
+                                   <SimpleLoading />
                               ) : isError ? (
                                    <ErrorState />
                               ) : (
-                                   <div className="flex flex-row gap-x-4 justify-between mt-5">
+                                   <div className="flex flex-row gap-x-4 justify-between mt-5 max-lg:flex-col max-lg:gap-y-2">
                                         <div className="flex flex-col px-3 space-y-3 py-2 w-full">
                                              <h2 className="font-medium text-lg">Contacts</h2>
                                              <div className="bg-green-100 border-l-3 border-l-green-500 border-r-3 border-r-green-500 cursor-pointer flex items-center justify-between px-4 py-2 rounded-lg">
@@ -233,6 +190,7 @@ const Contacts = () => {
                                                   onContactsChange={setAllContacts}
                                                   isLoading={isLoading}
                                                   isError={isError}
+                                                  onRefresh={refreshContacts}
                                              />
                                         </div>
                                    </div>
@@ -241,7 +199,11 @@ const Contacts = () => {
                               {/* A sample div for dimming background */}
                               {
                                    showAddContactDialog &&
-                                   <div className="fixed inset-0 bg-black/50 bg-opacity-20 z-40">
+                                   <div 
+                                        className="fixed inset-0 bg-black/50 bg-opacity-20 z-40"
+                                        onClick={isAddingContact ? undefined : () => setShowAddContactDialog(false)}
+                                        style={{ cursor: isAddingContact ? 'not-allowed' : 'pointer' }}
+                                   >
                                         {/* This div is just for dimming the background if delete messages dialog is opened, otherwise the background would be smooth */}
                                    </div>
                               }
@@ -258,11 +220,15 @@ const Contacts = () => {
                               {
                                    showAddContactDialog &&
                                    (
-                                        <div className='fixed top-0 z-50 h-auto right-88 bg-white rounded-2xl border-gray-200 border-1 w-[550px] shadow-gray-200'>
+                                        <div 
+                                             className='fixed top-0 z-50 h-auto right-88 bg-white rounded-2xl border-gray-200 border-1 w-[550px] shadow-gray-200'
+                                             onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on modal
+                                        >
                                              <AddContactsDialog
                                                   title={"Add New Contact"}
                                                   saveContact={handleContactSaved}
                                                   closeDialog={() => setShowAddContactDialog(false)}
+                                                  onLoadingChange={setIsAddingContact}
                                              />
                                         </div>
                                    )

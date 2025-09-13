@@ -11,14 +11,16 @@ import DynamicTemplate from './Components/TemplatesPage/DynamicTemplate';
 import ImportContacts from './routes/ImportContacts';
 import SendNewMessage from './routes/SendNewMessage';
 import DynamicUser from './routes/DynamicUser';
+import Campaigns from './routes/Campaigns';
 import AuthForm from './Components/Authentication/Login';
-import Cookies from 'js-cookie';
+import { authUtils } from './utils/auth';
+import { useAuthSync } from './hooks/useAuthSync';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  const tokenFromCookies = Cookies.get("jwtToken");
+  const isAuthenticated = authUtils.isAuthenticated();
   
-  if (!tokenFromCookies) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   
@@ -27,9 +29,9 @@ const ProtectedRoute = ({ children }) => {
 
 // Public Route Component (redirects to dashboard if already logged in)
 const PublicRoute = ({ children }) => {
-  const tokenFromCookies = Cookies.get("jwtToken");
+  const isAuthenticated = authUtils.isAuthenticated();
   
-  if (tokenFromCookies) {
+  if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
   
@@ -37,6 +39,9 @@ const PublicRoute = ({ children }) => {
 };
 
 function App() {
+  // Sync authentication state between cookies and Redux store
+  useAuthSync();
+  
   return (
     <Routes>
       {/* Public Route - Login */}
@@ -73,6 +78,15 @@ function App() {
         element={
           <ProtectedRoute>
             <Templates />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/campaigns"
+        element={
+          <ProtectedRoute>
+            <Campaigns />
           </ProtectedRoute>
         }
       />
